@@ -168,6 +168,7 @@ private slots:
     QStringList presetModule(const Tables &t, int _CODEC, int _PRESET) const;
 
     void extSub(Data &data, int extTrackNum, QStringList &_subtitleMapParam, QStringList &_subtitleMetadataParam,
+                QStringList &_subtitleFormatParam,
                 int subtNum);
 
     void
@@ -182,19 +183,21 @@ private slots:
                    const QString &subtitle_font_color, const bool burn_background,
                    const QString &subtitle_background_color,
                    int subtitle_location, Data &data, QStringList &burn_subt_vf, QStringList &_subtitleMapParam,
-                   QStringList &_subtitleMetadataParam, int &subtNum);
+                   QStringList &_subtitleMetadataParam,
+                   QStringList &_subtitleFormatParam, int &subtNum);
 
     QStringList getCodec(const Tables &t, int _CODEC, const QString &resize_vf, const QString &fps_vf,
                          const QStringList &_videoMetadataParam, const QStringList &_audioMapParam,
                          const QStringList &_audioMetadataParam, const QStringList &burn_subt_vf,
                          const QStringList &_subtitleMapParam, const QStringList &_subtitleMetadataParam,
+                         const QStringList &_subtitleFormatParam,
                          const QString &hwaccel_filter_vf, const QStringList &colorprim_vf,
                          const QStringList &colormatrix_vf, const QStringList &transfer_vf) const;
 
     void getPresets(const QStringList &_splitStartParam, const QStringList &_splitParam, const QString &hwaccel,
                     const QStringList &level, const QStringList &mode, const QStringList &preset,
                     const QStringList &pass,
-                    const QStringList &pass1, const QStringList &audio_param, const QStringList &sub_param,
+                    const QStringList &pass1, const QStringList &audio_param,
                     const QStringList &colorprim, const QStringList &colormatrix, const QStringList &transfer,
                     const QStringList &codec, const QStringList &color_range, const QStringList &max_lum,
                     const QStringList &min_lum, const QStringList &max_cll, const QStringList &max_fall,

@@ -157,6 +157,7 @@ void Encoder::initEncoding(const QString  &temp_file,
     QStringList burn_subt_vf;
     QStringList _subtitleMapParam;
     QStringList _subtitleMetadataParam;
+    QStringList _subtitleFormatParam;
     int subtNum;
     subtitles(input_file,
               _USE_PRESET_SUBTITLES == 1 ? _SUBTITLE_FONT : subtitle_font,
@@ -166,10 +167,14 @@ void Encoder::initEncoding(const QString  &temp_file,
               _USE_PRESET_SUBTITLES == 1 ? _SUBTITLE_BACKGROUND_COLOR : subtitle_background_color,
               _USE_PRESET_SUBTITLES == 1 ? _SUBTITLE_LOCATION : subtitle_location,
               data, burn_subt_vf, _subtitleMapParam,
-              _subtitleMetadataParam, subtNum);
+              _subtitleMetadataParam,
+              _subtitleFormatParam,
+              subtNum);
+
+
 
     /****************************** External Subtitle streams *********************************/
-    extSub(data, extTrackNum, _subtitleMapParam, _subtitleMetadataParam, subtNum);
+    extSub(data, extTrackNum, _subtitleMapParam, _subtitleMetadataParam, _subtitleFormatParam, subtNum);
 
     /************************************* Codec module ***************************************/
     QString hwaccel;
@@ -194,7 +199,7 @@ void Encoder::initEncoding(const QString  &temp_file,
     QStringList audio_param = audioModule(t, _CODEC, _AUDIO_CODEC, _AUDIO_BITRATE, _AUDIO_SAMPLING, _AUDIO_CHANNELS);
 
     /************************************ Subtitle module *************************************/
-    QStringList sub_param = subModule(container);
+    // QStringList sub_param = subModule(container);
 
     /************************************* Color module ***************************************/
 
@@ -214,7 +219,7 @@ void Encoder::initEncoding(const QString  &temp_file,
     colorTransfer(_hdr, _TRC, _REP_TRC, transfer, transfer_vf);
 
     QStringList codec = getCodec(t, _CODEC, resize_vf, fps_vf, _videoMetadataParam, _audioMapParam, _audioMetadataParam,
-                                 burn_subt_vf, _subtitleMapParam, _subtitleMetadataParam, hwaccel_filter_vf,
+                                 burn_subt_vf, _subtitleMapParam, _subtitleMetadataParam, _subtitleFormatParam, hwaccel_filter_vf,
                                  colorprim_vf,
                                  colormatrix_vf, transfer_vf);
 
@@ -241,7 +246,7 @@ void Encoder::initEncoding(const QString  &temp_file,
     }
 
     /************************************* Result module ***************************************/
-    getPresets(_splitStartParam, _splitParam, hwaccel, level, mode, preset, pass, pass1, audio_param, sub_param,
+    getPresets(_splitStartParam, _splitParam, hwaccel, level, mode, preset, pass, pass1, audio_param,
                colorprim,
                colormatrix, transfer, codec, color_range, max_lum, min_lum, max_cll, max_fall, chroma_coord,
                white_coord);
@@ -378,7 +383,7 @@ Data &Encoder::video(QString &globalTitle, Data &data, QVector<QString> &videoMe
 void Encoder::getPresets(const QStringList &_splitStartParam, const QStringList &_splitParam, const QString &hwaccel,
                          const QStringList &level, const QStringList &mode, const QStringList &preset,
                          const QStringList &pass, const QStringList &pass1, const QStringList &audio_param,
-                         const QStringList &sub_param, const QStringList &colorprim, const QStringList &colormatrix,
+                         const QStringList &colorprim, const QStringList &colormatrix,
                          const QStringList &transfer, const QStringList &codec, const QStringList &color_range,
                          const QStringList &max_lum, const QStringList &min_lum, const QStringList &max_cll,
                          const QStringList &max_fall, const QStringList &chroma_coord, const QStringList &white_coord) {
@@ -386,7 +391,7 @@ void Encoder::getPresets(const QStringList &_splitStartParam, const QStringList 
     _preset_pass1 = _splitParam + codec + level + preset + mode + pass1 + color_range
                     + colorprim + colormatrix + transfer + QStringList {"-an","-sn","-f","null", "/dev/null"};
     _preset = _splitParam + codec + level + preset + mode + pass + color_range
-              + colorprim + colormatrix + transfer + audio_param + sub_param;
+              + colorprim + colormatrix + transfer + audio_param;
     // DEBUG
 /*
 std::string _presetarray[_preset.length()];
@@ -403,6 +408,7 @@ QStringList Encoder::getCodec(const Tables &t, int _CODEC, const QString &resize
                               const QStringList &_videoMetadataParam, const QStringList &_audioMapParam,
                               const QStringList &_audioMetadataParam, const QStringList &burn_subt_vf,
                               const QStringList &_subtitleMapParam, const QStringList &_subtitleMetadataParam,
+                              const QStringList &_subtitleFormatParam,
                               const QString &hwaccel_filter_vf, const QStringList &colorprim_vf,
                               const QStringList &colormatrix_vf, const QStringList &transfer_vf) const {
     QStringList codec;
@@ -418,6 +424,7 @@ QStringList Encoder::getCodec(const Tables &t, int _CODEC, const QString &resize
     codec.append(_videoMetadataParam);
     codec.append(_audioMetadataParam);
     codec.append(_subtitleMetadataParam);
+    codec.append(_subtitleFormatParam);
     if ((hwaccel_filter_vf != "") ||
         (fps_vf != "") ||
         (resize_vf != "") ||
@@ -447,6 +454,7 @@ void Encoder::subtitles(const QString &input_file, const QString &subtitle_font,
                         const QString &subtitle_font_color, const bool burn_background,
                         const QString &subtitle_background_color, int subtitle_location, Data &data,
                         QStringList &burn_subt_vf, QStringList &_subtitleMapParam, QStringList &_subtitleMetadataParam,
+                        QStringList &_subtitleFormatParam,
                         int &subtNum) {
     subtNum= 0;
     std::string debugstr = burn_subt_vf.join(" ").toStdString();
@@ -464,6 +472,13 @@ void Encoder::subtitles(const QString &input_file, const QString &subtitle_font,
             if (CHECKS(subtChecks)[k] == true) {
                 subtitleFormats[k] = FIELDS(subtFormats)[k];
                 std::string subtitleFormat = FIELDS(subtFormats)[k].toStdString();
+                if (subtitleFormat == "UTF-8")
+                {
+                    _subtitleFormatParam.append({"-c:s", "mov_text"});
+                } else
+                {
+                    _subtitleFormatParam.append({"-c:s", "dvd_subtitle"});
+                }
                 subtitleMap[k] = QString("-map 0:s:%1? ").arg(numToStr(k));
                 _subtitleMapParam.append({"-map", "0:s:"+numToStr(k)+"?"});
                 subtitleLang[k] = QString("-metadata:s:s:%1 language=%2 ")
@@ -583,15 +598,26 @@ void Encoder::colorTransfer(const QString _hdr[], int _TRC, int _REP_TRC, QStrin
 
 void
 Encoder::extSub(Data &data, int extTrackNum, QStringList &_subtitleMapParam, QStringList &_subtitleMetadataParam,
+                QStringList &_subtitleFormatParam,
                 int subtNum) {
     QVector<QString> extSubLang(CHECKS(externSubtChecks).size(), ""),
                      extSubTitle(CHECKS(externSubtChecks).size(), ""),
                      extSubMap(CHECKS(externSubtChecks).size(), ""),
+                     extSubFormat(CHECKS(externSubtChecks).size(), ""),
                      extSubDef(CHECKS(externSubtChecks).size(), "");
 
     if (!_burn_subtitle) {
         Q_LOOP(k, 0, CHECKS(externSubtChecks).size()) {
             if (CHECKS(externSubtChecks)[k] == true) {
+                extSubFormat[k] = FIELDS(externSubtFormats)[k];
+                std::string subtitleFormat = FIELDS(externSubtFormats)[k].toStdString();
+                if (subtitleFormat == "UTF-8")
+                {
+                    _subtitleFormatParam.append({"-c:s", "mov_text"});
+                } else
+                {
+                    _subtitleFormatParam.append({"-c:s", "dvd_subtitle"});
+                }
                 _extSubPaths << "-i" << FIELDS(externSubtPath)[k];
                 extSubMap[k] = QString("-map %1:s? ").arg(numToStr(extTrackNum));
                 _subtitleMapParam.append({"-map", numToStr(extTrackNum)+":s?"});
