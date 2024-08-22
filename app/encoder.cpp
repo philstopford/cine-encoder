@@ -475,7 +475,12 @@ void Encoder::subtitles(const QString &input_file, const QString &subtitle_font,
                 if (subtitleFormat == "UTF-8")
                 {
                     _subtitleFormatParam.append({"-c:s", "mov_text"});
-                } else
+                }
+                else if (subtitleFormat == "D_WEBVTT/SUBTITLES")
+                {
+                    _subtitleFormatParam.append({"-c:s", "webvtt"});
+                }
+                else
                 {
                     _subtitleFormatParam.append({"-c:s", "dvd_subtitle"});
                 }
@@ -614,7 +619,12 @@ Encoder::extSub(Data &data, int extTrackNum, QStringList &_subtitleMapParam, QSt
                 if (subtitleFormat == "UTF-8")
                 {
                     _subtitleFormatParam.append({"-c:s", "mov_text"});
-                } else
+                }
+                else if (subtitleFormat == "D_WEBVTT/SUBTITLES")
+                {
+                    _subtitleFormatParam.append({"-c:s", "webvtt"});
+                }
+                else
                 {
                     _subtitleFormatParam.append({"-c:s", "dvd_subtitle"});
                 }
@@ -1318,6 +1328,7 @@ void Encoder::encode()   // Encode
 
     // Debug
     std::string args = arguments.join(" ").toStdString();
+    std::cout << args;
 
     processEncoding->start("ffmpeg", arguments);
     if (!processEncoding->waitForStarted()) {

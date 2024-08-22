@@ -255,7 +255,7 @@ bool Helper::isSubtitleSupported(const QString extension, const QString &format)
 {
     if (extension == "mp4") {
         const QVector<QString> unspFormats = {
-                "PGS", "VobSub"
+                "PGS", "VobSub", "D_WEBVTT/SUBTITLES"
         };
         return unspFormats.indexOf(format) == -1 ? true : false;
     }
