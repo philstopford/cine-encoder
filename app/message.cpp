@@ -20,7 +20,7 @@
 
 Message::Message(QWidget *parent, MessType mess_type,
                  const QString &message, const bool timer_flag) :
-    BaseWindow(parent, false),
+    BaseWindow(parent, true),
     ui(new Ui::Message),
     m_message(message),
     m_mess_type(mess_type),
@@ -77,12 +77,13 @@ void Message::showEvent(QShowEvent *event)
     BaseWindow::showEvent(event);
     if (!m_windowActivated) {
         m_windowActivated = true;
-        resize(QSize(330, 175) * Helper::scaling());
+        //resize(QSize(330, 175) * Helper::scaling());
         QSizeF size(this->size());
         QPoint center = QPointF(size.width()/2, size.height()/2).toPoint();
         move(parentWidget()->geometry().center() - center);
         setMessage();
     }
+    this->adjustSize();
 }
 
 void Message::setMessage()
