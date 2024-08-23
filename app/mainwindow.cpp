@@ -43,6 +43,7 @@
 #include <cmath>
 #include <sstream>
 #include <QXmlStreamWriter>
+#include <QString>
 
 #if defined (Q_OS_UNIX)
     #ifndef UNICODE
@@ -2181,7 +2182,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
     prg.setModal(true);
     setProgressEnabled(false);
     MediaInfo MI;
-    QList<QString> ffmpegHatesThese = {"[", "]"};
+    QList<QString> ffmpegHatesThese = {"[", "]", "＂", "'"};
     Q_LOOP(i, 0, openFileNames.size()) {
         const QString file = openFileNames.at(i);
         const QString inputFolder = QFileInfo(file).absolutePath();
@@ -2196,8 +2197,13 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
         }
         if (!fileNameOK)
         {
+            QString proposedFileName = file;
+            Q_LOOP(ch, 0, ffmpegHatesThese.size()) {
+                proposedFileName.replace(ffmpegHatesThese[ch], "");
+            }
             const QString message = "Cannot add " + file + " because it contains characters that ffmpeg doesn't like.\r\n" +
-                "You will need to rename the file to avoid these characters: " + ffmpegHatesThese.join(" ");
+                "You will need to rename the file to avoid these characters: " + ffmpegHatesThese.join(" ") + "\r\n" +
+                "Suggestion: " + proposedFileName;
             Message msg(this, MessType::INFO, message);
             msg.exec();
             continue;
