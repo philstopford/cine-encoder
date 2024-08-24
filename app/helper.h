@@ -20,6 +20,8 @@ public:
         GNOME, OTHER, UNDEF
     };
 
+    static QString makeFileStringFFMPEGReady(const QString& fileString);
+
     static void detectEnv();
     static DesktopEnv getEnv();
     static QString getParsedCss(const QString &list);

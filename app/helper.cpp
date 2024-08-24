@@ -28,6 +28,36 @@ Helper::~Helper()
 
 Helper::DesktopEnv Helper::m_desktopEnv = Helper::DesktopEnv::UNDEF;
 
+QString Helper::makeFileStringFFMPEGReady(const QString& fileString)
+{
+    /*
+     * from https://stackoverflow.com/questions/45916331/escape-special-characters-in-ffmpeg-subtitle-filename
+     * i=$(ls)
+       e=${i//\\/\\\\\\\\} # escape backslashes
+       e=${e//:/\\\\:}     # escape : (used to pass params to filter)
+       e=${e//,/\\,}       # escape , (used to separate filters)
+       e=${e//;/\\;}       # escape ; (used to separate filterchains)
+       e=${e//\'/\\\\\\\'} # escape ' (parsed by filter)
+       e=${e//\[/\\[}      # escape [ (used to name components of filtergraph)
+       e=${e//\]/\\]}      # escape ] (same as above)
+     */
+    // QList<QString> ffmpegHatesThese = {"\\", ":", ",", ";", "'", "[", "]", "＂", "'"};
+    QString file_substitute = fileString;
+    std::string input = fileString.toStdString();
+    file_substitute.replace("\\", "\\\\\\\\\\\\\\\\");
+    file_substitute.replace(":", "\\\\:");
+    file_substitute.replace(",", "\\,");
+    file_substitute.replace(";", "\\;");
+    file_substitute.replace("'", "\\\\\\\\\\\\\\'");
+    file_substitute.replace("[", "\\[");
+    file_substitute.replace("]", "\\]");
+    file_substitute.replace("(", "\\(");
+    file_substitute.replace(")", "\\)");
+
+    std::string debug = file_substitute.toStdString();
+    return file_substitute;
+}
+
 void Helper::detectEnv()
 {
 #if defined (Q_OS_UNIX)
