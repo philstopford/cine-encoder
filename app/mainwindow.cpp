@@ -2201,12 +2201,15 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             Q_LOOP(ch, 0, ffmpegHatesThese.size()) {
                 proposedFileName.replace(ffmpegHatesThese[ch], "");
             }
-            const QString message = "Cannot add " + file + " because it contains characters that ffmpeg doesn't like.\r\n" +
-                "You will need to rename the file to avoid these characters: " + ffmpegHatesThese.join(" ") + "\r\n" +
-                "Suggestion: " + proposedFileName;
-            Message msg(this, MessType::INFO, message);
-            msg.exec();
-            continue;
+            const QString message = file + " contains characters that ffmpeg doesn't always like (e.g. for subtitles).\r\n" +
+                "You may wish to rename the file to avoid these characters: " + ffmpegHatesThese.join(" ") + "\r\n" +
+                "Suggestion: " + proposedFileName + "\r\n" +
+                "Press OK to continue, or cancel to skip this file";
+            Message msg(this, MessType::DIALOG, message);
+            if (msg.exec() != Message::Accept)
+            {
+                continue;
+            }
         }
         if (MI.Open(file.toStdWString()) == 1) {
             if (i == 0) {
