@@ -28,6 +28,17 @@ Helper::~Helper()
 
 Helper::DesktopEnv Helper::m_desktopEnv = Helper::DesktopEnv::UNDEF;
 
+QStringList Helper::makeStringsFFMPEGReady(const QStringList stringList)
+{
+    QStringList ret;
+    Q_LOOP(k, 0, stringList.count())
+    {
+        ret.append(makeFileStringFFMPEGReady(stringList[k]));
+    }
+
+    return ret;
+}
+
 QString Helper::makeFileStringFFMPEGReady(const QString& fileString)
 {
     /*
@@ -45,14 +56,16 @@ QString Helper::makeFileStringFFMPEGReady(const QString& fileString)
     QString file_substitute = fileString;
     std::string input = fileString.toStdString();
     file_substitute.replace("\\", "\\\\\\\\\\\\\\\\");
-    file_substitute.replace(":", "\\\\:");
-    file_substitute.replace(",", "\\,");
-    file_substitute.replace(";", "\\;");
-    file_substitute.replace("'", "\\\\\\\\\\\\\\'");
-    file_substitute.replace("[", "\\[");
-    file_substitute.replace("]", "\\]");
-    file_substitute.replace("(", "\\(");
-    file_substitute.replace(")", "\\)");
+    file_substitute.replace(":", "\:");
+    file_substitute.replace(",", "\,");
+    file_substitute.replace(";", "\;");
+    file_substitute.replace("'", "\'");
+    file_substitute.replace("[", "\[");
+    file_substitute.replace("]", "\]");
+    file_substitute.replace("(", "\(");
+    file_substitute.replace(")", "\)");
+    file_substitute.replace("\"", "\"");
+    file_substitute.replace(" ", "\ ");
 
     std::string debug = file_substitute.toStdString();
     return file_substitute;

@@ -12,6 +12,7 @@
 
 #include "encoderstream.h"
 #include "tables.h"
+#include "helper.h"
 #include <QDir>
 #include <QMap>
 #include <iostream>
@@ -195,8 +196,10 @@ void EncoderStream::encode()   // Encode
     }
     emit onEncodingStarted();
     m_loop_start = time(nullptr);
-    arguments << m_preset_0.split(" ") << "-i" << m_pData->input_file
-              << m_preset.split(" ") << "-y" << m_output_file;
+    std::string debug1 = m_pData->input_file.toStdString();
+std::string debug2   = m_output_file.toStdString();
+    arguments << m_preset_0.split(" ") << "-i" << Helper::makeFileStringFFMPEGReady(m_pData->input_file)
+              << m_preset.split(" ") << "-y" << Helper::makeFileStringFFMPEGReady(m_output_file);
     //qDebug() << arguments;
     m_pProcessEncoding->start("ffmpeg", arguments);
     if (!m_pProcessEncoding->waitForStarted()) {

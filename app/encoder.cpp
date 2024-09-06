@@ -12,6 +12,7 @@
 
 #include "encoder.h"
 #include "tables.h"
+#include "helper.h"
 #include <QDir>
 #include <QMap>
 #include <iostream>
@@ -341,41 +342,41 @@ void Encoder::initVariables(const QString &temp_file, const QString &input_file,
 Data &Encoder::video(QString &globalTitle, Data &data, QVector<QString> &videoMetadata,
                      QStringList &_videoMetadataParam) const {
     if (globalTitle != "") {
-        videoMetadata[0] = QString("-metadata:s:v:0 title=\"%1\" ").arg(globalTitle.replace(" ", "\u00A0"));
-        _videoMetadataParam.append({"-metadata:s:v:0",QString("title=\""+globalTitle+"\"")});
+        videoMetadata[0] = QString("-metadata:s:v:0 title=\"%1\" ").arg(Helper::makeFileStringFFMPEGReady(globalTitle).replace(" ", "\u00A0"));
+        _videoMetadataParam.append({"-metadata:s:v:0",QString("title=\""+Helper::makeFileStringFFMPEGReady(globalTitle)+"\"")});
     } else {
         if (data.videoMetadata[VIDEO_TITLE] != "") {
-            videoMetadata[0] = QString("-metadata:s:v:0 title=\"%1\" ").arg(data.videoMetadata[VIDEO_TITLE]
+            videoMetadata[0] = QString("-metadata:s:v:0 title=\"%1\" ").arg(Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_TITLE])
                                                                                 .replace(" ", "\u00A0"));
-            _videoMetadataParam.append({"-metadata:s:v:0",QString("title=\"" + data.videoMetadata[VIDEO_TITLE] + "\"")});
+            _videoMetadataParam.append({"-metadata:s:v:0",QString("title=\"" + Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_TITLE]) + "\"")});
         } else {
             videoMetadata[0] = QString("-map_metadata:s:v:0 -1 ");
             _videoMetadataParam.append({"-map_metadata:s:v:0","-1"});
         }
     }
     if (data.videoMetadata[VIDEO_MOVIENAME] != "") {
-        videoMetadata[1] = QString("-metadata title=\"%1\" ").arg(data.videoMetadata[VIDEO_MOVIENAME]
+        videoMetadata[1] = QString("-metadata title=\"%1\" ").arg(Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_MOVIENAME])
                                                               .replace(" ", "\u00A0"));
-        _videoMetadataParam.append({"-metadata",QString("title=\""+data.videoMetadata[VIDEO_MOVIENAME]+"\"")});
+        _videoMetadataParam.append({"-metadata",QString("title=\""+Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_MOVIENAME])+"\"")});
     }
     if (data.videoMetadata[VIDEO_AUTHOR] != "") {
-        videoMetadata[2] = QString("-metadata author=\"%1\" ").arg(data.videoMetadata[VIDEO_AUTHOR]
+        videoMetadata[2] = QString("-metadata author=\"%1\" ").arg(Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_AUTHOR])
                                                                .replace(" ", "\u00A0"));
-        _videoMetadataParam.append({"-metadata",QString("author=\""+data.videoMetadata[VIDEO_AUTHOR]+"\"")});
+        _videoMetadataParam.append({"-metadata",QString("author=\""+Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_AUTHOR])+"\"")});
     }
     if (data.videoMetadata[VIDEO_DESCRIPTION] != "") {
-        videoMetadata[3] = QString("-metadata description=\"%1\" ").arg(data.videoMetadata[VIDEO_DESCRIPTION]
+        videoMetadata[3] = QString("-metadata description=\"%1\" ").arg(Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_DESCRIPTION])
                                                                     .replace(" ", "\u00A0"));
-        _videoMetadataParam.append({"-metadata",QString("description=\""+data.videoMetadata[VIDEO_DESCRIPTION]+"\"")});
+        _videoMetadataParam.append({"-metadata",QString("description=\""+Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_DESCRIPTION])+"\"")});
     }
     if (data.videoMetadata[VIDEO_YEAR] != "") {
-        videoMetadata[4] = QString("-metadata year=%1 ").arg(data.videoMetadata[VIDEO_YEAR].replace(" ", ""));
-        _videoMetadataParam.append({"-metadata",QString("year="+data.videoMetadata[VIDEO_YEAR])});
+        videoMetadata[4] = QString("-metadata year=%1 ").arg(Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_YEAR]).replace(" ", ""));
+        _videoMetadataParam.append({"-metadata",QString("year="+Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_YEAR]))});
     }
     if (data.videoMetadata[VIDEO_PERFORMER] != "") {
-        videoMetadata[5] = QString("-metadata author=\"%1\" ").arg(data.videoMetadata[VIDEO_PERFORMER]
+        videoMetadata[5] = QString("-metadata author=\"%1\" ").arg(Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_PERFORMER])
                                                                .replace(" ", "\u00A0"));
-        _videoMetadataParam.append({"-metadata",QString("author=\""+data.videoMetadata[VIDEO_PERFORMER]+"\"")});
+        _videoMetadataParam.append({"-metadata",QString("author=\""+Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_PERFORMER])+"\"")});
     }
     return data;
 }
@@ -487,11 +488,11 @@ void Encoder::subtitles(const QString &input_file, const QString &subtitle_font,
                 subtitleMap[k] = QString("-map 0:s:%1? ").arg(numToStr(k));
                 _subtitleMapParam.append({"-map", "0:s:"+numToStr(k)+"?"});
                 subtitleLang[k] = QString("-metadata:s:s:%1 language=%2 ")
-                                      .arg(numToStr(subtNum), FIELDS(subtLangs)[k].replace(" ", "\u00A0"));
-                _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "language="+FIELDS(subtLangs)[k] });
+                                      .arg(numToStr(subtNum), Helper::makeFileStringFFMPEGReady(FIELDS(subtLangs)[k]).replace(" ", "\u00A0"));
+                _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "language="+Helper::makeFileStringFFMPEGReady(FIELDS(subtLangs)[k]) });
                 subtitleTitle[k] = QString("-metadata:s:s:%1 title=%2 ")
-                                       .arg(numToStr(subtNum), FIELDS(subtTitles)[k].replace(" ", "\u00A0"));
-                _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "title="+FIELDS(subtTitles)[k] });
+                                       .arg(numToStr(subtNum), Helper::makeFileStringFFMPEGReady(FIELDS(subtTitles)[k]).replace(" ", "\u00A0"));
+                _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "title="+Helper::makeFileStringFFMPEGReady(FIELDS(subtTitles)[k]) });
                 subtitleDef[k] = QString("-disposition:s:%1 %2 ")
                                      .arg(numToStr(subtNum), CHECKS(subtDef)[k] ? "default" : "0");
                 _subtitleMetadataParam.append({"-disposition:s:"+numToStr(subtNum), CHECKS(subtDef)[k] ? "default" : "0" });
@@ -628,15 +629,15 @@ Encoder::extSub(Data &data, int extTrackNum, QStringList &_subtitleMapParam, QSt
                 {
                     _subtitleFormatParam.append({"-c:s", "dvd_subtitle"});
                 }
-                _extSubPaths << "-i" << FIELDS(externSubtPath)[k];
+                _extSubPaths << "-i" << Helper::makeFileStringFFMPEGReady(FIELDS(externSubtPath)[k]);
                 extSubMap[k] = QString("-map %1:s? ").arg(numToStr(extTrackNum));
                 _subtitleMapParam.append({"-map", numToStr(extTrackNum)+":s?"});
                 extSubLang[k] = QString("-metadata:s:s:%1 language=%2 ")
-                                    .arg(numToStr(subtNum), FIELDS(externSubtLangs)[k].replace(" ", "\u00A0"));
-                _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "language="+FIELDS(externSubtLangs)[k] });
+                                    .arg(numToStr(subtNum), Helper::makeFileStringFFMPEGReady(FIELDS(externSubtLangs)[k]).replace(" ", "\u00A0"));
+                _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "language="+Helper::makeFileStringFFMPEGReady(FIELDS(externSubtLangs)[k]) });
                 extSubTitle[k] = QString("-metadata:s:s:%1 title=%2 ")
-                                     .arg(numToStr(subtNum), FIELDS(externSubtTitles)[k].replace(" ", "\u00A0"));
-                _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "title="+FIELDS(externSubtTitles)[k] });
+                                     .arg(numToStr(subtNum), Helper::makeFileStringFFMPEGReady(FIELDS(externSubtTitles)[k]).replace(" ", "\u00A0"));
+                _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "title="+Helper::makeFileStringFFMPEGReady(FIELDS(externSubtTitles)[k]) });
                 extSubDef[k] = QString("-disposition:s:%1 %2 ")
                                    .arg(numToStr(subtNum), CHECKS(externSubtDef)[k] ? "default" : "0");
                 _subtitleMetadataParam.append({"-disposition:s:"+numToStr(subtNum), CHECKS(externSubtDef)[k] ? "default" : "0" });
@@ -668,11 +669,11 @@ Encoder::audio(Data &data, QStringList &_audioMapParam, QStringList &_audioMetad
             audioMap[k] = QString("-map 0:a:%1? ").arg(numToStr(k));
             _audioMapParam.append({"-map", "0:a:"+numToStr(k)+"?" });
             audioLang[k] = QString("-metadata:s:a:%1 language=%2 ")
-                           .arg(numToStr(audioNum), FIELDS(audioLangs)[k].replace(" ", "\u00A0"));
-            _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"language="+FIELDS(audioLangs)[k]});
+                           .arg(numToStr(audioNum), Helper::makeFileStringFFMPEGReady(FIELDS(audioLangs)[k]).replace(" ", "\u00A0"));
+            _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"language="+Helper::makeFileStringFFMPEGReady(FIELDS(audioLangs)[k])});
             audioTitle[k] = QString("-metadata:s:a:%1 title=%2 ")
-                            .arg(numToStr(audioNum), FIELDS(audioTitles)[k].replace(" ", "\u00A0"));
-            _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"title="+FIELDS(audioTitles)[k]});
+                            .arg(numToStr(audioNum), Helper::makeFileStringFFMPEGReady(FIELDS(audioTitles)[k]).replace(" ", "\u00A0"));
+            _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"title="+Helper::makeFileStringFFMPEGReady(FIELDS(audioTitles)[k])});
             audioDef[k] = QString("-disposition:a:%1 %2 ")
                            .arg(numToStr(audioNum), CHECKS(audioDef)[k] ? "default" : "0");
             _audioMetadataParam.append({"-disposition:a:"+numToStr(audioNum),CHECKS(audioDef)[k] ? "default" : "0"});
@@ -690,15 +691,15 @@ int Encoder::extAudio(Data &data, QStringList &_audioMapParam, QStringList &_aud
 
     Q_LOOP(k, 0, CHECKS(externAudioChecks).size()) {
         if (CHECKS(externAudioChecks)[k] == true) {
-            _extAudioPaths << "-i" << FIELDS(externAudioPath)[k];
+            _extAudioPaths << "-i" << Helper::makeFileStringFFMPEGReady(FIELDS(externAudioPath)[k]);
             extAudioMap[k] = QString("-map %1:a? ").arg(numToStr(extTrackNum));
             _audioMapParam.append({"-map", numToStr(extTrackNum) + ":a?" });
             extAudioLang[k] = QString("-metadata:s:a:%1 language=%2 ")
-                           .arg(numToStr(audioNum), FIELDS(externAudioLangs)[k].replace(" ", "\u00A0"));
-            _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"language="+FIELDS(externAudioLangs)[k]});
+                           .arg(numToStr(audioNum), Helper::makeFileStringFFMPEGReady(FIELDS(externAudioLangs)[k]).replace(" ", "\u00A0"));
+            _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"language="+Helper::makeFileStringFFMPEGReady(FIELDS(externAudioLangs)[k])});
             extAudioTitle[k] = QString("-metadata:s:a:%1 title=%2 ")
-                            .arg(numToStr(audioNum), FIELDS(externAudioTitles)[k].replace(" ", "\u00A0"));
-            _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"title="+FIELDS(externAudioTitles)[k]});
+                            .arg(numToStr(audioNum), Helper::makeFileStringFFMPEGReady(FIELDS(externAudioTitles)[k]).replace(" ", "\u00A0"));
+            _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"title="+Helper::makeFileStringFFMPEGReady(FIELDS(externAudioTitles)[k])});
             extAudioDef[k] = QString("-disposition:a:%1 %2 ")
                            .arg(numToStr(audioNum), CHECKS(externAudioDef)[k] ? "default" : "0");
             _audioMetadataParam.append({"-disposition:a:"+numToStr(audioNum),CHECKS(externAudioDef)[k] ? "default" : "0"});
@@ -1270,15 +1271,22 @@ void Encoder::encode()   // Encode
     connect(processEncoding, SIGNAL(finished(int)), this, SLOT(completed(int)));
     emit onEncodingProgress(0, 0.0f);
 
+    QString escaped_file_in;
+    std::string debug1 = _input_file.toStdString();
+    std::string debug3 = _output_file.toStdString();
+    QString escaped_file_out = Helper::makeFileStringFFMPEGReady(_output_file);
+    std::string debug4 = escaped_file_out.toStdString();
+
     if (_mux_mode) {
         Print("Muxing mode ...");
         _encoding_mode = tr("Muxing:");
         emit onEncodingMode(_encoding_mode);
-        arguments << "-hide_banner" << "-i" << _temp_file << "-map" << "0:v:0?" << "-map" << "0:a?"
+        escaped_file_in = Helper::makeFileStringFFMPEGReady(_temp_file);
+        arguments << "-hide_banner" << "-i" << escaped_file_in << "-map" << "0:v:0?" << "-map" << "0:a?"
                   << "-map" << "0:s?" << "-movflags" << "+write_colr"
                   << "-c:v" << "copy" << "-c:a" << "copy" << _sub_mux_param
                   << "-threads" << numToStr(_threads)
-                  << "-y" << _output_file;
+                  << "-y" << escaped_file_out;
     } else {
         if (*fr_count == 0) {
             _message = tr("The file does not contain FPS information!\nSelect the correct input file!");
@@ -1287,34 +1295,38 @@ void Encoder::encode()   // Encode
         }
         emit onEncodingStarted();
 
+        escaped_file_in = Helper::makeFileStringFFMPEGReady(_input_file);
+        std::string debug2 = escaped_file_in.toStdString();
+
         _loop_start = time(nullptr);
         if (!_flag_two_pass && !_flag_hdr) {
             Print("Encode non HDR...");
             _encoding_mode = tr("Encoding:");
             emit onEncodingMode(_encoding_mode);
-            arguments << _preset_0.split(" ") << "-i" << _input_file
+            arguments << _preset_0.split(" ") << "-i" << escaped_file_in
                       << _extAudioPaths
                       << _extSubPaths << _preset
                      << "-threads" << numToStr(_threads)
-                      << "-y" << _output_file;
+                      << "-y" << escaped_file_out;
         }
         else
         if (!_flag_two_pass && _flag_hdr) {
             Print("Encode HDR...");
+            escaped_file_out = Helper::makeFileStringFFMPEGReady(_temp_file);
             _encoding_mode = tr("Encoding:");
             emit onEncodingMode(_encoding_mode);
-            arguments << _preset_0.split(" ") << "-i" << _input_file
+            arguments << _preset_0.split(" ") << "-i" << escaped_file_in
                       << _extAudioPaths
                       << _extSubPaths << _preset
                       << "-threads" << numToStr(_threads)
-                      << "-y" << _temp_file;
+                      << "-y" << escaped_file_out;
         }
         else
         if (_flag_two_pass) {
             Print("Encode 1-st pass...");
             _encoding_mode = tr("1-st pass:");
             emit onEncodingMode(_encoding_mode);
-            arguments << _preset_0.split(" ") << "-y" << "-i" << _input_file
+            arguments << _preset_0.split(" ") << "-y" << "-i" << escaped_file_in
                       << _extAudioPaths
                       << _extSubPaths
                       << "-threads" << numToStr(_threads)
@@ -1335,7 +1347,7 @@ void Encoder::encode()   // Encode
         Print("cmd command not found!!!");
         processEncoding->disconnect();
         _message = tr("An unknown error occurred!\n Possible FFMPEG not installed.\n");
-        emit onEncodingInitError(_message);
+            emit onEncodingInitError(_message);
     }
 }
 
@@ -1355,7 +1367,7 @@ void Encoder::add_metadata() // Add metedata
     if (!processEncoding->waitForStarted()) {
         Print("cmd command not found!!!");
         processEncoding->disconnect();
-        _message = tr("An unknown error occured!\n Possible mkvtoolnix not installed.\n");
+        _message = tr("An unknown error occurred!\n Possibly mkvtoolnix is not installed.\n");
         emit onEncodingInitError(_message);
     }
 }

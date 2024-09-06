@@ -2182,35 +2182,10 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
     prg.setModal(true);
     setProgressEnabled(false);
     MediaInfo MI;
-    QList<QString> ffmpegHatesThese = {"[", "]", "＂", "'"};
     Q_LOOP(i, 0, openFileNames.size()) {
         const QString file = openFileNames.at(i);
         const QString inputFolder = QFileInfo(file).absolutePath();
         const QString inputFile = QFileInfo(file).fileName();
-        bool fileNameOK = true;
-        Q_LOOP(ch, 0, ffmpegHatesThese.size()) {
-            if (inputFile.contains(ffmpegHatesThese[ch]))
-            {
-                fileNameOK = false;
-                break;
-            }
-        }
-        if (!fileNameOK)
-        {
-            QString proposedFileName = file;
-            Q_LOOP(ch, 0, ffmpegHatesThese.size()) {
-                proposedFileName.replace(ffmpegHatesThese[ch], "");
-            }
-            const QString message = file + " contains characters that ffmpeg doesn't always like (e.g. for subtitles).\r\n" +
-                "You may wish to rename the file to avoid these characters: " + ffmpegHatesThese.join(" ") + "\r\n" +
-                "Suggestion: " + proposedFileName + "\r\n" +
-                "Press OK to continue, or cancel to skip this file";
-            Message msg(this, MessType::DIALOG, message);
-            if (msg.exec() != Message::Accept)
-            {
-                continue;
-            }
-        }
         if (MI.Open(file.toStdWString()) == 1) {
             if (i == 0) {
                 m_openDir = inputFolder;
