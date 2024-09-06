@@ -52,10 +52,9 @@ QString Helper::makeFileStringFFMPEGReady(const QString& fileString)
        e=${e//\[/\\[}      # escape [ (used to name components of filtergraph)
        e=${e//\]/\\]}      # escape ] (same as above)
      */
-    // QList<QString> ffmpegHatesThese = {"\\", ":", ",", ";", "'", "[", "]", "＂", "'"};
     QString file_substitute = fileString;
     std::string input = fileString.toStdString();
-    file_substitute.replace("\\", "\\\\\\\\\\\\\\\\");
+    file_substitute.replace("\\", "\\");
     file_substitute.replace(":", "\:");
     file_substitute.replace(",", "\,");
     file_substitute.replace(";", "\;");
