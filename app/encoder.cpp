@@ -481,6 +481,10 @@ void Encoder::subtitles(const QString &input_file, const QString &subtitle_font,
                 {
                     _subtitleFormatParam.append({"-c:s", "webvtt"});
                 }
+                else if (subtitleFormat == "Timed Text")
+                {
+                    _subtitleFormatParam.append({"-c:s", "srt"});
+                }
                 else
                 {
                     _subtitleFormatParam.append({"-c:s", "dvd_subtitle"});
