@@ -483,7 +483,7 @@ void Encoder::subtitles(const QString &input_file, const QString &subtitle_font,
                 }
                 else if (subtitleFormat == "Timed Text")
                 {
-                    _subtitleFormatParam.append({"-c:s", "srt"});
+                    _subtitleFormatParam.append({"-c:s", "ttml"});
                 }
                 else
                 {
