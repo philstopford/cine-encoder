@@ -473,7 +473,7 @@ void Encoder::subtitles(const QString &input_file, const QString &subtitle_font,
             if (CHECKS(subtChecks)[k] == true) {
                 subtitleFormats[k] = FIELDS(subtFormats)[k];
                 std::string subtitleFormat = FIELDS(subtFormats)[k].toStdString();
-                if (subtitleFormat == "UTF-8")
+                if ((subtitleFormat == "UTF-8") || (subtitleFormat == "ASS"))
                 {
                     _subtitleFormatParam.append({"-c:s", "mov_text"});
                 }
