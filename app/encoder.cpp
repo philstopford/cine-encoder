@@ -45,8 +45,8 @@ Encoder::~Encoder()
 void Encoder::initEncoding(const QString  &temp_file,
                            const QString  &input_file,
                            const QString  &output_file,
-                           const QString  &_width,
-                           const QString  &_height,
+                           QString  &_width,
+                           QString  &_height,
                            const QString  &_fps,
                            const double   &_startTime,
                            const double   &_endTime,
@@ -119,6 +119,8 @@ void Encoder::initEncoding(const QString  &temp_file,
     /****************************************** Resize ****************************************/
     QString resize_vf;
     resizeVF(_width, _height, _CODEC, _WIDTH, _HEIGHT, t, resize_vf);
+    const QString width = _width;
+    const QString height = _height;
 
     /******************************************* FPS *****************************************/
     QString fps_vf;
@@ -167,7 +169,7 @@ void Encoder::initEncoding(const QString  &temp_file,
               _USE_PRESET_SUBTITLES == 1 ? _SUBTITLE_BACKGROUND : burn_background,
               _USE_PRESET_SUBTITLES == 1 ? _SUBTITLE_BACKGROUND_COLOR : subtitle_background_color,
               _USE_PRESET_SUBTITLES == 1 ? _SUBTITLE_LOCATION : subtitle_location,
-              data, burn_subt_vf, _subtitleMapParam,
+              data, burn_subt_vf, const_cast<QString &>(width), const_cast<QString &>(height), _subtitleMapParam,
               _subtitleMetadataParam,
               _subtitleFormatParam,
               subtNum);
@@ -454,13 +456,13 @@ QStringList Encoder::getCodec(const Tables &t, int _CODEC, const QString &resize
 void Encoder::subtitles(const QString &input_file, const QString &subtitle_font, int subtitle_font_size,
                         const QString &subtitle_font_color, const bool burn_background,
                         const QString &subtitle_background_color, int subtitle_location, Data &data,
-                        QStringList &burn_subt_vf, QStringList &_subtitleMapParam, QStringList &_subtitleMetadataParam,
+                        QStringList &burn_subt_vf, QString& width, QString& height, QStringList &_subtitleMapParam, QStringList &_subtitleMetadataParam,
                         QStringList &_subtitleFormatParam,
                         int &subtNum) {
     subtNum= 0;
     std::string debugstr = burn_subt_vf.join(" ").toStdString();
     subtVF(input_file, subtitle_font, subtitle_font_size, subtitle_font_color, burn_background,
-           subtitle_background_color, subtitle_location, data, burn_subt_vf);
+           subtitle_background_color, subtitle_location, data, burn_subt_vf, width, height);
     std::string debugstr2 = burn_subt_vf.join(" ").toStdString();
 
     QVector<QString> subtitleLang(CHECKS(subtChecks).size(), ""),
@@ -1143,7 +1145,7 @@ QStringList Encoder::audioModule(const Tables &t, int _CODEC, int _AUDIO_CODEC, 
 void Encoder::subtVF(const QString &input_file, const QString &subtitle_font, int subtitle_font_size,
                      const QString &subtitle_font_color, const bool burn_background,
                      const QString &subtitle_background_color, int subtitle_location, Data &data,
-                     QStringList &burn_subt_vf) {
+                     QStringList &burn_subt_vf, const QString& width, const QString& height) {
     // Keep with a QString here as there are no spaces in the parameters.
     QString  burn_string;
     // DEBUG
@@ -1192,7 +1194,7 @@ void Encoder::subtVF(const QString &input_file, const QString &subtitle_font, in
             if ((subtitleFormat == "PGS") || (subtitleFormat == "VobSub"))
             {
                 burn_subt_vf.append("-filter_complex");
-                burn_subt_vf.append(QString("[0:v:0][0:s:%1]overlay[v]").arg(numToStr(k)));
+                burn_subt_vf.append(QString("[0:v]scale="+width+":"+height+"[video];[0:s:%1]scale="+width+":"+height+"[sub];[video][sub]overlay[v]").arg(numToStr(k)));
                 burn_subt_vf.append("-map");
                 burn_subt_vf.append("[v]");
             }
@@ -1244,7 +1246,7 @@ void Encoder::fpsVF(const QString &_fps, int _CODEC, int _FRAME_RATE, int _BLEND
         fps_dest = _fps.toDouble();
 }
 
-void Encoder::resizeVF(const QString &_width, const QString &_height, int _CODEC, int _WIDTH, int _HEIGHT, Tables &t,
+void Encoder::resizeVF(QString &_width, QString &_height, int _CODEC, int _WIDTH, int _HEIGHT, Tables &t,
                        QString &resize_vf) const {
     // Keep with a QString here as there are no spaces in the parameters.
     resize_vf= "";
@@ -1259,6 +1261,8 @@ void Encoder::resizeVF(const QString &_width, const QString &_height, int _CODEC
         else
             resize_vf = QString("scale=%1:%2,setsar=1:1").arg(new_width, new_height);
     }
+    _width = new_width;
+    _height = new_height;
 }
 
 void Encoder::encode()   // Encode

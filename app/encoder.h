@@ -39,8 +39,8 @@ public:
     void initEncoding(const QString  &temp_file,
                       const QString  &input_file,
                       const QString  &output_file,
-                      const QString  &_width,
-                      const QString  &_height,
+                      QString  &_width,
+                      QString  &_height,
                       const QString  &_fps,
                       const double   &_startTime,
                       const double   &_endTime,
@@ -117,7 +117,7 @@ private slots:
     void abort();
 
     void
-    resizeVF(const QString &_width, const QString &_height, int _CODEC, int _WIDTH, int _HEIGHT, Tables &t,
+    resizeVF(QString &_width, QString &_height, int _CODEC, int _WIDTH, int _HEIGHT, Tables &t,
              QString &resize_vf) const;
     void
     fpsVF(const QString &_fps, int _CODEC, int _FRAME_RATE, int _BLENDING, Tables &t, QString &fps_vf,
@@ -126,7 +126,7 @@ private slots:
     void subtVF(const QString &input_file, const QString &subtitle_font, int subtitle_font_size,
                 const QString &subtitle_font_color, const bool burn_background,
                 const QString &subtitle_background_color,
-                int subtitle_location, Data &data, QStringList &burn_subt_vf);
+                int subtitle_location, Data &data, QStringList &burn_subt_vf, const QString& width, const QString& height);
 
     QStringList
     audioModule(const Tables &t, int _CODEC, int _AUDIO_CODEC, int _AUDIO_BITRATE, int _AUDIO_SAMPLING,
@@ -182,7 +182,7 @@ private slots:
     void subtitles(const QString &input_file, const QString &subtitle_font, int subtitle_font_size,
                    const QString &subtitle_font_color, const bool burn_background,
                    const QString &subtitle_background_color,
-                   int subtitle_location, Data &data, QStringList &burn_subt_vf, QStringList &_subtitleMapParam,
+                   int subtitle_location, Data &data, QStringList &burn_subt_vf, QString& width, QString& height, QStringList &_subtitleMapParam,
                    QStringList &_subtitleMetadataParam,
                    QStringList &_subtitleFormatParam, int &subtNum);
 
