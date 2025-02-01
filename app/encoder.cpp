@@ -475,7 +475,15 @@ void Encoder::subtitles(const QString &input_file, const QString &subtitle_font,
             if (CHECKS(subtChecks)[k] == true) {
                 subtitleFormats[k] = FIELDS(subtFormats)[k];
                 std::string subtitleFormat = FIELDS(subtFormats)[k].toStdString();
-                if ((subtitleFormat == "UTF-8") || (subtitleFormat == "ASS"))
+                // This one has some subtleties. mov_text worked fine except for certain
+                // files (mkv) that had a UTF-8 subtitle track which started complaining.
+                // srt seems OK so far.
+                // Largely this is by empirical testing.
+                if (subtitleFormat == "UTF-8")
+                {
+                    _subtitleFormatParam.append({"-c:s", "srt"});
+                }
+                else if (subtitleFormat == "ASS")
                 {
                     _subtitleFormatParam.append({"-c:s", "mov_text"});
                 }
