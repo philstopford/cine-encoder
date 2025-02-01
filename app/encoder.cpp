@@ -479,6 +479,7 @@ void Encoder::subtitles(const QString &input_file, const QString &subtitle_font,
                 // files (mkv) that had a UTF-8 subtitle track which started complaining.
                 // srt seems OK so far.
                 // Largely this is by empirical testing.
+                /*
                 if (subtitleFormat == "UTF-8")
                 {
                     _subtitleFormatParam.append({"-c:s", "srt"});
@@ -496,8 +497,10 @@ void Encoder::subtitles(const QString &input_file, const QString &subtitle_font,
                     _subtitleFormatParam.append({"-c:s", "ttml"});
                 }
                 else
+                */
                 {
-                    _subtitleFormatParam.append({"-c:s", "dvd_subtitle"});
+                    _subtitleFormatParam.append({"-c:s", "copy"});
+                    // _subtitleFormatParam.append({"-c:s", "dvd_subtitle"});
                 }
                 subtitleMap[k] = QString("-map 0:s:%1? ").arg(numToStr(k));
                 _subtitleMapParam.append({"-map", "0:s:"+numToStr(k)+"?"});
