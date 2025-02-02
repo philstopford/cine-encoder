@@ -23,6 +23,7 @@
 #include <X11/Xatom.h>
 //#include <X11/Xlib.h>
 #include <X11/extensions/shape.h>
+#include <qscreen.h>
 #include <qguiapplication_platform.h>
 #include <QtGui/private/qtx11extras_p.h>
 
@@ -164,25 +165,32 @@ void ChangeWindowMaximizedState(const QWidget *widget, int wm_state)
 	XFlush(display);
 }
 
-CornerEdge GetCornerEdge(const QWidget *widget, int x, int y, const QMargins &margins, int border_width)
+CornerEdge GetCornerEdge(const QWidget *widget, int x_, int y_, const QMargins &margins, int border_width_)
 {
+    int border_width = border_width_ * QApplication::primaryScreen()->devicePixelRatio();
 	QRect fullRect = widget->rect();
+    int x = x_ * QApplication::primaryScreen()->devicePixelRatio();
+    int y = y_ * QApplication::primaryScreen()->devicePixelRatio();
 	fullRect = fullRect.marginsRemoved(margins);
+    int frt = fullRect.top() * QApplication::primaryScreen()->devicePixelRatio();
+    int frb = fullRect.bottom() * QApplication::primaryScreen()->devicePixelRatio();
+    int frl = fullRect.left() * QApplication::primaryScreen()->devicePixelRatio();
+    int frr = fullRect.right() * QApplication::primaryScreen()->devicePixelRatio();
 	unsigned int ce = static_cast<unsigned int>(CornerEdge::kInvalid);
-	if ((y - fullRect.top() >= -border_width)
-			&& (y < fullRect.top())) {
+	if ((y - frt >= -border_width)
+			&& (y < frt)) {
 		ce = ce | static_cast<unsigned int>(CornerEdge::kTop);
 	}
-	if ((x - fullRect.left() >= -border_width)
-			&& (x < fullRect.left())) {
+	if ((x - frl >= -border_width)
+			&& (x < frl)) {
 		ce = ce | static_cast<unsigned int>(CornerEdge::kLeft);
 	}
-	if ((y - fullRect.bottom() <= border_width)
-			&& (y > fullRect.bottom())) {
+	if ((y - frb <= border_width)
+			&& (y > frb)) {
 		ce = ce | static_cast<unsigned int>(CornerEdge::kBottom);
 	}
-	if ((x - fullRect.right() <= border_width)
-			&& (x > fullRect.right())) {
+	if ((x - frr <= border_width)
+			&& (x > frr)) {
 		ce = ce | static_cast<unsigned int>(CornerEdge::kRight);
 	}
 	return static_cast<CornerEdge>(ce);
@@ -214,8 +222,8 @@ void SendMoveResizeMessage(const QWidget *widget, Qt::MouseButton qbutton, int a
 	xev.xclient.format = 32;
 
 	const auto global_position = QCursor::pos();
-	xev.xclient.data.l[0] = global_position.x();
-	xev.xclient.data.l[1] = global_position.y();
+	xev.xclient.data.l[0] = global_position.x() * QApplication::primaryScreen()->devicePixelRatio();
+	xev.xclient.data.l[1] = global_position.y() * QApplication::primaryScreen()->devicePixelRatio();
 	xev.xclient.data.l[2] = action;
 	xev.xclient.data.l[3] = xbtn;
 	xev.xclient.data.l[4] = 0;
@@ -306,10 +314,10 @@ void SendButtonRelease(const QWidget *widget,
 	xevent.type = ButtonRelease;
 	xevent.xbutton.button = Button1;
 	xevent.xbutton.window = widget->effectiveWinId();
-	xevent.xbutton.x = pos.x();
-	xevent.xbutton.y = pos.y();
-	xevent.xbutton.x_root = globalPos.x();
-	xevent.xbutton.y_root = globalPos.y();
+	xevent.xbutton.x = pos.x() * QApplication::primaryScreen()->devicePixelRatio();
+	xevent.xbutton.y = pos.y() * QApplication::primaryScreen()->devicePixelRatio();
+	xevent.xbutton.x_root = globalPos.x() * QApplication::primaryScreen()->devicePixelRatio();
+	xevent.xbutton.y_root = globalPos.y() * QApplication::primaryScreen()->devicePixelRatio();
 	xevent.xbutton.display = display;
 
 	XSendEvent(display, widget->effectiveWinId(), False, ButtonReleaseMask, &xevent);
@@ -527,8 +535,8 @@ void SetMouseTransparent(const QWidget *widget, bool on)
 		XRect.height = 0;
 		nRects = 0;
 	} else {
-		XRect.width = widget->width();
-		XRect.height = widget->height();
+		XRect.width = widget->width() * QApplication::primaryScreen()->devicePixelRatio();
+		XRect.height = widget->height() * QApplication::primaryScreen()->devicePixelRatio();
 		nRects = 1;
 	}
 	XShapeCombineRectangles(display, widget->winId(), ShapeInput,
@@ -556,16 +564,16 @@ void PropagateSizeHints(const QWidget *w)
     const auto screen = QX11Info::appScreen();
 	XSizeHints *sh = XAllocSizeHints();
 	sh->flags = PPosition | PSize | PMinSize | PMaxSize | PResizeInc;
-	sh->x = w->x();
-	sh->y = w->y();
-	sh->min_width = w->minimumWidth();
-	sh->min_height = w->minimumHeight();
-	sh->base_width = w->baseSize().width();
-	sh->base_height = w->baseSize().height();
-	sh->max_width = w->maximumWidth();
-	sh->max_height = w->maximumHeight();
-	sh->width_inc =  w->sizeIncrement().width();
-	sh->height_inc = w->sizeIncrement().height();
+	sh->x = w->x() * QApplication::primaryScreen()->devicePixelRatio();
+	sh->y = w->y() * QApplication::primaryScreen()->devicePixelRatio();
+	sh->min_width = w->minimumWidth() * QApplication::primaryScreen()->devicePixelRatio();
+	sh->min_height = w->minimumHeight() * QApplication::primaryScreen()->devicePixelRatio();
+	sh->base_width = w->baseSize().width() * QApplication::primaryScreen()->devicePixelRatio();
+	sh->base_height = w->baseSize().height() * QApplication::primaryScreen()->devicePixelRatio();
+	sh->max_width = w->maximumWidth() * QApplication::primaryScreen()->devicePixelRatio();
+	sh->max_height = w->maximumHeight() * QApplication::primaryScreen()->devicePixelRatio();
+	sh->width_inc =  w->sizeIncrement().width() * QApplication::primaryScreen()->devicePixelRatio();
+	sh->height_inc = w->sizeIncrement().height() * QApplication::primaryScreen()->devicePixelRatio();
 	XSetWMNormalHints(display, w->winId(), sh);
 	XFree(sh);
 }
@@ -651,8 +659,8 @@ void StartResizing(const QWidget *w, const QPoint &globalPoint, const CornerEdge
 	xev.xclient.window = winId;
 	xev.xclient.format = 32;
 
-	xev.xclient.data.l[0] = globalPoint.x();
-	xev.xclient.data.l[1] = globalPoint.y();
+	xev.xclient.data.l[0] = globalPoint.x() * QApplication::primaryScreen()->devicePixelRatio();
+	xev.xclient.data.l[1] = globalPoint.y() * QApplication::primaryScreen()->devicePixelRatio();
 	xev.xclient.data.l[2] = CornerEdge2WmGravity(ce);
 	xev.xclient.data.l[3] = Button1;
 	xev.xclient.data.l[4] = 1;
@@ -682,10 +690,10 @@ void SetWindowExtents(uint wid, const QRect &windowRect, const QMargins &margins
     const auto screen = QX11Info::appScreen();
 	Atom frameExtents;
 	unsigned long value[4] = {
-		(unsigned long)(margins.left()),
-		(unsigned long)(margins.right()),
-		(unsigned long)(margins.top()),
-		(unsigned long)(margins.bottom())
+		(unsigned long)(margins.left() * QApplication::primaryScreen()->devicePixelRatio()),
+		(unsigned long)(margins.right() * QApplication::primaryScreen()->devicePixelRatio()),
+		(unsigned long)(margins.top() * QApplication::primaryScreen()->devicePixelRatio()),
+		(unsigned long)(margins.bottom() * QApplication::primaryScreen()->devicePixelRatio())
 	};
 	frameExtents = XInternAtom(display, "_GTK_FRAME_EXTENTS", False);
 	if (frameExtents == None) {
@@ -708,8 +716,8 @@ void SetWindowExtents(uint wid, const QRect &windowRect, const QMargins &margins
 	XRectangle contentXRect;
 	contentXRect.x = 0;
 	contentXRect.y = 0;
-	contentXRect.width = tmp_rect.width() + resizeHandleSize * 2;
-	contentXRect.height = tmp_rect.height() + resizeHandleSize * 2;
+	contentXRect.width = (tmp_rect.width() + resizeHandleSize * 2) * QApplication::primaryScreen()->devicePixelRatio();
+	contentXRect.height = (tmp_rect.height() + resizeHandleSize * 2)  * QApplication::primaryScreen()->devicePixelRatio();
 	XShapeCombineRectangles(display,
 							wid,
 							ShapeInput,
