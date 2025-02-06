@@ -615,15 +615,22 @@ void MainWindow::createConnections()
     m_pActEditMetadata = new QAction(tr("Edit metadata"), menuTools);
     m_pActSelectAudio = new QAction(tr("Select audio streams"), menuTools);
     m_pActSelectSubtitles = new QAction(tr("Select subtitles"), menuTools);
+    m_pActDeselectAudio = new QAction(tr("Deselect audio streams"), menuTools);
+    m_pActDeselectSubtitles = new QAction(tr("Deselect subtitles"), menuTools);
     m_pActSplitVideo = new QAction(tr("Split video"), menuTools);
     connect(m_pActEditMetadata, &QAction::triggered, this, SLT(showMetadataEditor));
     connect(m_pActSelectAudio, &QAction::triggered, this, SLT(showAudioStreams));
     connect(m_pActSelectSubtitles, &QAction::triggered, this, SLT(showSubtitles));
+    connect(m_pActDeselectAudio, &QAction::triggered, this, SLT(clearAudioStreams));
+    connect(m_pActDeselectSubtitles, &QAction::triggered, this, SLT(clearSubtitleStreams));
     connect(m_pActSplitVideo, &QAction::triggered, this, SLT(showVideoSplitter));
     menuTools->addAction(m_pActEditMetadata);
     menuTools->addSeparator();
     menuTools->addAction(m_pActSelectAudio);
     menuTools->addAction(m_pActSelectSubtitles);
+    menuTools->addSeparator();
+    menuTools->addAction(m_pActDeselectAudio);
+    menuTools->addAction(m_pActDeselectSubtitles);
     menuTools->addSeparator();
     menuTools->addAction(m_pActSplitVideo);
 
@@ -658,6 +665,9 @@ void MainWindow::createConnections()
     m_pItemMenu->addSeparator();
     m_pItemMenu->addAction(m_pActSelectAudio);
     m_pItemMenu->addAction(m_pActSelectSubtitles);
+    m_pItemMenu->addSeparator();
+    m_pItemMenu->addAction(m_pActDeselectAudio);
+    m_pItemMenu->addAction(m_pActDeselectSubtitles);
     m_pItemMenu->addSeparator();
     m_pItemMenu->addAction(m_pActSplitVideo);
     connect(ui->tableWidget, &QTableWidget::customContextMenuRequested, this, SLT(provideContextMenu));
@@ -1460,6 +1470,16 @@ void MainWindow::showSubtitles()
     ui->tabWidgetStreams->setCurrentIndex(1);
 }
 
+void MainWindow::clearAudioStreams()
+{
+    ui->streamAudio->deselectTitles();
+}
+
+void MainWindow::clearSubtitleStreams()
+{
+    ui->streamSubtitle->deselectTitles();
+}
+
 void MainWindow::showVideoSplitter()
 {
     setFloating(DockIndex::SPLIT_DOCK, QPoint(240,-160), QSize(400,395));
@@ -1738,6 +1758,15 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
             ui->frameMiddle->setFocus();
             return true;
         } else
+            if (keyEvent->modifiers() == Qt::KeyboardModifier::AltModifier)
+            {
+                if (keyEvent->key() == Qt::Key_Z) {
+                    ui->streamAudio->deselectTitles();
+                }
+                if (keyEvent->key() == Qt::Key_K) {
+                    ui->streamSubtitle->deselectTitles();
+                }
+            }
         if (keyEvent->key() == Qt::Key_F10) {
             auto actList = m_pMenuBar->actions();
             if (!actList.empty()) {

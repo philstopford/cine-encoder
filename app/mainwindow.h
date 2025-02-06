@@ -143,6 +143,8 @@ private:
                 *m_pActEditMetadata,
                 *m_pActSelectAudio,
                 *m_pActSelectSubtitles,
+                *m_pActDeselectAudio,
+                *m_pActDeselectSubtitles,
                 *m_pActSplitVideo,
                 *m_pActSettings,
                 *m_pActResetView,
@@ -303,6 +305,8 @@ private slots:
     void showMetadataEditor();
     void showAudioStreams();
     void showSubtitles();
+    void clearAudioStreams();
+    void clearSubtitleStreams();
     void showVideoSplitter();
     void repeatHandler_Type_1();
     void repeatHandler_Type_2();
