@@ -2336,7 +2336,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             Q_LOOP(j, 0, MAX_SUBTITLES) {
                 const QString subtitleFormat = SINFO(size_t(j), "Format");
                 if (!subtitleFormat.isEmpty()) {
-                    _CHECKS(numRows, subtChecks).push_back(Helper::isSubtitleSupported(extension, subtitleFormat));
+                    _CHECKS(numRows, subtChecks).push_back(false);//Helper::isSubtitleSupported(extension, subtitleFormat));
                     _FIELDS(numRows, subtFormats).push_back(subtitleFormat);
                     _FIELDS(numRows, subtDuration).push_back(SINFO(size_t(j), "Duration"));
                     _FIELDS(numRows, subtLangs).push_back(SINFO(size_t(j), "Language"));
