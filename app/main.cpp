@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName(QString::fromUtf8("CineEncoder"));
     QCoreApplication::setApplicationName(QString::fromUtf8("Cine Encoder"));
     QApplication::setApplicationDisplayName("Cine Encoder");
+    QGuiApplication::setDesktopFileName("Cine Encoder");
     QApplication app(argc, argv);
     app.setStyle(QStyleFactory::create("Fusion"));
     const QString sysLang = Helper::getSysLanguage();
