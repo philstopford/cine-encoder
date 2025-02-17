@@ -126,6 +126,7 @@ void Settings::setParameters(QString    *pOutputFolder,
                              QString    *pFont,
                              int        *pSubtitlesFontSize,
                              QString    *pSubtitlesFont,
+                             bool       *pSubtitlesDeselectAll,
                              bool       *pSubtitlesBackground,
                              QColor     *pSubtitlesColor,
                              QColor     *pSubtitlesBackgroundColor,
@@ -153,6 +154,7 @@ void Settings::setParameters(QString    *pOutputFolder,
     m_pFontSize = pFontSize;
     m_pSubtitlesFont = pSubtitlesFont;
     m_pSubtitlesFontSize = pSubtitlesFontSize;
+    m_pSubtitlesDeselectAll = pSubtitlesDeselectAll;
     m_pSubtitlesBackground = pSubtitlesBackground;
     m_pSubtitlesColor = pSubtitlesColor;
     m_pSubtitlesBackgroundColor = pSubtitlesBackgroundColor;
@@ -226,6 +228,10 @@ void Settings::setParameters(QString    *pOutputFolder,
 
     if (*m_pSubtitlesBackground) {
         ui->checkBox_subtitles_background->setChecked(true);
+    }
+
+    if (*m_pSubtitlesDeselectAll) {
+        ui->checkBox_subtitles_deselectall->setChecked(true);
     }
 
     QStringListModel *subtitlesFontModel = new QStringListModel(ui->comboBox_subtitles_font);
@@ -328,6 +334,10 @@ void Settings::onButtonApply()
     /*============= Multi Instances ==============*/
     int stts_multiInst = ui->checkBox_allowDuplicates->checkState();
     *m_pMultiInstances = (stts_multiInst == 2) ? true : false;
+
+    /*============= Should subtitle streams be deselected by default? ==============*/
+    int subtitles_deselectall = ui->checkBox_subtitles_deselectall->checkState();
+    *m_pSubtitlesDeselectAll = (subtitles_deselectall == 2) ? true : false;
 
     /*============= Background for hard-burn subtitles ==============*/
     int subtitles_background = ui->checkBox_subtitles_background->checkState();

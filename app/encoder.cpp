@@ -256,7 +256,7 @@ void Encoder::initEncoding(const QString  &temp_file,
 
     Print("Flag two-pass: " << _flag_two_pass);
     Print("Flag HDR: " << _flag_hdr);
-    Print("preset_0: " << _preset_0.toStdString());
+    Print("preset_0: " << _preset_0.join(" ").toStdString());
 
     QString log = getLog();
     emit onEncodingLog(log);
@@ -327,7 +327,7 @@ void Encoder::initVariables(const QString &temp_file, const QString &input_file,
     fr_count = _fr_count;//int _CONTAINER = _cur_param[CurParamIndex::CONTAINER].toInt();
     _extAudioPaths.clear();
     _extSubPaths.clear();
-    _preset_0 = "";
+    _preset_0 = QStringList();
     _preset_pass1.clear();
     _preset.clear();
     _preset_mkvmerge = "";
@@ -390,7 +390,14 @@ void Encoder::getPresets(const QStringList &_splitStartParam, const QStringList 
                          const QStringList &transfer, const QStringList &codec, const QStringList &color_range,
                          const QStringList &max_lum, const QStringList &min_lum, const QStringList &max_cll,
                          const QStringList &max_fall, const QStringList &chroma_coord, const QStringList &white_coord) {
-    _preset_0 = "-hide_banner -probesize 100M -analyzeduration 50M" + hwaccel + _splitStartParam.join(" ");
+    _preset_0 = QStringList("-hide_banner");
+    _preset_0.append("-probesize");
+    _preset_0.append("100M");
+    _preset_0.append("-analyzeduration");
+    _preset_0.append("50M");
+    _preset_0.append(hwaccel);
+    // _preset_0.append(_splitStartParam.join(" "));
+    _preset_0.append(_splitStartParam);
     _preset_pass1 = _splitParam + codec + level + preset + mode + pass1 + color_range
                     + colorprim + colormatrix + transfer + QStringList {"-an","-sn","-f","null", "/dev/null"};
     _preset = _splitParam + codec + level + preset + mode + pass + color_range
@@ -1013,7 +1020,7 @@ QString Encoder::getLog() const {
         log = QString("Preset pass 1: %1 -i <input file> %2\n"
                       "Preset pass 2: %3 -i <input file> %4 -y <output file>\n"
                       "Preset mkvpropedit: %5\n")
-                .arg(_preset_0, _preset_pass1.join(" "), _preset_0, _preset.join(" "), _preset_mkvmerge);
+                .arg(_preset_0.join(" "), _preset_pass1.join(" "), _preset_0.join(" "), _preset.join(" "), _preset_mkvmerge);
     }
     else
     if (_flag_two_pass && !_flag_hdr) {
@@ -1021,7 +1028,7 @@ QString Encoder::getLog() const {
         Print("preset: " << _preset.join(" ").toStdString());
         log = QString("Preset pass 1: %1 -i <input file> %2\n"
                       "Preset pass 2: %3 -i <input file> %4 -y <output file>\n")
-                .arg(_preset_0, _preset_pass1.join(" "), _preset_0, _preset.join(" "));
+                .arg(_preset_0.join(" "), _preset_pass1.join(" "), _preset_0.join(" "), _preset.join(" "));
     }
     else
     if (!_flag_two_pass && _flag_hdr) {
@@ -1029,13 +1036,13 @@ QString Encoder::getLog() const {
         Print("preset_mkvpropedit: " << _preset_mkvmerge.toStdString());
         log = QString("Preset: %1 -i <input file> %2 -y <output file>\n"
                       "Preset mkvpropedit: %3\n")
-                .arg(_preset_0, _preset.join(" "), _preset_mkvmerge);
+                .arg(_preset_0.join(" "), _preset.join(" "), _preset_mkvmerge);
     }
     else
     if (!_flag_two_pass && !_flag_hdr) {
         Print("preset: " << _preset.join(" ").toStdString());
         log = QString("Preset: %1 -i <input file> %2 -y <output file>\n")
-                .arg(_preset_0, _preset.join(" "));
+                .arg(_preset_0.join(" "), _preset.join(" "));
     }
     return log;
 }
@@ -1321,7 +1328,7 @@ void Encoder::encode()   // Encode
             Print("Encode non HDR...");
             _encoding_mode = tr("Encoding:");
             emit onEncodingMode(_encoding_mode);
-            arguments << _preset_0.split(" ") << "-i" << escaped_file_in
+            arguments << _preset_0 << "-i" << escaped_file_in
                       << _extAudioPaths
                       << _extSubPaths << _preset
                      << "-threads" << numToStr(_threads)
@@ -1333,7 +1340,7 @@ void Encoder::encode()   // Encode
             escaped_file_out = Helper::makeFileStringFFMPEGReady(_temp_file);
             _encoding_mode = tr("Encoding:");
             emit onEncodingMode(_encoding_mode);
-            arguments << _preset_0.split(" ") << "-i" << escaped_file_in
+            arguments << _preset_0 << "-i" << escaped_file_in
                       << _extAudioPaths
                       << _extSubPaths << _preset
                       << "-threads" << numToStr(_threads)
@@ -1344,7 +1351,7 @@ void Encoder::encode()   // Encode
             Print("Encode 1-st pass...");
             _encoding_mode = tr("1-st pass:");
             emit onEncodingMode(_encoding_mode);
-            arguments << _preset_0.split(" ") << "-y" << "-i" << escaped_file_in
+            arguments << _preset_0 << "-y" << "-i" << escaped_file_in
                       << _extAudioPaths
                       << _extSubPaths
                       << "-threads" << numToStr(_threads)

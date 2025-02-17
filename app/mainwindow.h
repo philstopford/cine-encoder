@@ -207,7 +207,8 @@ private:
                 m_showHdrFlag,
                 m_multiInstances,
                 m_protectFlag,
-                m_subtitles_background;
+                m_subtitles_background,
+                m_subtitles_deselectall;
 
     int         m_fontSize,
                 m_subtitles_fontSize,

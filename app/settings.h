@@ -60,6 +60,7 @@ public:
                        QString    *pFont,
                        int        *pSubtitlesFontSize,
                        QString    *pSubtitlesFont,
+                       bool       *pSubtitlesDeselectAll,
                        bool       *pSubtitlesBackground,
                        QColor     *pSubtitlesColor,
                        QColor     *pSubtitlesBackgroundColor,
@@ -113,7 +114,8 @@ private:
             *m_pMultiInstances,
             *m_pHideInTrayFlag,
             m_windowActivated,
-            *m_pSubtitlesBackground;
+            *m_pSubtitlesBackground,
+            *m_pSubtitlesDeselectAll;
 };
 
 #endif // SETTINGS_H

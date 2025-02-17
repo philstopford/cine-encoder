@@ -56,9 +56,9 @@ public:
 
 private:
     time_t  m_loop_start;
-    QString m_preset_0,
-            m_preset,
-            m_output_file,
+    QStringList m_preset_0,
+            m_preset;
+    QString m_output_file,
             m_message,
             m_error_message;
 

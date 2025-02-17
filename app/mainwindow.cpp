@@ -446,6 +446,9 @@ void MainWindow::saveXMLSettingsFile()
     streamSettings.writeStartElement("subtitles_color");
     streamSettings.writeCharacters(m_subtitles_color.name());
     streamSettings.writeEndElement();
+    streamSettings.writeStartElement("subtitles_deselectall");
+    streamSettings.writeCharacters(numToStr(m_subtitles_deselectall));
+    streamSettings.writeEndElement();
     streamSettings.writeStartElement("subtitles_background");
     streamSettings.writeCharacters(numToStr(m_subtitles_background));
     streamSettings.writeEndElement();
@@ -948,6 +951,7 @@ void MainWindow::setParameters()    // Set parameters
     m_subtitles_fontSize = 8;
     m_subtitles_color = "#ffffff";
     m_subtitles_background = false;
+    m_subtitles_deselectall = true;
     m_subtitles_background_alpha = 150;
     m_subtitles_background_color = "#000000";
     m_subtitles_location = 0;
@@ -1160,6 +1164,10 @@ void MainWindow::readXMLSettingsFile(QString xmlFileName)
                 if (nnn == QString("subtitles_font_size")) {
                     QString val = stream.readElementText();
                     m_subtitles_fontSize = val.toInt();
+                }
+                if (nnn == QString("subtitles_deselectall")) {
+                    QString val = stream.readElementText();
+                    m_subtitles_deselectall = val.toInt();
                 }
                 if (nnn == QString("subtitles_background")) {
                     QString val = stream.readElementText();
@@ -1426,6 +1434,7 @@ void MainWindow::onSettings()
                            &m_font,
                            &m_subtitles_fontSize,
                            &m_subtitles_font,
+                           &m_subtitles_deselectall,
                            &m_subtitles_background,
                            &m_subtitles_color,
                            &m_subtitles_background_color,
@@ -2336,7 +2345,15 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             Q_LOOP(j, 0, MAX_SUBTITLES) {
                 const QString subtitleFormat = SINFO(size_t(j), "Format");
                 if (!subtitleFormat.isEmpty()) {
-                    _CHECKS(numRows, subtChecks).push_back(false);//Helper::isSubtitleSupported(extension, subtitleFormat));
+                    bool select;
+                    if (m_subtitles_deselectall) {
+                        select = false;
+                    }
+                    else
+                    {
+                        select = Helper::isSubtitleSupported(extension, subtitleFormat);
+                    }
+                    _CHECKS(numRows, subtChecks).push_back(select);
                     _FIELDS(numRows, subtFormats).push_back(subtitleFormat);
                     _FIELDS(numRows, subtDuration).push_back(SINFO(size_t(j), "Duration"));
                     _FIELDS(numRows, subtLangs).push_back(SINFO(size_t(j), "Language"));
@@ -2533,12 +2550,23 @@ QString MainWindow::setThumbnail(QString curFilename,
     QString tmb_file = THUMBNAILPATH + QString("/%1.png").arg(tmb_name);
     QFile tmb(tmb_file);
     if (!tmb.exists()) {
-        QString inpParam("-hide_banner -probesize 100M -analyzeduration 50M");
-        if (destination == PreviewDest::PREVIEW)
-            inpParam += " -skip_frame nokey";
         QStringList cmd;
-        cmd << inpParam.split(" ") << "-ss" << time_qstr << "-i" << m_input_file
-            << qualityParam.split(" ") << "-vframes" << "1" << "-y" << tmb_file;
+        cmd.append("-hide_banner");
+        cmd.append("-probesize");
+        cmd.append("100M");
+        cmd.append("-analyzeduration");
+        cmd.append("50M");
+        if (destination == PreviewDest::PREVIEW)
+            cmd.append("-skip_frame nokey");
+        cmd.append("-ss");
+        cmd.append(time_qstr);
+        cmd.append("-i");
+        cmd.append(m_input_file);
+        cmd.append(qualityParam.split(" "));
+        cmd.append("-vframes");
+        cmd.append("1");
+        cmd.append("-y");
+        cmd.append(tmb_file);
         m_pProcessThumbCreation = new QProcess(this);
         m_pProcessThumbCreation->start("ffmpeg", cmd);
         m_pProcessThumbCreation->waitForFinished();
@@ -2693,7 +2721,7 @@ void MainWindow::onAddExtStream()
                         if (vcnt == 0 && scnt == 1) {
                             const QString subtitleFormat = SINFO(0, "Format");
                             if (!subtitleFormat.isEmpty()) {
-                                _CHECKS(m_row, externSubtChecks).push_back(Helper::isSubtitleSupported(m_curParams[CurParamIndex::CONTAINER], subtitleFormat));
+                                _CHECKS(m_row, externSubtChecks).push_back(false);// Helper::isSubtitleSupported(m_curParams[CurParamIndex::CONTAINER], subtitleFormat));
                                 _FIELDS(m_row, externSubtFormats).push_back(subtitleFormat);
                                 _FIELDS(m_row, externSubtDuration).push_back(SINFO(0, "Duration"));
                                 _FIELDS(m_row, externSubtLangs).push_back(SINFO(0, "Language"));

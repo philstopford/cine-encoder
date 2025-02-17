@@ -95,10 +95,10 @@ private:
 
     QStringList _extAudioPaths,
                 _extSubPaths;
+    QStringList _preset_0;
     QString _temp_file,
             _input_file,
             _output_file,
-            _preset_0,
             _preset_mkvmerge,
             _message,
             _error_message,
