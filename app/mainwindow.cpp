@@ -79,11 +79,11 @@
 #define AINFO(a, b) QString::fromStdWString(MI.Get(Stream_Audio, a, __T(b)))
 #define SINFO(a, b) QString::fromStdWString(MI.Get(Stream_Text, a, __T(b)))
 #define GETTEXT(row, col) ui->tableWidget->item(row, ColumnIndex::col)->text()
-#define SLT(method) &MainWindow::method
+// #define SLT(method) &MainWindow::method
 // #define _CHECKS(row, chk) m_data[row].checks[Data::chk]
 // #define _FIELDS(row, fld) m_data[row].fields[Data::fld]
 
-typedef void(MainWindow::*FnVoidVoid)(void);
+typedef void(MainWindow::*FnVoidVoid)();
 typedef void(MainWindow::*FnVoidInt)(int);
 
 namespace MainWindowPrivate
@@ -490,7 +490,7 @@ void MainWindow::setTrayIcon()
     const int ACT_COUNT = 3;
     QString actNames[ACT_COUNT] = {tr("Hide"), tr("Show"), tr("Exit")};
     FnVoidVoid actMethods[ACT_COUNT] = {
-        SLT(hide), SLT(onRestoreWindowState), SLT(onCloseWindow)
+        &MainWindow::hide, &MainWindow::onRestoreWindowState, &MainWindow::onCloseWindow
     };
     for (int i = 0; i < ACT_COUNT; i++) {
         auto *act = new QAction(actNames[i], trayMenu);
@@ -528,52 +528,52 @@ void MainWindow::createConnections()
         ui->deselectTitles
     };
     FnVoidVoid btn_methods[BTN_COUNT] = {
-        SLT(onCloseWindow),  SLT(onHideWindow),    SLT(onExpandWindow),
-        SLT(onAddFiles),     SLT(onRemoveFile),    SLT(onSortUp),
-        SLT(onSortDown),     SLT(onStop),          SLT(onStart),
-        SLT(onSettings),     SLT(onClearMetadata), SLT(onUndoMetadata),
-        SLT(onAddExtStream), SLT(onClearTitles),   SLT(onUndoTitles),
-        SLT(onFramePrev),    SLT(onFrameNext),     SLT(onSetStartTime),
-        SLT(onSetEndTime),   SLT(onRemovePreset),  SLT(onEditPreset),
-        SLT(onApplyPreset),  SLT(onAddFiles),      SLT(onSetOutFolder),
-        SLT(onCloseWindow),  SLT(onResetLabels),   SLT(onReport),
-        SLT(onBack),         SLT(onForward),       SLT(onRemoveAllFiles),
-        SLT(onDeselectTitles)
+            &MainWindow::onCloseWindow,  &MainWindow::onHideWindow,    &MainWindow::onExpandWindow,
+            &MainWindow::onAddFiles,     &MainWindow::onRemoveFile,    &MainWindow::onSortUp,
+            &MainWindow::onSortDown,     &MainWindow::onStop,          &MainWindow::onStart,
+            &MainWindow::onSettings,     &MainWindow::onClearMetadata, &MainWindow::onUndoMetadata,
+            &MainWindow::onAddExtStream, &MainWindow::onClearTitles,   &MainWindow::onUndoTitles,
+            &MainWindow::onFramePrev,    &MainWindow::onFrameNext,     &MainWindow::onSetStartTime,
+            &MainWindow::onSetEndTime,   &MainWindow::onRemovePreset,  &MainWindow::onEditPreset,
+            &MainWindow::onApplyPreset,  &MainWindow::onAddFiles,      &MainWindow::onSetOutFolder,
+            &MainWindow::onCloseWindow,  &MainWindow::onResetLabels,   &MainWindow::onReport,
+            &MainWindow::onBack,         &MainWindow::onForward,       &MainWindow::onRemoveAllFiles,
+            &MainWindow::onDeselectTitles
     };
     for (int i = 0; i < BTN_COUNT; i++)
         connect(btns[i], &QPushButton::clicked, this, btn_methods[i]);
 
     // Streams actions
-    connect(ui->streamAudio, &QStreamView::onExtractTrack, this, SLT(onExtract));
-    connect(ui->streamSubtitle, &QStreamView::onExtractTrack, this, SLT(onExtract));
+    connect(ui->streamAudio, &QStreamView::onExtractTrack, this, &MainWindow::onExtract);
+    connect(ui->streamSubtitle, &QStreamView::onExtractTrack, this, &MainWindow::onExtract);
 
     // Table
     connect(ui->tableWidget, &QTableWidget::itemSelectionChanged,
-            this, SLT(onTableSelectionChanged));
+            this, &MainWindow::onTableSelectionChanged);
 
-    connect(ui->switchViewMode, &QDoubleButton::indexChanged, this, SLT(onViewMode));
+    connect(ui->switchViewMode, &QDoubleButton::indexChanged, this, &MainWindow::onViewMode);
 
     connect(ui->comboBoxMode, SIGNAL(currentIndexChanged(int)), this, SLOT(onComboModeChanged(int)));
-    connect(ui->sliderTimeline, &QSlider::valueChanged, this, SLT(onSliderTimelineChanged));
-    connect(ui->sliderResize, &QSlider::valueChanged, this, SLT(onSliderResizeChanged));
+    connect(ui->sliderTimeline, &QSlider::valueChanged, this, &MainWindow::onSliderTimelineChanged);
+    connect(ui->sliderResize, &QSlider::valueChanged, this, &MainWindow::onSliderResizeChanged);
 
-    connect(ui->treeWidget, &QTreeWidget::itemCollapsed, this, SLT(onTreeCollapsed));
-    connect(ui->treeWidget, &QTreeWidget::itemExpanded, this, SLT(onTreeExpanded));
-    connect(ui->treeWidget, &QTreeWidget::itemChanged, this, SLT(onTreeChanged));
-    connect(ui->treeWidget, &QTreeWidget::itemDoubleClicked, this, SLT(onTreeDblClicked));
+    connect(ui->treeWidget, &QTreeWidget::itemCollapsed, this, &MainWindow::onTreeCollapsed);
+    connect(ui->treeWidget, &QTreeWidget::itemExpanded, this, &MainWindow::onTreeExpanded);
+    connect(ui->treeWidget, &QTreeWidget::itemChanged, this, &MainWindow::onTreeChanged);
+    connect(ui->treeWidget, &QTreeWidget::itemDoubleClicked, this, &MainWindow::onTreeDblClicked);
 
-    connect(ui->treeDirs, &QTreeView::clicked, this, SLT(onTreeDirsClicked));
-    connect(ui->treeDirs, &QTreeView::doubleClicked, this, SLT(onTreeDirsDblClicked));
+    connect(ui->treeDirs, &QTreeView::clicked, this, &MainWindow::onTreeDirsClicked);
+    connect(ui->treeDirs, &QTreeView::doubleClicked, this, &MainWindow::onTreeDirsDblClicked);
 
     m_pEncoder = new Encoder(this);
-    connect(m_pEncoder, &Encoder::onEncodingMode, this, SLT(onEncodingMode));
-    connect(m_pEncoder, &Encoder::onEncodingStarted, this, SLT(onEncodingStarted));
-    connect(m_pEncoder, &Encoder::onEncodingInitError, this, SLT(onEncodingInitError));
-    connect(m_pEncoder, &Encoder::onEncodingProgress, this, SLT(onEncodingProgress));
-    connect(m_pEncoder, &Encoder::onEncodingLog, this, SLT(onEncodingLog));
-    connect(m_pEncoder, &Encoder::onEncodingCompleted, this, SLT(onEncodingCompleted));
-    connect(m_pEncoder, &Encoder::onEncodingAborted, this, SLT(onEncodingAborted));
-    connect(m_pEncoder, &Encoder::onEncodingError, this, SLT(onEncodingError));
+    connect(m_pEncoder, &Encoder::onEncodingMode, this, &MainWindow::onEncodingMode);
+    connect(m_pEncoder, &Encoder::onEncodingStarted, this, &MainWindow::onEncodingStarted);
+    connect(m_pEncoder, &Encoder::onEncodingInitError, this, &MainWindow::onEncodingInitError);
+    connect(m_pEncoder, &Encoder::onEncodingProgress, this, &MainWindow::onEncodingProgress);
+    connect(m_pEncoder, &Encoder::onEncodingLog, this, &MainWindow::onEncodingLog);
+    connect(m_pEncoder, &Encoder::onEncodingCompleted, this, &MainWindow::onEncodingCompleted);
+    connect(m_pEncoder, &Encoder::onEncodingAborted, this, &MainWindow::onEncodingAborted);
+    connect(m_pEncoder, &Encoder::onEncodingError, this, &MainWindow::onEncodingError);
 
     m_pTimer = new QTimer(this);
     connect(m_pTimer, SIGNAL(timeout()), this, SLOT(repeatHandler_Type_1()));
@@ -599,10 +599,10 @@ void MainWindow::createConnections()
     m_pActRemoveFile = new QAction(tr("Remove from the list"), menuFiles);
     m_pActRemoveAllFiles = new QAction(tr("Clear the list"), menuFiles);
     m_pActCloseWindow = new QAction(tr("Close"), menuFiles);
-    connect(m_pActAddFiles, &QAction::triggered, this, SLT(onAddFiles));
-    connect(m_pActRemoveFile, &QAction::triggered, this, SLT(onRemoveFile));
-    connect(m_pActRemoveAllFiles, &QAction::triggered, this, SLT(onRemoveAllFiles));
-    connect(m_pActCloseWindow, &QAction::triggered, this, SLT(onCloseWindow));
+    connect(m_pActAddFiles, &QAction::triggered, this, &MainWindow::onAddFiles);
+    connect(m_pActRemoveFile, &QAction::triggered, this, &MainWindow::onRemoveFile);
+    connect(m_pActRemoveAllFiles, &QAction::triggered, this, &MainWindow::onRemoveAllFiles);
+    connect(m_pActCloseWindow, &QAction::triggered, this, &MainWindow::onCloseWindow);
     menuFiles->addAction(m_pActAddFiles);
     menuFiles->addAction(m_pActRemoveFile);
     menuFiles->addAction(m_pActRemoveAllFiles);
@@ -611,8 +611,8 @@ void MainWindow::createConnections()
 
     m_pActStart = new QAction(tr("Encode/Pause"), menuEdit);
     m_pActStop = new QAction(tr("Stop"), menuEdit);
-    connect(m_pActStart, &QAction::triggered, this, SLT(onStart));
-    connect(m_pActStop, &QAction::triggered, this, SLT(onStop));
+    connect(m_pActStart, &QAction::triggered, this, &MainWindow::onStart);
+    connect(m_pActStop, &QAction::triggered, this, &MainWindow::onStop);
     menuEdit->addAction(m_pActStart);
     menuEdit->addAction(m_pActStop);
 
@@ -622,12 +622,12 @@ void MainWindow::createConnections()
     m_pActDeselectAudio = new QAction(tr("Deselect audio streams"), menuTools);
     m_pActDeselectSubtitles = new QAction(tr("Deselect subtitles"), menuTools);
     m_pActSplitVideo = new QAction(tr("Split video"), menuTools);
-    connect(m_pActEditMetadata, &QAction::triggered, this, SLT(showMetadataEditor));
-    connect(m_pActSelectAudio, &QAction::triggered, this, SLT(showAudioStreams));
-    connect(m_pActSelectSubtitles, &QAction::triggered, this, SLT(showSubtitles));
-    connect(m_pActDeselectAudio, &QAction::triggered, this, SLT(clearAudioStreams));
-    connect(m_pActDeselectSubtitles, &QAction::triggered, this, SLT(clearSubtitleStreams));
-    connect(m_pActSplitVideo, &QAction::triggered, this, SLT(showVideoSplitter));
+    connect(m_pActEditMetadata, &QAction::triggered, this, &MainWindow::showMetadataEditor);
+    connect(m_pActSelectAudio, &QAction::triggered, this, &MainWindow::showAudioStreams);
+    connect(m_pActSelectSubtitles, &QAction::triggered, this, &MainWindow::showSubtitles);
+    connect(m_pActDeselectAudio, &QAction::triggered, this, &MainWindow::clearAudioStreams);
+    connect(m_pActDeselectSubtitles, &QAction::triggered, this, &MainWindow::clearSubtitleStreams);
+    connect(m_pActSplitVideo, &QAction::triggered, this, &MainWindow::showVideoSplitter);
     menuTools->addAction(m_pActEditMetadata);
     menuTools->addSeparator();
     menuTools->addAction(m_pActSelectAudio);
@@ -639,19 +639,19 @@ void MainWindow::createConnections()
     menuTools->addAction(m_pActSplitVideo);
 
     m_pActResetView = new QAction(tr("Reset state"), menuView);
-    connect(m_pActResetView, &QAction::triggered, this, SLT(resetView));
+    connect(m_pActResetView, &QAction::triggered, this, &MainWindow::resetView);
     for (int i = 0; i < DOCKS_COUNT; i++)
         menuView->addAction(m_pDocks[i]->toggleViewAction());
     menuView->addAction(m_pActResetView);
 
     m_pActSettings = new QAction(tr("Settings"), menuPreferences);
-    connect(m_pActSettings, &QAction::triggered, this, SLT(onSettings));
+    connect(m_pActSettings, &QAction::triggered, this, &MainWindow::onSettings);
     menuPreferences->addAction(m_pActSettings);
 
     m_pActAbout = new QAction(tr("About"), menuAbout);
     m_pActDonate = new QAction(tr("Donate"), menuAbout);
-    connect(m_pActAbout, &QAction::triggered, this, SLT(onActionAbout));
-    connect(m_pActDonate, &QAction::triggered, this, SLT(onActionDonate));
+    connect(m_pActAbout, &QAction::triggered, this, &MainWindow::onActionAbout);
+    connect(m_pActDonate, &QAction::triggered, this, &MainWindow::onActionDonate);
     menuAbout->addAction(m_pActAbout);
     menuAbout->addSeparator();
     menuAbout->addAction(m_pActDonate);
@@ -674,15 +674,15 @@ void MainWindow::createConnections()
     m_pItemMenu->addAction(m_pActDeselectSubtitles);
     m_pItemMenu->addSeparator();
     m_pItemMenu->addAction(m_pActSplitVideo);
-    connect(ui->tableWidget, &QTableWidget::customContextMenuRequested, this, SLT(provideContextMenu));
+    connect(ui->tableWidget, &QTableWidget::customContextMenuRequested, this, &MainWindow::provideContextMenu);
 
     //********** File Browser actions **************//
     ui->listFiles->setContextMenuPolicy(Qt::CustomContextMenu);
     m_pFilesItemMenu = new QMenu(ui->listFiles);
     m_pActAddToTask = new QAction(tr("Add to task"), m_pFilesItemMenu);
-    connect(m_pActAddToTask, &QAction::triggered, this, SLT(onAddToTask));
+    connect(m_pActAddToTask, &QAction::triggered, this, &MainWindow::onAddToTask);
     m_pFilesItemMenu->addAction(m_pActAddToTask);
-    connect(ui->listFiles, &QListView::customContextMenuRequested, this, SLT(provideListContextMenu));
+    connect(ui->listFiles, &QListView::customContextMenuRequested, this, &MainWindow::provideListContextMenu);
 
     //*********** Tree menu actions ****************//
     ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -692,12 +692,12 @@ void MainWindow::createConnections()
     auto *actRemovePreset = new QAction(tr("Remove"), this);
     auto *actApplyPreset = new QAction(tr("Apply"), this);
     auto *actEditPreset = new QAction(tr("Edit"), this);
-    connect(actAddSection, &QAction::triggered, this, SLT(onAddSection));
-    connect(actAddPreset, &QAction::triggered, this, SLT(onAddPreset));
-    connect(actRenamePreset, &QAction::triggered, this, SLT(onRenamePreset));
-    connect(actRemovePreset, &QAction::triggered, this, SLT(onRemovePreset));
-    connect(actApplyPreset, &QAction::triggered, this, SLT(onApplyPreset));
-    connect(actEditPreset, &QAction::triggered, this, SLT(onEditPreset));
+    connect(actAddSection, &QAction::triggered, this, &MainWindow::onAddSection);
+    connect(actAddPreset, &QAction::triggered, this, &MainWindow::onAddPreset);
+    connect(actRenamePreset, &QAction::triggered, this, &MainWindow::onRenamePreset);
+    connect(actRemovePreset, &QAction::triggered, this, &MainWindow::onRemovePreset);
+    connect(actApplyPreset, &QAction::triggered, this, &MainWindow::onApplyPreset);
+    connect(actEditPreset, &QAction::triggered, this, &MainWindow::onEditPreset);
 
     m_pSectionMenu = new QMenu(this);
     m_pSectionMenu->addAction(actAddSection);
@@ -713,7 +713,7 @@ void MainWindow::createConnections()
     m_pPresetMenu->addSeparator();
     m_pPresetMenu->addAction(actApplyPreset);
     m_pPresetMenu->addAction(actEditPreset);
-    connect(ui->treeWidget, &QTreeWidget::customContextMenuRequested, this, SLT(providePresetContextMenu));
+    connect(ui->treeWidget, &QTreeWidget::customContextMenuRequested, this, &MainWindow::providePresetContextMenu);
 
     //********** Preset menu actions ***************//
     auto *addPresetMenu = new QMenu(ui->addPreset);
@@ -721,8 +721,8 @@ void MainWindow::createConnections()
     auto *_actAddPreset = new QAction(tr("Add new preset"), this);
     _actAddSection->setIcon(QIcon(":/resources/icons/svg/folder_light.svg"));
     _actAddPreset->setIcon(QIcon(":/resources/icons/svg/file.svg"));
-    connect(_actAddSection, &QAction::triggered, this, SLT(onAddSection));
-    connect(_actAddPreset, &QAction::triggered, this, SLT(onAddPreset));
+    connect(_actAddSection, &QAction::triggered, this, &MainWindow::onAddSection);
+    connect(_actAddPreset, &QAction::triggered, this, &MainWindow::onAddPreset);
     addPresetMenu->addAction(_actAddSection);
     addPresetMenu->addSeparator();
     addPresetMenu->addAction(_actAddPreset);

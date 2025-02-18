@@ -77,11 +77,11 @@ void BaseWindow::setMaskWidget(QWidget* maskwidget)
     m_maskwidget->setAttribute(Qt::WA_Hover, true);
     m_maskwidget->setAttribute(Qt::WA_NoMousePropagation, true);
     m_maskwidget->installEventFilter(this);
-    auto *shadow = new QGraphicsDropShadowEffect(m_maskwidget);
-    shadow->setBlurRadius(25.0);
-    shadow->setColor(QColor(0, 0, 0, 80));
-    shadow->setOffset(0.0);
-    m_maskwidget->setGraphicsEffect(shadow);
+    auto shadow = QGraphicsDropShadowEffect(m_maskwidget);
+    shadow.setBlurRadius(25.0);
+    shadow.setColor(QColor(0, 0, 0, 80));
+    shadow.setOffset(0.0);
+    m_maskwidget->setGraphicsEffect(&shadow);
 }
 
 void BaseWindow::onExpandWindow()
@@ -100,8 +100,8 @@ void BaseWindow::showEvent(QShowEvent *event)
 
 void BaseWindow::mouseMoveEvent(QMouseEvent *event)
 {
-    const int x = event->position().x();
-    const int y = event->position().y();
+    const auto x = event->position().x();
+    const auto y = event->position().y();
     if (m_resizingCornerEdge == XUtils::CornerEdge::kInvalid && m_isResizable) {
         XUtils::UpdateCursorShape(this, x, y, this->contentsMargins(), BORDER);
     }
@@ -110,8 +110,8 @@ void BaseWindow::mouseMoveEvent(QMouseEvent *event)
 
 void BaseWindow::mousePressEvent(QMouseEvent *event)
 {
-    const int x = event->position().x();
-    const int y = event->position().y();
+    const auto x = event->position().x();
+    const auto y = event->position().y();
     if (event->button() == Qt::LeftButton && m_isResizable) {
         const XUtils::CornerEdge ce = XUtils::GetCornerEdge(this, x, y,
                                                             this->contentsMargins(),

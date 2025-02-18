@@ -68,7 +68,8 @@ void EncoderStream::initEncoding(StreamData *data,
         mapParam.append(QString("-map 0:a:%1?").arg(numToStr(m_pData->stream)));
     } else {
         m_output_file += SCONTAINER.toLower();
-        mapParam.append(QString("-map 0:s:%1?").arg(numToStr(m_pData->stream)));
+        mapParam.append(QString("-map"));
+        mapParam.append(QString("0:s:%1?").arg(numToStr(m_pData->stream)));
     }
 
     /************************************* Audio module ***************************************/
@@ -76,13 +77,18 @@ void EncoderStream::initEncoding(StreamData *data,
     {
         const QString selected_sampling = t.arr_sampling[ASAMPLING];
         if (selected_sampling != "Source")
-            sampling.append(QString("-af aresample=%1:resampler=soxr").arg(selected_sampling));
+        {
+            sampling.append("-af");
+            sampling.append(QString("aresample=%1:resampler=soxr").arg(selected_sampling));
+        }
     }
     QStringList channels("");
     {
         const QString selected_channels = t.arr_channels[ACHANNELS];
-        if (selected_channels != "Source")
-            channels.append(QString(" -ac %1").arg(selected_channels));
+        if (selected_channels != "Source") {
+            channels.append("-ac");
+            channels.append(QString("%1").arg(selected_channels));
+        }
     }
     QStringList acodec("");
     {
@@ -90,43 +96,66 @@ void EncoderStream::initEncoding(StreamData *data,
         const QString selected_acodec = t.arr_acodec_sep[ACODEC];
         if (selected_acodec == "Advanced Audio Coding") {
             selected_bitrate = t.arr_bitrate[0][ABITRATE];
-            acodec.append(QString("-strict experimental -c:a aac -b:a %1").arg(selected_bitrate));
+            acodec.append("-strict");
+            acodec.append("experimental");
+            acodec.append("-c:a");
+            acodec.append("aac");
+            acodec.append("-b:a");
+            acodec.append(QString("%1").arg(selected_bitrate));
         }
         else
         if (selected_acodec == "Dolby Digital") {
             selected_bitrate = t.arr_bitrate[1][ABITRATE];
-            acodec.append(QString("-c:a ac3 -b:a %1").arg(selected_bitrate));
+            acodec.append("-c:a");
+            acodec.append("ac3");
+            acodec.append("-b:a");
+            acodec.append(QString("%1").arg(selected_bitrate));
         }
         else
         if (selected_acodec == "Dolby TrueHD") {
             selected_bitrate = t.arr_bitrate[2][ABITRATE];
-            acodec.append(QString("-strict -2 -c:a dca -b:a %1").arg(selected_bitrate));
+            acodec.append("-strict");
+            acodec.append("-2");
+            acodec.append("-c:a");
+            acodec.append("dca");
+            acodec.append("-b:a");
+            acodec.append(QString("%1").arg(selected_bitrate));
         }
         else
         if (selected_acodec == "Vorbis") {
             selected_bitrate = t.arr_bitrate[3][ABITRATE];
-            acodec.append(QString("-c:a libvorbis -b:a %1").arg(selected_bitrate));
+            acodec.append("-c:a");
+            acodec.append("libvorbis");
+            acodec.append("-b:a");
+            acodec.append(QString("%1").arg(selected_bitrate));
         }
         else
         if (selected_acodec == "Opus") {
             selected_bitrate = t.arr_bitrate[4][ABITRATE];
-            acodec.append(QString("-c:a libopus -b:a %1").arg(selected_bitrate));
+            acodec.append("-c:a");
+            acodec.append("libopus");
+            acodec.append("-b:a");
+            acodec.append(QString("%1").arg(selected_bitrate));
         }
         else
         if (selected_acodec == "Pulse Code Modulation 16 bit") {
-            acodec.append("-c:a pcm_s16le");
+            acodec.append("-c:a");
+            acodec.append("pcm_s16le");
         }
         else
         if (selected_acodec == "Pulse Code Modulation 24 bit") {
-            acodec.append("-c:a pcm_s24le");
+            acodec.append("-c:a");
+            acodec.append("pcm_s24le");
         }
         else
         if (selected_acodec == "Pulse Code Modulation 32 bit") {
-            acodec.append("-c:a pcm_s32le");
+            acodec.append("-c:a");
+            acodec.append("pcm_s32le");
         }
         else
         if (selected_acodec == tr("Source")) {
-            acodec.append("-c:a copy");
+            acodec.append("-c:a");
+            acodec.append("copy");
         }
     }
     QStringList aparam = QStringList("-sn ");
@@ -140,31 +169,38 @@ void EncoderStream::initEncoding(StreamData *data,
         const QString selected_scodec = t.arr_scodec_sep[SCODEC];
         std::string selected_scodec_debug = selected_scodec.toStdString();
         if (selected_scodec == "SubRip") {
-            scodec.append(QString("-c:s srt"));
+            scodec.append("-c:s");
+            scodec.append("srt");
         }
         else
         if (selected_scodec == "WebVTT") {
-            scodec.append(QString("-c:s webvtt"));
+            scodec.append("-c:s");
+            scodec.append("webvtt");
         }
         else
         if (selected_scodec == "SubStation Alpha") {
-            scodec.append(QString("-c:s ssa"));
+            scodec.append("-c:s");
+            scodec.append("ssa");
         }
         else
         if (selected_scodec == "Advanced SSA") {
-            scodec.append(QString("-c:s ass"));
+            scodec.append("-c:s");
+            scodec.append("ass");
         }
         else
         if (selected_scodec == "Timed Text") {
-            scodec.append(QString("-c:s ttml"));
+            scodec.append("-c:s");
+            scodec.append("ttml");
         }
         else
         if (selected_scodec == "MOV text") {
-            scodec.append(QString("-c:s mov_text"));
+            scodec.append("-c:s");
+            scodec.append("mov_text");
         }
         else
         if (selected_scodec == tr("Source")) {
-            scodec.append("-c:s copy");
+            scodec.append("-c:s");
+            scodec.append("copy");
         }
     }
     QStringList sparam = QStringList("-an");
@@ -177,8 +213,10 @@ void EncoderStream::initEncoding(StreamData *data,
     m_preset_0.append("-analyzeduration");
     m_preset_0.append("50M");
     m_preset.append("-vn");
-    m_preset.append("-map_metadata -1");
-    m_preset.append("-map_chapters -1");
+    m_preset.append("-map_metadata");
+    m_preset.append("-1");
+    m_preset.append("-map_chapters");
+    m_preset.append("-1");
     m_preset.append(mapParam);
     if (data->cont_type == ContentType::Audio)
     {
@@ -203,7 +241,7 @@ void EncoderStream::encode()   // Encode
     Print("Encode ...");
     QStringList arguments;
     m_pProcessEncoding->disconnect();
-    connect(m_pProcessEncoding, SIGNAL(QProcess::readyReadStandardOutput), this, SLOT(EncoderStream::progress));
+    connect(m_pProcessEncoding, &QProcess::readyReadStandardOutput, this, &EncoderStream::progress);
     connect(m_pProcessEncoding, SIGNAL(finished(int)), this, SLOT(completed(int)));
     emit onEncodingProgress(0, 0.0f);
 
@@ -215,7 +253,7 @@ void EncoderStream::encode()   // Encode
     emit onEncodingStarted();
     m_loop_start = time(nullptr);
     std::string debug1 = m_pData->input_file.toStdString();
-std::string debug2   = m_output_file.toStdString();
+    std::string debug2   = m_output_file.toStdString();
     arguments << m_preset_0 << "-i" << Helper::makeFileStringFFMPEGReady(m_pData->input_file)
               << m_preset << "-y" << Helper::makeFileStringFFMPEGReady(m_output_file);
     //qDebug() << arguments;
