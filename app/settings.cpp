@@ -215,7 +215,7 @@ void Settings::setParameters(QString    *pOutputFolder,
     QFontDatabase database;
     QFontDatabase::WritingSystem values = QFontDatabase::WritingSystem::Latin;
     const QStringList fontFamilies = database.families(values);
-    auto *fontModel = new QStringListModel(ui->comboBox_font);
+    QStringListModel *fontModel = new QStringListModel(ui->comboBox_font);
     fontModel->setStringList(fontFamilies);
     ui->comboBox_font->blockSignals(true);
     ui->comboBox_font->setModel(fontModel);
@@ -234,7 +234,7 @@ void Settings::setParameters(QString    *pOutputFolder,
         ui->checkBox_subtitles_deselectall->setChecked(true);
     }
 
-    auto *subtitlesFontModel = new QStringListModel(ui->comboBox_subtitles_font);
+    QStringListModel *subtitlesFontModel = new QStringListModel(ui->comboBox_subtitles_font);
     subtitlesFontModel->setStringList(fontFamilies);
     ui->comboBox_subtitles_font->blockSignals(true);
     ui->comboBox_subtitles_font->setModel(subtitlesFontModel);
@@ -260,14 +260,14 @@ void Settings::setParameters(QString    *pOutputFolder,
     ui->comboBox_subtitles_location->setCurrentIndex(*m_pSubtitlesLocation);
     ui->comboBox_subtitles_location->blockSignals(false);
 
-    auto *comboboxLangListView = new QListView(ui->comboBox_lang);
-    auto *comboboxThemeListView = new QListView(ui->comboBox_theme);
-    auto *comboboxFontListView = new QListView(ui->comboBox_font);
-    auto *comboboxFontSizeListView = new QListView(ui->comboBox_fontsize);
-    auto *comboboxSubtitlesFontListView = new QListView(ui->comboBox_subtitles_font);
-    auto *comboboxSubtitlesFontSizeListView = new QListView(ui->comboBox_subtitles_fontsize);
-    auto *comboboxPrefixTypeListView = new QListView(ui->comboBoxPrefixType);
-    auto *comboboxSuffixTypeListView = new QListView(ui->comboBoxSuffixType);
+    QListView *comboboxLangListView = new QListView(ui->comboBox_lang);
+    QListView *comboboxThemeListView = new QListView(ui->comboBox_theme);
+    QListView *comboboxFontListView = new QListView(ui->comboBox_font);
+    QListView *comboboxFontSizeListView = new QListView(ui->comboBox_fontsize);
+    QListView *comboboxSubtitlesFontListView = new QListView(ui->comboBox_subtitles_font);
+    QListView *comboboxSubtitlesFontSizeListView = new QListView(ui->comboBox_subtitles_fontsize);
+    QListView *comboboxPrefixTypeListView = new QListView(ui->comboBoxPrefixType);
+    QListView *comboboxSuffixTypeListView = new QListView(ui->comboBoxSuffixType);
     ui->comboBox_lang->setView(comboboxLangListView);
     ui->comboBox_theme->setView(comboboxThemeListView);
     ui->comboBox_font->setView(comboboxFontListView);
@@ -277,8 +277,8 @@ void Settings::setParameters(QString    *pOutputFolder,
     ui->comboBoxPrefixType->setView(comboboxPrefixTypeListView);
     ui->comboBoxSuffixType->setView(comboboxSuffixTypeListView);
 
-    auto *prefixValidator = new QRegularExpressionValidator(QRegularExpression("^[^\\\\/:*?\"<>|+%!@]*$"), ui->lineEditPrefix);
-    auto *suffixValidator = new QRegularExpressionValidator(QRegularExpression("^[^\\\\/:*?\"<>|+%!@]*$"), ui->lineEditSuffix);
+    QRegularExpressionValidator *prefixValidator = new QRegularExpressionValidator(QRegularExpression("^[^\\\\/:*?\"<>|+%!@]*$"), ui->lineEditPrefix);
+    QRegularExpressionValidator *suffixValidator = new QRegularExpressionValidator(QRegularExpression("^[^\\\\/:*?\"<>|+%!@]*$"), ui->lineEditSuffix);
     ui->lineEditPrefix->setValidator(prefixValidator);
     ui->lineEditSuffix->setValidator(suffixValidator);
 }
@@ -319,29 +319,29 @@ void Settings::onButtonApply()
 
     /*==================== Tray  ==================*/
     int stts_tray = ui->checkBox_tray->checkState();
-    *m_pHideInTrayFlag = (stts_tray == 2);
+    *m_pHideInTrayFlag = (stts_tray == 2) ? true : false;
 
     /*================= HDR Info  =================*/
     int stts_hdr_info = ui->checkBox_showHDR->checkState();
-    *m_pShowHdrFlag = (stts_hdr_info == 2);
+    *m_pShowHdrFlag = (stts_hdr_info == 2) ? true : false;
 
     /*================ Protection ================*/
     *m_pThreads = ui->spinBox_threads->value();
     *m_pTimerInterval = ui->spinBox_protectionTimer->value();
     int stts_protect = ui->checkBox_protection->checkState();
-    *m_pProtectFlag = (stts_protect == 2);
+    *m_pProtectFlag = (stts_protect == 2) ? true : false;
 
     /*============= Multi Instances ==============*/
     int stts_multiInst = ui->checkBox_allowDuplicates->checkState();
-    *m_pMultiInstances = (stts_multiInst == 2);
+    *m_pMultiInstances = (stts_multiInst == 2) ? true : false;
 
     /*============= Should subtitle streams be deselected by default? ==============*/
     int subtitles_deselectall = ui->checkBox_subtitles_deselectall->checkState();
-    *m_pSubtitlesDeselectAll = (subtitles_deselectall == 2);
+    *m_pSubtitlesDeselectAll = (subtitles_deselectall == 2) ? true : false;
 
     /*============= Background for hard-burn subtitles ==============*/
     int subtitles_background = ui->checkBox_subtitles_background->checkState();
-    *m_pSubtitlesBackground = (subtitles_background == 2);
+    *m_pSubtitlesBackground = (subtitles_background == 2) ? true : false;
 
     *m_pSubtitlesColor = QColor(m_pSubtitlesColor_temp.name());
 
@@ -437,7 +437,7 @@ void Settings::showEvent(QShowEvent *event)
 bool Settings::eventFilter(QObject *watched, QEvent *event)
 {
     if (event->type() == QEvent::KeyPress) {
-        auto *keyEvent = dynamic_cast<QKeyEvent*>(event);
+        QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
         if (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) {
             ui->frameMiddle->setFocus();
             return true;

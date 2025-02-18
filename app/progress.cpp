@@ -20,7 +20,7 @@ Progress::Progress(QWidget *parent, const QString &title):
     ui(new Ui::Progress),
     m_windowActivated(false)
 {
-    auto *ui_widget = new QWidget(this);
+    QWidget *ui_widget = new QWidget(this);
     layout()->addWidget(ui_widget);
     ui->setupUi(ui_widget);
     setMaskWidget(ui_widget);

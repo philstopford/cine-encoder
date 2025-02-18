@@ -18,7 +18,7 @@ Report::Report(QWidget *parent, const QVector<ReportLog> &reportLog) :
     setWindowFlags((windowFlags() & ~Qt::Dialog & ~Qt::SubWindow) | Qt::Popup);
     setWindowModality(Qt::NonModal);
     setAttribute(Qt::WA_DeleteOnClose);
-    auto *ui_widget = new QWidget(this);
+    QWidget *ui_widget = new QWidget(this);
     layout()->addWidget(ui_widget);
     ui->setupUi(ui_widget);
     setMaskWidget(ui_widget);
@@ -31,7 +31,7 @@ Report::Report(QWidget *parent, const QVector<ReportLog> &reportLog) :
         close();
     });
 
-    auto *tmr = new QTimer(this);
+    QTimer *tmr = new QTimer(this);
     tmr->setSingleShot(false);
     tmr->setInterval(250);
     connect(tmr, &QTimer::timeout, this, &Report::moveWidget);
@@ -51,13 +51,13 @@ Report::Report(QWidget *parent, const QVector<ReportLog> &reportLog) :
         const int ind = ui->reportTable->rowCount();
         ui->reportTable->setRowCount(ind + 1);
 
-        auto *__item_time = new QTableWidgetItem(a.reportTime);
+        QTableWidgetItem *__item_time = new QTableWidgetItem(a.reportTime);
         __item_time->setTextAlignment(Qt::AlignCenter);
         ui->reportTable->setItem(ind, 0, __item_time);
 
         QString msg = a.reportMsg;
         msg.replace("\n", "");
-        auto *__item_msg = new QTableWidgetItem(msg);
+        QTableWidgetItem *__item_msg = new QTableWidgetItem(msg);
         __item_msg->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
         ui->reportTable->setItem(ind, 1, __item_msg);
 

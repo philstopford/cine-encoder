@@ -50,7 +50,7 @@ private:
     void onComboBox_width_textChanged(const QString&);
     void onComboBox_height_textChanged(const QString&);
     void onComboBoxFrameRate_indexChanged(int);
-    void calculateDAR(const QString&, const QString&);
+    void calculateDAR(QString, QString);
     // Video
     void disableHDR();
     void onComboBox_codec_textChanged(const QString&);
