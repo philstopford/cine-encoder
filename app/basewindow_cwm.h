@@ -48,7 +48,7 @@ private:
     QWidget *m_titlebar,
             *m_maskwidget;
 
-    QPoint   m_mouseClickCoordinate,
+    QPointF   m_mouseClickCoordinate,
              m_globalMouseClickCoordinate;
 
     bool     m_windowActivated,

@@ -119,7 +119,7 @@ void QStreamView::setList(QString extension, Data &data)
         tr("Format"), tr("Title"), tr("Language")
     };
     QStandardItemModel *model = new QStandardItemModel(this);
-    Q_LOOP(i, 0, 3) {
+    for (int i = 0; i < 3; i++) {
         QStandardItem *__item = new QStandardItem(columns[i]);
         model->setHorizontalHeaderItem(i, __item);
     }
@@ -138,17 +138,17 @@ void QStreamView::setList(QString extension, Data &data)
 
     if (m_type == Content::Audio) {
         bool stub = false;
-        for (int i = 0; i < FIELDS(audioFormats).size(); i++) {
-            QWidget *cell = createCell(CHECKS(audioChecks)[i],
+        for (int i = 0; i < data.fields[Data::audioFormats].size(); i++) {
+            QWidget *cell = createCell(data.checks[Data::audioChecks][i],
                                        extension,
-                                       FIELDS(audioFormats)[i],
-                                       FIELDS(audioDuration)[i],
-                                       FIELDS(audioLangs)[i],
-                                       FIELDS(audioTitles)[i],
-                                       FIELDS(audioChannels)[i],
-                                       FIELDS(audioChLayouts)[i],
+                                       data.fields[Data::audioFormats][i],
+                                    data.fields[Data::audioDuration][i],
+                                    data.fields[Data::audioLangs][i],
+                                    data.fields[Data::audioTitles][i],
+                                    data.fields[Data::audioChannels][i],
+                                    data.fields[Data::audioChLayouts][i],
                                        "",
-                                       CHECKS(audioDef)[i],
+            data.checks[Data::audioDef][i],
                                        stub);
             m_pLayout->addWidget(cell);
         }

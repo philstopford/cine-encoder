@@ -230,15 +230,15 @@ void StreamConverter::showEvent(QShowEvent *event)
         ui->comboBox_audio_channels->addItems({tr("Source"), tr("trim to 1 ch"), tr("trim to 2 ch")});
 
         int asampling_size = sizeof(t.arr_sampling)/sizeof(QString);
-        Q_LOOP(i, 0, asampling_size)
+        for(int i = 0; i < asampling_size; i++)
             ui->comboBox_audio_sampling->addItem(t.arr_sampling[i]);
 
         int acodec_size = sizeof(t.arr_acodec_sep)/sizeof(QString);
-        Q_LOOP(i, 0, acodec_size)
+        for (int i = 0; i < acodec_size; i++)
             ui->comboBox_audio_codec->addItem(t.arr_acodec_sep[i]);
 
         int scodec_size = sizeof(t.arr_scodec_sep)/sizeof(QString);
-        Q_LOOP(i, 0, scodec_size)
+        for (int i = 0; i < scodec_size; i++)
             ui->comboBox_subt_codec->addItem(t.arr_scodec_sep[i]);
 
         lockSignals(false);
