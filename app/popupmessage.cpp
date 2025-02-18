@@ -39,17 +39,17 @@ PopupMessage::PopupMessage(QWidget *parent, Icon icon, const QString &text) :
 
     QPixmap pxm(":/resources/icons/svg/popup.svg");
     ui->imageLabel->setPixmap(pxm.scaled(ui_widget->size() * Helper::scaling(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
-    QGridLayout lt = QGridLayout(ui->imageLabel);
-    lt.setContentsMargins(12 * Helper::scaling(),
+    QGridLayout *lt = new QGridLayout(ui->imageLabel);
+    lt->setContentsMargins(12 * Helper::scaling(),
                            34 * Helper::scaling(),
                            6 * Helper::scaling(),
                            6 * Helper::scaling());
-    lt.setSpacing(6 * Helper::scaling());
-    ui->imageLabel->setLayout(&lt);
+    lt->setSpacing(6 * Helper::scaling());
+    ui->imageLabel->setLayout(lt);
 
-    QLabel lab = QLabel(ui->imageLabel);
-    lab.setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    lab.setFixedSize(QSize(30, 30)* Helper::scaling());
+    QLabel *lab = new QLabel(ui->imageLabel);
+    lab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    lab->setFixedSize(QSize(30, 30)* Helper::scaling());
 
     QString iconPath(":/resources/icons/svg/info.svg");
     switch (icon) {
@@ -63,21 +63,21 @@ PopupMessage::PopupMessage(QWidget *parent, Icon icon, const QString &text) :
         break;
     }
     QPixmap logo(iconPath);
-    lab.setPixmap(logo.scaled(QSize(30,30) * Helper::scaling(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    lt.addWidget(&lab, 0, 0, Qt::AlignTop);
+    lab->setPixmap(logo.scaled(QSize(30,30) * Helper::scaling(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    lt->addWidget(lab, 0, 0, Qt::AlignTop);
 
-    QTextBrowser br = QTextBrowser(ui->imageLabel);
-    br.setEnabled(false);
-    br.setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    lt.addWidget(&br, 0, 1);
-    br.setText(text);
-    br.setStyleSheet("color: #303030");
+    QTextBrowser *br = new QTextBrowser(ui->imageLabel);
+    br->setEnabled(false);
+    br->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    lt->addWidget(br, 0, 1);
+    br->setText(text);
+    br->setStyleSheet("color: #303030");
 
-    QTimer tmr = QTimer(this);
-    tmr.setSingleShot(false);
-    tmr.setInterval(250);
-    connect(&tmr, &QTimer::timeout, this, &PopupMessage::moveWidget);
-    tmr.start();
+    QTimer *tmr = new QTimer(this);
+    tmr->setSingleShot(false);
+    tmr->setInterval(250);
+    connect(tmr, &QTimer::timeout, this, &PopupMessage::moveWidget);
+    tmr->start();
 }
 
 PopupMessage::~PopupMessage()
@@ -125,15 +125,15 @@ void PopupMessage::showEffect(const EffectType efType)
         anm->setEasingCurve(QEasingCurve::InCurve);*/
     } else
     if (efType == EffectType::Fade) {
-        QGraphicsOpacityEffect m_pGrEffect = QGraphicsOpacityEffect(ui_widget);
-        ui_widget->setGraphicsEffect(&m_pGrEffect);
-        QPropertyAnimation anm = QPropertyAnimation(&m_pGrEffect, "opacity");
-        anm.setDuration(2000);
-        anm.setStartValue(1);
-        anm.setEndValue(0);
-        connect(&anm, &QPropertyAnimation::finished, this, [this](){
+        QGraphicsOpacityEffect *m_pGrEffect = new QGraphicsOpacityEffect(ui_widget);
+        ui_widget->setGraphicsEffect(m_pGrEffect);
+        QPropertyAnimation *anm = new QPropertyAnimation(m_pGrEffect, "opacity");
+        anm->setDuration(2000);
+        anm->setStartValue(1);
+        anm->setEndValue(0);
+        connect(anm, &QPropertyAnimation::finished, this, [this](){
             this->deleteLater();
         });
-        anm.start(QPropertyAnimation::DeleteWhenStopped);
+        anm->start(QPropertyAnimation::DeleteWhenStopped);
     }
 }

@@ -394,7 +394,7 @@ public:
 
     /** Get Current **/
 
-    [[nodiscard]] QString getCodecName(int row) const
+    QString getCodecName(int row) const
     {
         if (row >= 0 && row < NUMBER_PRESETS) {
             QString codec = arr_codec[row][0];
@@ -404,10 +404,10 @@ public:
             }
             return codec;
         }
-        return {};
+        return QString();
     }
 
-    [[nodiscard]] QString getCurrentPreset(int row, int column) const
+    QString getCurrentPreset(int row, int column) const
     {
         if (row >= 0 && row < NUMBER_PRESETS && column >= 0 && column < 10) {
             const QMap<QString, QString> presetImpl = {
@@ -431,10 +431,10 @@ public:
             }
             return preset;
         }
-        return {};
+        return QString();
     }
 
-    [[nodiscard]] QString getCurrentPass(int row, int column) const
+    QString getCurrentPass(int row, int column) const
     {
         if (row >= 0 && row < NUMBER_PRESETS && column >= 0 && column < 2) {
             QString pass = arr_pass[row][column];
@@ -444,10 +444,10 @@ public:
             }
             return pass;
         }
-        return {};
+        return QString();
     }
 
-    [[nodiscard]] QString getCurrentMode(int row, int column) const
+    QString getCurrentMode(int row, int column) const
     {
         if (row >= 0 && row < NUMBER_PRESETS && column >= 0 && column < 5) {
             QString mode = arr_mode[row][column];
@@ -457,44 +457,44 @@ public:
             }
             return mode;
         }
-        return {};
+        return QString();
     }  
 
     /** Get List **/
 
-    [[nodiscard]] QStringList getModesListByRow(int row) const
+    QStringList getModesListByRow(int row) const
     {
         return getListByRow<NUMBER_PRESETS, 5>(row, arr_mode);
     }
 
-    [[nodiscard]] QStringList getPresetsListByRow(int row) const
+    QStringList getPresetsListByRow(int row) const
     {
         return getListByRow<NUMBER_PRESETS, 10>(row, arr_preset);
     }
 
-    [[nodiscard]] QStringList getContainersListByRow(int row) const
+    QStringList getContainersListByRow(int row) const
     {
         return getListByRow<NUMBER_PRESETS, 5>(row, arr_container);
     }
 
-    [[nodiscard]] QStringList getLevelsListByRow(int row) const
+    QStringList getLevelsListByRow(int row) const
     {
         return getListByRow<NUMBER_PRESETS, 21>(row, arr_level);
     }
 
-    [[nodiscard]] QStringList getPassesListByRow(int row) const
+    QStringList getPassesListByRow(int row) const
     {
         return getListByRow<NUMBER_PRESETS, 2>(row, arr_pass);
     }
 
-    [[nodiscard]] QStringList getAudioCodecsListByRow(int row) const
+    QStringList getAudioCodecsListByRow(int row) const
     {
         return getListByRow<NUMBER_PRESETS, 6>(row, arr_acodec);
     }
 
 private:
     template<const int r, const int c>
-    [[nodiscard]] QStringList getListByRow(const int row, const QString (&arr)[r][c]) const
+    QStringList getListByRow(const int row, const QString (&arr)[r][c]) const
     {
         Q_ASSERT(row < r);
         QStringList list;

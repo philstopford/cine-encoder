@@ -31,11 +31,11 @@ Report::Report(QWidget *parent, const QVector<ReportLog> &reportLog) :
         close();
     });
 
-    auto tmr = QTimer(this);
-    tmr.setSingleShot(false);
-    tmr.setInterval(250);
-    connect(&tmr, &QTimer::timeout, this, &Report::moveWidget);
-    tmr.start();
+    auto *tmr = new QTimer(this);
+    tmr->setSingleShot(false);
+    tmr->setInterval(250);
+    connect(tmr, &QTimer::timeout, this, &Report::moveWidget);
+    tmr->start();
 
     QFont fnt = ui->reportTable->horizontalHeader()->font();
     fnt.setBold(true);

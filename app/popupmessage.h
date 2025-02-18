@@ -31,16 +31,16 @@ public:
         Info, Warning, Critical
     };
     explicit PopupMessage(QWidget *parent, Icon icon, const QString &text);
-    ~PopupMessage() override;
+    ~PopupMessage();
 
 private:
     enum class EffectType : uchar {
         Arise, Fade
     };
-    bool eventFilter(QObject*, QEvent*) final;
-    void showEvent(QShowEvent*) final;
+    virtual bool eventFilter(QObject*, QEvent*) final;
+    virtual void showEvent(QShowEvent*) final;
     void moveWidget();
-    void showEffect(EffectType efType);
+    void showEffect(const EffectType efType);
     Ui::PopupMessage *ui;
     QWidget *ui_widget;
     bool m_activated;

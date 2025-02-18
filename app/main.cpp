@@ -27,7 +27,7 @@
 
 int checkForDuplicates();
 
-QString readXMLSettingFromFile(const QString& tagToFind);
+QString readXMLSettingFromFile(QString tagToFind);
 
 int main(int argc, char *argv[])
 {
@@ -42,7 +42,8 @@ int main(int argc, char *argv[])
     QApplication::setApplicationDisplayName("Cine Encoder");
     QGuiApplication::setDesktopFileName("Cine Encoder");
     QApplication app(argc, argv);
-    QApplication::setStyle(QStyleFactory::create("Fusion"));
+    app.setStyle(QStyleFactory::create("Fusion"));
+    const QString sysLang = Helper::getSysLanguage();
     /*const int id = QFontDatabase::addApplicationFont(":/resources/fonts/interregular.otf");
     QString sysFamily = app.font().family();
     if (!QFontDatabase::applicationFontFamilies(id).isEmpty())
@@ -77,28 +78,28 @@ int main(int argc, char *argv[])
     /******************* Set Translate ****************************/
     QTranslator trns;
     if (currLang != "en" && trns.load(QString(":/resources/translation/translation_%1.qm").arg(currLang)))
-        QApplication::installTranslator(&trns);
+        app.installTranslator(&trns);
 
     /********************* Set Font ******************************/
-    QFont fnt = QApplication::font();
+    QFont fnt = app.font();
     if (fntFamily != "")
         fnt.setFamily(fntFamily);
     fnt.setPointSize(fntSize);
     fnt.setWeight(QFont::Medium);
-    QApplication::setFont(fnt);
+    app.setFont(fnt);
 
     /******************* Set Splash *******************************/
     const QPixmap pixmap(":/resources/images/splash.png");
     const QPixmap scaled = pixmap.scaled(pixmap.size() * Helper::scaling(),
                                          Qt::KeepAspectRatio, Qt::FastTransformation);
-    auto *splash = new QSplashScreen(scaled);
+    QSplashScreen *splash = new QSplashScreen(scaled);
     splash->show();
-    QApplication::processEvents();
+    app.processEvents();
 
     QElapsedTimer time;
     time.start();
     while (time.elapsed() < 1000) {
-        QApplication::processEvents();
+        app.processEvents();
     }
 
     /******************* Set Window *******************************/
@@ -107,10 +108,10 @@ int main(int argc, char *argv[])
     window.show();
     splash->finish(&window);
     delete splash;
-    return QApplication::exec();
+    return app.exec();
 }
 
-QString readXMLSettingFromFile(const QString& tagToFind) {
+QString readXMLSettingFromFile(QString tagToFind) {
     QString val = QString("");
     QFile xmlFile(XMLSETTINGSFILE);
     bool settingsXMLFileValid = true;

@@ -42,19 +42,19 @@ public:
         Info, Warning, Critical
     };
     explicit Message(QWidget *parent, MessType mess_type,
-                     QString message, bool timer_flag = false);
-    ~Message() override;
+                     const QString &message, const bool timer_flag = false);
+    ~Message(); 
 
 private slots:
     void onButtonApply();
     void onCloseWindow();
-    void showEvent(QShowEvent*) final;
+    virtual void showEvent(QShowEvent*) final;
 
 private:
     void setMessage();
     void show_message();
     void repeatHandler();
-    void onExpandWindow() final {};
+    virtual void onExpandWindow() final {};
 
     Ui::Message *ui;
     QTimer      *m_timer;

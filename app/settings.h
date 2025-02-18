@@ -36,7 +36,7 @@ class Settings : public BaseWindow
     Q_OBJECT
 public:
     explicit Settings(QWidget *parent = nullptr);
-    ~Settings() override;
+    ~Settings();
     // Below is set to true if a setting is changed in Apply that requires an application restart.
     // Reset will always prompt for a restart.
     // There is no explicit set to false - once this is set to true, the prompt should be shown
@@ -71,8 +71,8 @@ private:
     void onCloseWindow();
     void onButtonApply();
     void onButtonReset();
-    void showEvent(QShowEvent*) override;
-    bool eventFilter(QObject*, QEvent*) final;
+    void showEvent(QShowEvent*);
+    virtual bool eventFilter(QObject*, QEvent*) final;
 
     void onButtonOutputPath();
     void onButtonTempPath();

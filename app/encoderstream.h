@@ -21,7 +21,7 @@
 
 #if defined (__linux__)
     #include <unistd.h>
-    #include <csignal>
+    #include <signal.h>
 #elif defined(__WIN64__)
     #include <windows.h>
 #endif
@@ -33,7 +33,7 @@ class EncoderStream : public QObject
     Q_OBJECT
 public:
     explicit EncoderStream(QObject *parent = nullptr);
-    ~EncoderStream() override;
+    ~EncoderStream();
 
     void initEncoding(StreamData *data,
                       EncoderAudioParam *aParam,
@@ -48,7 +48,7 @@ public:
     signals:
     void onEncodingStarted();
     void onEncodingInitError(const QString &_message);
-    void onEncodingProgress(int percent, float rem_time);
+    void onEncodingProgress(const int percent, const float rem_time);
     void onEncodingLog(const QString &log);
     void onEncodingAborted();
     void onEncodingError(const QString &_error_message, bool popup = false);

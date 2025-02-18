@@ -14,16 +14,15 @@
 #include "ui_message.h"
 #include "helper.h"
 #include <QSoundEffect>
-#include <utility>
 
 #define ELAPSED_TIME 25
 
 
 Message::Message(QWidget *parent, MessType mess_type,
-                 QString message, const bool timer_flag) :
+                 const QString &message, const bool timer_flag) :
     BaseWindow(parent, true),
     ui(new Ui::Message),
-    m_message(std::move(message)),
+    m_message(message),
     m_mess_type(mess_type),
     m_elps_t(0),
     m_windowActivated(false),

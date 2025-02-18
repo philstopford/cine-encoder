@@ -20,14 +20,14 @@ class BaseDialog : public QDialog
     Q_OBJECT
 public:
     explicit BaseDialog(QWidget *parent = nullptr, bool isReizable = true);
-    ~BaseDialog() override;
+    virtual ~BaseDialog();
 
 protected:
     void setTitleBar(QWidget*);
     void setMaskWidget(QWidget*);
-    void showEvent(QShowEvent*) override;
-    void changeEvent(QEvent*) override;
-    bool eventFilter(QObject *watched, QEvent *event) override;
+    virtual void showEvent(QShowEvent*) override;
+    virtual void changeEvent(QEvent*) override;
+    virtual bool eventFilter(QObject *watched, QEvent *event) override;
     virtual void onExpandWindow();
 
 private:

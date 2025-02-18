@@ -81,11 +81,11 @@ void BaseWindow::setMaskWidget(QWidget* maskwidget)
     m_maskwidget->setAttribute(Qt::WA_Hover, true);
     m_maskwidget->setAttribute(Qt::WA_NoMousePropagation, true);
     m_maskwidget->installEventFilter(this);
-    QGraphicsDropShadowEffect shadow = QGraphicsDropShadowEffect(m_maskwidget);
-    shadow.setBlurRadius(25.0);
-    shadow.setColor(QColor(0, 0, 0, 80));
-    shadow.setOffset(0.0);
-    m_maskwidget->setGraphicsEffect(&shadow);
+    QGraphicsDropShadowEffect *shadow = new QGraphicsDropShadowEffect(m_maskwidget);
+    shadow->setBlurRadius(25.0);
+    shadow->setColor(QColor(0, 0, 0, 80));
+    shadow->setOffset(0.0);
+    m_maskwidget->setGraphicsEffect(shadow);
 }
 
 void BaseWindow::showEvent(QShowEvent *event)

@@ -44,14 +44,14 @@ public:
                              Mode mode,
                              StreamData *data,
                              int theme);
-    ~StreamConverter() override;
+    ~StreamConverter();
 
 private:
     void onCloseWindow();
     void lockSignals(bool status);
-    void showEvent(QShowEvent*) final;
-    void closeEvent(QCloseEvent*) override;
-    bool eventFilter(QObject*, QEvent*) final;
+    virtual void showEvent(QShowEvent*) final;
+    virtual void closeEvent(QCloseEvent*);
+    virtual bool eventFilter(QObject*, QEvent*) final;
     void setWidgetsEnabled(bool);
     void onComboBox_audio_codec_textChanged(const QString&);
     void onComboBox_subt_codec_textChanged(const QString&);
@@ -74,7 +74,7 @@ private slots:
     void initEncoding();
     void onEncodingStarted();
     void onEncodingInitError(const QString &_message);
-    void onEncodingProgress(int percent, float rem_time);
+    void onEncodingProgress(const int percent, const float rem_time);
     void onEncodingLog(const QString &log);
     void onEncodingCompleted();
     void onEncodingAborted();

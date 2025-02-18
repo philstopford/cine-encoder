@@ -317,4 +317,3 @@ void EncoderStream::abort()
     m_pProcessEncoding->disconnect();
     emit onEncodingAborted();
 }
-
