@@ -22,7 +22,7 @@
 #include <QTimer>
 #include <iostream>
 
-#define SLT(method) &StreamConverter::method
+// #define SLT(method) &StreamConverter::method
 
 typedef void(StreamConverter::*FnVoidVoid)(void);
 typedef void(StreamConverter::*FnVoidInt)(int);
@@ -114,13 +114,13 @@ StreamConverter::StreamConverter(QWidget *parent,
     });
 
     m_pEncoder = new EncoderStream(this);
-    connect(m_pEncoder, &EncoderStream::onEncodingStarted, this, SLT(onEncodingStarted));
-    connect(m_pEncoder, &EncoderStream::onEncodingInitError, this, SLT(onEncodingInitError));
-    connect(m_pEncoder, &EncoderStream::onEncodingProgress, this, SLT(onEncodingProgress));
-    connect(m_pEncoder, &EncoderStream::onEncodingLog, this, SLT(onEncodingLog));
-    connect(m_pEncoder, &EncoderStream::onEncodingCompleted, this, SLT(onEncodingCompleted));
-    connect(m_pEncoder, &EncoderStream::onEncodingAborted, this, SLT(onEncodingAborted));
-    connect(m_pEncoder, &EncoderStream::onEncodingError, this, SLT(onEncodingError));
+    connect(m_pEncoder, &EncoderStream::onEncodingStarted, this, &StreamConverter::onEncodingStarted);
+    connect(m_pEncoder, &EncoderStream::onEncodingInitError, this, &StreamConverter::onEncodingInitError);
+    connect(m_pEncoder, &EncoderStream::onEncodingProgress, this, &StreamConverter::onEncodingProgress);
+    connect(m_pEncoder, &EncoderStream::onEncodingLog, this, &StreamConverter::onEncodingLog);
+    connect(m_pEncoder, &EncoderStream::onEncodingCompleted, this, &StreamConverter::onEncodingCompleted);
+    connect(m_pEncoder, &EncoderStream::onEncodingAborted, this, &StreamConverter::onEncodingAborted);
+    connect(m_pEncoder, &EncoderStream::onEncodingError, this, &StreamConverter::onEncodingError);
 }
 
 StreamConverter::~StreamConverter()
