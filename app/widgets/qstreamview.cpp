@@ -6,6 +6,7 @@
 #include <QStandardItemModel>
 #include <QHeaderView>
 #include <QEvent>
+#include <QStyle>
 #include <QLayout>
 #include <QAction>
 #include <QLineEdit>
@@ -20,7 +21,7 @@
 namespace QStreamViewPrivate {
     QLabel *createLabel(QWidget *parent, const char *name, const QString &text)
     {
-        auto *label = new QLabel(parent);
+        QLabel *label = new QLabel(parent);
         label->setObjectName(QString::fromUtf8(name));
         label->setText(text);
         label->setAutoFillBackground(false);
@@ -30,7 +31,7 @@ namespace QStreamViewPrivate {
 
     QLineEdit *createLine(QWidget *parent, const char *name, QString &text)
     {
-        auto *line = new QLineEdit(parent);
+        QLineEdit *line = new QLineEdit(parent);
         line->setObjectName(QString::fromUtf8(name));
         line->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
         line->setEnabled(true);
@@ -48,7 +49,7 @@ namespace QStreamViewPrivate {
 
     QRadioButton *createRadio(QWidget *parent, const char *name, const QString &text, bool checked)
     {
-        auto *btn = new QRadioButton(parent);
+        QRadioButton *btn = new QRadioButton(parent);
         btn->setObjectName(QString::fromUtf8(name));
         btn->setAutoExclusive(false);
         if (!text.isEmpty())
@@ -59,7 +60,7 @@ namespace QStreamViewPrivate {
 
     void onRowHovered(QObject *obj, bool flag)
     {
-        auto *wgt = dynamic_cast<QWidget*>(obj);
+        QWidget *wgt = dynamic_cast<QWidget*>(obj);
         if (wgt) {
             wgt->setProperty("hover", flag);
             wgt->style()->polish(wgt);
@@ -68,7 +69,7 @@ namespace QStreamViewPrivate {
 
     void onRowResize(QWidget *wgt, int start, int end)
     {
-        auto *animation = new QPropertyAnimation(wgt, "minimumHeight");
+        QPropertyAnimation *animation = new QPropertyAnimation(wgt, "minimumHeight");
         animation->setDuration(200);
         animation->setStartValue(start);
         animation->setEndValue(end);
@@ -89,7 +90,9 @@ QStreamView::QStreamView(QWidget *parent) :
 }
 
 QStreamView::~QStreamView()
-= default;
+{
+
+}
 
 void QStreamView::setContentType(Content type)
 {
@@ -115,12 +118,12 @@ void QStreamView::setList(QString extension, Data &data)
     const QString columns[] = {
         tr("Format"), tr("Title"), tr("Language")
     };
-    auto *model = new QStandardItemModel(this);
-    for (int i = 0; i < 3; i++) {
-        auto *__item = new QStandardItem(columns[i]);
+    QStandardItemModel *model = new QStandardItemModel(this);
+    Q_LOOP(i, 0, 3) {
+        QStandardItem *__item = new QStandardItem(columns[i]);
         model->setHorizontalHeaderItem(i, __item);
     }
-    auto *hw = new QHeaderView(Qt::Horizontal, this);
+    QHeaderView *hw = new QHeaderView(Qt::Horizontal, this);
     QFont fnt = hw->font();
     fnt.setItalic(true);
     fnt.setBold(true);
@@ -135,63 +138,63 @@ void QStreamView::setList(QString extension, Data &data)
 
     if (m_type == Content::Audio) {
         bool stub = false;
-        for (int i = 0; i < data.fields[Data::audioFormats].size(); i++) {
-            QWidget *cell = createCell(data.checks[Data::audioChecks][i],
+        for (int i = 0; i < FIELDS(audioFormats).size(); i++) {
+            QWidget *cell = createCell(CHECKS(audioChecks)[i],
                                        extension,
-                                       data.fields[Data::audioFormats][i],
-                                       data.fields[Data::audioDuration][i],
-                                       data.fields[Data::audioLangs][i],
-                                       data.fields[Data::audioTitles][i],
-                                       data.fields[Data::audioChannels][i],
-                                       data.fields[Data::audioChLayouts][i],
+                                       FIELDS(audioFormats)[i],
+                                       FIELDS(audioDuration)[i],
+                                       FIELDS(audioLangs)[i],
+                                       FIELDS(audioTitles)[i],
+                                       FIELDS(audioChannels)[i],
+                                       FIELDS(audioChLayouts)[i],
                                        "",
-                                       data.checks[Data::audioDef][i],
+                                       CHECKS(audioDef)[i],
                                        stub);
             m_pLayout->addWidget(cell);
         }
-        for (int i = 0; i < data.fields[Data::externAudioFormats].size(); i++) {
-            QWidget *cell = createCell(data.checks[Data::externAudioChecks][i],
+        for (int i = 0; i < FIELDS(externAudioFormats).size(); i++) {
+            QWidget *cell = createCell(CHECKS(externAudioChecks)[i],
                                        extension,
-                                       data.fields[Data::externAudioFormats][i],
-                                       data.fields[Data::externAudioDuration][i],
-                                       data.fields[Data::externAudioLangs][i],
-                                       data.fields[Data::externAudioTitles][i],
-                                       data.fields[Data::externAudioChannels][i],
-                                       data.fields[Data::externAudioChLayouts][i],
-                                       data.fields[Data::externAudioPath][i],
-                                       data.checks[Data::externAudioDef][i],
+                                       FIELDS(externAudioFormats)[i],
+                                       FIELDS(externAudioDuration)[i],
+                                       FIELDS(externAudioLangs)[i],
+                                       FIELDS(externAudioTitles)[i],
+                                       FIELDS(externAudioChannels)[i],
+                                       FIELDS(externAudioChLayouts)[i],
+                                       FIELDS(externAudioPath)[i],
+                                       CHECKS(externAudioDef)[i],
                                        stub,
                                        true);
             m_pLayout->addWidget(cell);
         }
     } else
     if (m_type == Content::Subtitle) {
-        for (int i = 0; i < data.fields[Data::subtFormats].size(); i++) {
-            QWidget *cell = createCell(data.checks[Data::subtChecks][i],
+        for (int i = 0; i < FIELDS(subtFormats).size(); i++) {
+            QWidget *cell = createCell(CHECKS(subtChecks)[i],
                                        extension,
-                                       data.fields[Data::subtFormats][i],
-                                       data.fields[Data::subtDuration][i],
-                                       data.fields[Data::subtLangs][i],
-                                       data.fields[Data::subtTitles][i],
+                                       FIELDS(subtFormats)[i],
+                                       FIELDS(subtDuration)[i],
+                                       FIELDS(subtLangs)[i],
+                                       FIELDS(subtTitles)[i],
                                        "",
                                        "",
                                        "",
-                                       data.checks[Data::subtDef][i],
-                                       data.checks[Data::subtBurn][i]);
+                                       CHECKS(subtDef)[i],
+                                       CHECKS(subtBurn)[i]);
             m_pLayout->addWidget(cell);
         }
-        for (int i = 0; i < data.fields[Data::externSubtFormats].size(); i++) {
-            QWidget *cell = createCell(data.checks[Data::externSubtChecks][i],
+        for (int i = 0; i < FIELDS(externSubtFormats).size(); i++) {
+            QWidget *cell = createCell(CHECKS(externSubtChecks)[i],
                                        extension,
-                                       data.fields[Data::externSubtFormats][i],
-                                       data.fields[Data::externSubtDuration][i],
-                                       data.fields[Data::externSubtLangs][i],
-                                       data.fields[Data::externSubtTitles][i],
+                                       FIELDS(externSubtFormats)[i],
+                                       FIELDS(externSubtDuration)[i],
+                                       FIELDS(externSubtLangs)[i],
+                                       FIELDS(externSubtTitles)[i],
                                        "",
                                        "",
-                                       data.fields[Data::externSubtPath][i],
-                                       data.checks[Data::externSubtDef][i],
-                                       data.checks[Data::externSubtBurn][i],
+                                       FIELDS(externSubtPath)[i],
+                                       CHECKS(externSubtDef)[i],
+                                       CHECKS(externSubtBurn)[i],
                                        true);
             m_pLayout->addWidget(cell);
         }
@@ -213,14 +216,14 @@ void QStreamView::deselectTitles()
         line->setChecked(false);
     }
     if (m_type == Content::Audio) {
-        if (m_pData != nullptr) {
+        if (m_pData != NULL) {
             m_pData->checks[Data::audioChecks].fill(false);
             m_pData->checks[Data::externAudioChecks].fill(false);
             m_pData->checks[Data::audioDef].fill(false);
         }
     } else
     if (m_type == Content::Subtitle) {
-        if (m_pData != nullptr) {
+        if (m_pData != NULL) {
             m_pData->checks[Data::subtChecks].fill(false);
             m_pData->checks[Data::externSubtChecks].fill(false);
             m_pData->checks[Data::subtDef].fill(false);
@@ -267,37 +270,37 @@ bool QStreamView::eventFilter(QObject *obj, QEvent *event)
         QStreamViewPrivate::onRowHovered(obj, false);
         break;
     case QEvent::MouseButtonDblClick: {
-        auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
+        QMouseEvent* mouse_event = dynamic_cast<QMouseEvent*>(event);
         if (mouse_event->buttons() & Qt::LeftButton) {
             QWidget *cell = qobject_cast<QWidget*>(obj);
-            auto *btn = cell->findChild<QPushButton*>("expandBtn");
+            QPushButton *btn = cell->findChild<QPushButton*>("expandBtn");
             if (btn)
                 btn->click();
         }
         break;
     }
     case QEvent::MouseButtonPress: {
-        auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
+        QMouseEvent* mouse_event = dynamic_cast<QMouseEvent*>(event);
         if (mouse_event->buttons() & Qt::RightButton) {
             QWidget *cell = qobject_cast<QWidget*>(obj);
-            auto *btn = cell->findChild<QPushButton*>("expandBtn");
+            QPushButton *btn = cell->findChild<QPushButton*>("expandBtn");
             bool expanded = false;
             if (btn)
                 expanded = btn->property("expanded").toBool();
-            auto *chkBox = cell->findChild<QCheckBox*>("checkStream");
+            QCheckBox *chkBox = cell->findChild<QCheckBox*>("checkStream");
             bool checked = false;
             if (chkBox)
-                checked = (chkBox->checkState() == 2);
-            auto *rbtn = cell->findChild<QRadioButton*>("defaultStream");
+                checked = (chkBox->checkState() == 2) ? true : false;
+            QRadioButton *rbtn = cell->findChild<QRadioButton*>("defaultStream");
             bool deflt = false;
             if (rbtn)
                 deflt = rbtn->isChecked();
 
-            auto *streamMenu = new QMenu(cell);
-            auto *pActExpand = new QAction(expanded ? tr("Collapse") : tr("Expand"), streamMenu);
-            auto *pActCheck = new QAction(checked ? tr("Uncheck") : tr("Check"), streamMenu);
-            auto pActSetDef = new QAction(tr("Set as default track"), streamMenu);
-            auto *pActDeselectAll = new QAction(tr("Deselect all"), streamMenu);
+            QMenu *streamMenu = new QMenu(cell);
+            QAction *pActExpand = new QAction(expanded ? tr("Collapse") : tr("Expand"), streamMenu);
+            QAction *pActCheck = new QAction(checked ? tr("Uncheck") : tr("Check"), streamMenu);
+            QAction *pActSetDef = new QAction(tr("Set as default track"), streamMenu);
+            QAction *pActDeselectAll = new QAction(tr("Deselect all"), streamMenu);
             connect(pActExpand, &QAction::triggered, this, [btn]() {
                 if (btn)
                     btn->click();
@@ -346,11 +349,11 @@ bool QStreamView::eventFilter(QObject *obj, QEvent *event)
 
 void QStreamView::resetCheckFlags(const int ind)
 {
-    for (int i = 1; i < m_pLayout->count(); i++) {
+    Q_LOOP(i, 1, m_pLayout->count()) {
         if (i != ind) {
             QLayoutItem *item = m_pLayout->itemAt(i);
             if (item && item->widget()) {
-                auto *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
+                QCheckBox *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
                 if (chkBox)
                     chkBox->setChecked(false);
             }
@@ -369,11 +372,11 @@ void QStreamView::resetCheckFlags(const int ind)
 
 void QStreamView::resetDefFlags(const int ind)
 {
-    for (int i = 1; i < m_pLayout->count(); i++) {
+    Q_LOOP(i, 1, m_pLayout->count()) {
         if (i != ind) {
             QLayoutItem *item = m_pLayout->itemAt(i);
             if (item && item->widget()) {
-                auto *rbtn = item->widget()->findChild<QRadioButton*>("defaultStream", Qt::FindDirectChildrenOnly);
+                QRadioButton *rbtn = item->widget()->findChild<QRadioButton*>("defaultStream", Qt::FindDirectChildrenOnly);
                 if (rbtn)
                     rbtn->setChecked(false);
             }
@@ -392,11 +395,11 @@ void QStreamView::resetDefFlags(const int ind)
 
 void QStreamView::resetBurnFlags(const int ind)
 {
-    for (int i = 1; i < m_pLayout->count(); i++) {
+    Q_LOOP(i, 1, m_pLayout->count()) {
         if (i != ind) {
             QLayoutItem *item = m_pLayout->itemAt(i);
             if (item && item->widget()) {
-                auto *rbtn = item->widget()->findChild<QRadioButton*>("burnInto");
+                QRadioButton *rbtn = item->widget()->findChild<QRadioButton*>("burnInto");
                 if (rbtn)
                     rbtn->setChecked(false);
             }
@@ -437,7 +440,7 @@ QWidget *QStreamView::createCell(bool &state,
         }
     };
 
-    auto *cell = new QWidget(this);
+    QWidget *cell = new QWidget(this);
     cell->setAttribute(Qt::WA_Hover);
     cell->installEventFilter(this);
     cell->setObjectName("Cell");
@@ -445,7 +448,7 @@ QWidget *QStreamView::createCell(bool &state,
     cell->setProperty("External", externFlag);
     cell->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     cell->setMinimumHeight(46 * Helper::scaling());
-    auto *lut = new QGridLayout(cell);
+    QGridLayout *lut = new QGridLayout(cell);
     lut->setContentsMargins(6,2,6,4);
     lut->setHorizontalSpacing(6 * Helper::scaling());
     lut->setVerticalSpacing(4 * Helper::scaling());
@@ -462,13 +465,13 @@ QWidget *QStreamView::createCell(bool &state,
         QLayoutItem *item = m_pLayout->itemAt(m_pLayout->indexOf(cell));
         if (item && item->widget()) {
             if (deflt) {
-                auto *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
+                QCheckBox *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
                 if (chkBox && !chkBox->isChecked()) {
                     chkBox->setChecked(true);
                     state = true;
                 }
             } else {
-                auto *brn_rbtn = item->widget()->findChild<QRadioButton*>("burnInto");
+                QRadioButton *brn_rbtn = item->widget()->findChild<QRadioButton*>("burnInto");
                 if (brn_rbtn && brn_rbtn->isChecked()) {
                     brn_rbtn->setChecked(false);
                     burn = false;
@@ -490,12 +493,12 @@ QWidget *QStreamView::createCell(bool &state,
     if (externFlag)
         tit->setText(tr("external") + " ");
 
-    auto *info = new QWidget(cell);
+    QWidget *info = new QWidget(cell);
     info->setObjectName("infoWidget");
     info->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     info->hide();
     lut->addWidget(info, 2, 0, 3, 0);
-    auto *infoLut = new QGridLayout(info);
+    QGridLayout *infoLut = new QGridLayout(info);
     infoLut->setContentsMargins(6,6,6,6);
     infoLut->setHorizontalSpacing(6 * Helper::scaling());
     infoLut->setVerticalSpacing(2 * Helper::scaling());
@@ -554,12 +557,12 @@ QWidget *QStreamView::createCell(bool &state,
                 QLayoutItem *item = m_pLayout->itemAt(m_pLayout->indexOf(cell));
                 if (item && item->widget()) {
                     // Cannot copy stream if burn is set.
-                    auto *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
+                    QCheckBox *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
                     if (chkBox && chkBox->isChecked()) {
                         chkBox->setChecked(false);
                         state = false;
                     }
-                    auto *rbtn = item->widget()->findChild<QRadioButton *>("defaultStream",
+                    QRadioButton *rbtn = item->widget()->findChild<QRadioButton *>("defaultStream",
                                                                                    Qt::FindDirectChildrenOnly);
                     // Don't force this here - the default button is the way that the hard-burn is enabled.
                     if (!burn_only) {
@@ -584,11 +587,11 @@ QWidget *QStreamView::createCell(bool &state,
         infoLut->addWidget(labPath, 2, 0, 1, 2);
     }
 
-    auto *sp_bottom = new QSpacerItem(5, 5, QSizePolicy::Fixed, QSizePolicy::Expanding);
+    QSpacerItem *sp_bottom = new QSpacerItem(5, 5, QSizePolicy::Fixed, QSizePolicy::Expanding);
     infoLut->addItem(sp_bottom, 5, 0);
 
     // Expand button
-    auto *btn = new QPushButton(cell);
+    QPushButton *btn = new QPushButton(cell);
     btn->setObjectName(QString::fromUtf8("expandBtn"));
     btn->setFixedSize(QSize(12, 12) * Helper::scaling());
     connect(btn, &QPushButton::clicked, this, [cell, btn, info]() {
@@ -615,7 +618,7 @@ QWidget *QStreamView::createCell(bool &state,
     lut->addWidget(num, 1, 0, Qt::AlignLeft);
 
     // Check
-    auto *chkBox = new QCheckBox(cell);
+    QCheckBox *chkBox = new QCheckBox(cell);
     chkBox->setObjectName(QString::fromUtf8("checkStream"));
     chkBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     chkBox->setFixedWidth(100 * Helper::scaling());
@@ -632,7 +635,7 @@ QWidget *QStreamView::createCell(bool &state,
     // Burn is whether the user selected to burn; burn_only is when only burning is an option.
     // Default marks the default stream, which triggers burn. A stream cannot be burnt if it is not default.
     connect(chkBox, &QCheckBox::clicked, this, [this, cell, chkBox, &burn, &burn_only, &state, &deflt](){
-        state = (chkBox->checkState() == 2);
+        state = (chkBox->checkState() == 2) ? true : false;
         // Burn-only prohibits the copy of subtitle streams (target format cannot support the stream).
         if (burn_only)
         {

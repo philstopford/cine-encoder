@@ -19,8 +19,11 @@
 #include <QComboBox>
 #include <QListView>
 #include <QMouseEvent>
+#include <QCloseEvent>
+#include <QResizeEvent>
 #include <QTimer>
 #include <iostream>
+#include <math.h>
 
 #define SLT(method) &StreamConverter::method
 
@@ -96,7 +99,7 @@ StreamConverter::StreamConverter(QWidget *parent,
         ui->stackedWidget->setCurrentIndex(0);
     });
     connect(ui->stackedWidget, &QStackedWidget::currentChanged, this, [this](int index) {
-        bool status = index != 0;
+        bool status = (index == 0) ? false : true;
         ui->buttonExport->setVisible(!status);
         ui->buttonPause->setVisible(status);
         ui->buttonStop->setVisible(status);
@@ -210,7 +213,7 @@ void StreamConverter::showEvent(QShowEvent *event)
         // Fill interface
         auto comboBoxes = findChildren<QComboBox*>();
         foreach (auto combo, comboBoxes) {
-            auto *_view = new QListView(combo);
+            QListView *_view = new QListView(combo);
             _view->setTextElideMode(Qt::ElideMiddle);
             combo->setView(_view);
         }
@@ -227,15 +230,15 @@ void StreamConverter::showEvent(QShowEvent *event)
         ui->comboBox_audio_channels->addItems({tr("Source"), tr("trim to 1 ch"), tr("trim to 2 ch")});
 
         int asampling_size = sizeof(t.arr_sampling)/sizeof(QString);
-        for (int i = 0; i < asampling_size; i++)
+        Q_LOOP(i, 0, asampling_size)
             ui->comboBox_audio_sampling->addItem(t.arr_sampling[i]);
 
         int acodec_size = sizeof(t.arr_acodec_sep)/sizeof(QString);
-        for (int i = 0; i < acodec_size; i++)
+        Q_LOOP(i, 0, acodec_size)
             ui->comboBox_audio_codec->addItem(t.arr_acodec_sep[i]);
 
         int scodec_size = sizeof(t.arr_scodec_sep)/sizeof(QString);
-        for (int i = 0; i < scodec_size; i++)
+        Q_LOOP(i, 0, scodec_size)
             ui->comboBox_subt_codec->addItem(t.arr_scodec_sep[i]);
 
         lockSignals(false);
@@ -255,7 +258,7 @@ void StreamConverter::closeEvent(QCloseEvent *event)
 bool StreamConverter::eventFilter(QObject *watched, QEvent *event)
 {
     if (event->type() == QEvent::KeyPress) {
-        auto *keyEvent = dynamic_cast<QKeyEvent*>(event);
+        QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
         if (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) {
             ui->frameMiddle->setFocus();
             return true;
@@ -318,9 +321,17 @@ void StreamConverter::onComboBox_audio_codec_textChanged(const QString &arg1)
         ui->comboBox_audio_bitrate->setCurrentIndex(2);
         ui->comboBox_audio_container->addItems({"Opus", "MKA"});
     }
-    else if ((arg1 == "Pulse Code Modulation 16 bit") ||
-             (arg1 == "Pulse Code Modulation 24 bit") ||
-             (arg1 == "Pulse Code Modulation 32 bit")) {
+    else if (arg1 == "Pulse Code Modulation 16 bit") {
+        ui->comboBox_audio_bitrate->addItems({tr("Auto")});
+        ui->comboBox_audio_bitrate->setEnabled(false);
+        ui->comboBox_audio_container->addItems({"WAV", "MKA"});
+    }
+    else if (arg1 == "Pulse Code Modulation 24 bit") {
+        ui->comboBox_audio_bitrate->addItems({tr("Auto")});
+        ui->comboBox_audio_bitrate->setEnabled(false);
+        ui->comboBox_audio_container->addItems({"WAV", "MKA"});
+    }
+    else if (arg1 == "Pulse Code Modulation 32 bit") {
         ui->comboBox_audio_bitrate->addItems({tr("Auto")});
         ui->comboBox_audio_bitrate->setEnabled(false);
         ui->comboBox_audio_container->addItems({"WAV", "MKA"});

@@ -20,11 +20,12 @@
 
 #define Print(a) std::cout << a << std::endl
 #define numToStr(num) QString::number(num)
-// #define CHECKS(chk) data.checks[Data::chk]
-// #define FIELDS(fld) data.fields[Data::fld]
+#define Q_LOOP(i, start, end) for(int i = start; i < end; i++)
+#define CHECKS(chk) data.checks[Data::chk]
+#define FIELDS(fld) data.fields[Data::fld]
 #define SETTINGSPATH QDir::homePath() + QString("/CineEncoder")
-#define SETTINGSFILE (SETTINGSPATH + QString("/settings.ini"))
-#define XMLSETTINGSFILE (SETTINGSPATH + QString("/settings.xml"))
+#define SETTINGSFILE SETTINGSPATH + QString("/settings.ini")
+#define XMLSETTINGSFILE SETTINGSPATH + QString("/settings.xml")
 #define SETTINGS(settings) QSettings settings(SETTINGSFILE, \
                             QSettings::IniFormat);
 
@@ -149,10 +150,10 @@ namespace Constants {
         QVector<QString> fields[FIELDS_COUNT];
         void clear() {
             videoMetadata.clear();
-            for (auto & check : checks)
-                check.clear();
-            for (auto & field : fields)
-                field.clear();
+            Q_LOOP(i, 0, CHECKS_COUNT)
+                checks[i].clear();
+            Q_LOOP(i, 0, FIELDS_COUNT)
+                fields[i].clear();
         }
     };
 
