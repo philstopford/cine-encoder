@@ -78,9 +78,9 @@
 #define AINFO(a, b) QString::fromStdWString(MI.Get(Stream_Audio, a, __T(b)))
 #define SINFO(a, b) QString::fromStdWString(MI.Get(Stream_Text, a, __T(b)))
 #define GETTEXT(row, col) ui->tableWidget->item(row, ColumnIndex::col)->text()
-#define SLT(method) &MainWindow::method
-#define _CHECKS(row, chk) m_data[row].checks[Data::chk]
-#define _FIELDS(row, fld) m_data[row].fields[Data::fld]
+//#define &MainWindow::method) &MainWindow::method
+// #define _CHECKS(row, chk) m_data[row].checks[Data::chk]
+// #define _FIELDS(row, fld) m_data[row].fields[Data::fld]
 
 typedef void(MainWindow::*FnVoidVoid)(void);
 typedef void(MainWindow::*FnVoidInt)(int);
@@ -89,7 +89,7 @@ namespace MainWindowPrivate
 {
     QLabel* createLabel(QWidget *parent, const char *name, const QString &text)
     {
-        QLabel *label = new QLabel(parent);
+        auto *label = new QLabel(parent);
         label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         label->setObjectName(QString::fromUtf8(name));
         label->setAlignment(Qt::AlignCenter);
@@ -134,7 +134,7 @@ MainWindow::MainWindow(QWidget *parent):
     ui->setupUi(centralWidget());
     setTitleBar(ui->frame_top);
     //*************** Set labels *****************//
-    QHBoxLayout *pTableLayout = new QHBoxLayout(ui->tableWidget);
+    auto *pTableLayout = new QHBoxLayout(ui->tableWidget);
     ui->tableWidget->setLayout(pTableLayout);
     m_pTableLabel = MainWindowPrivate::createLabel(ui->tableWidget, "TableWidgetLabel", tr("No media"));
     pTableLayout->addWidget(m_pTableLabel);
@@ -144,7 +144,7 @@ MainWindow::MainWindow(QWidget *parent):
     ui->gridLayoutSubtitle->addWidget(m_pSubtitleLabel);
 
     //************** Create docks ******************//
-    QGridLayout *pMiddleLayout = new QGridLayout(ui->frameMiddle);
+    auto *pMiddleLayout = new QGridLayout(ui->frameMiddle);
     ui->frameMiddle->setLayout(pMiddleLayout);
     m_pDocksContainer = new QMainWindow(ui->frameMiddle);
     pMiddleLayout->addWidget(m_pDocksContainer);
@@ -163,13 +163,13 @@ MainWindow::MainWindow(QWidget *parent):
     m_pDocksContainer->setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
     m_pDocksContainer->setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
 
-    QGridLayout *pCentralDockLayout = new QGridLayout(m_pCentralDock);
+    auto *pCentralDockLayout = new QGridLayout(m_pCentralDock);
     m_pCentralDock->setLayout(pCentralDockLayout);
     pCentralDockLayout->addWidget(ui->frameTask);
     pCentralDockLayout->setContentsMargins(0, 0, 0, 0);
 
-    QFrame *pFrameSource = new QFrame(ui->frameMiddle);
-    QGridLayout *pSourceLayout = new QGridLayout(pFrameSource);
+    auto *pFrameSource = new QFrame(ui->frameMiddle);
+    auto *pSourceLayout = new QGridLayout(pFrameSource);
     pSourceLayout->setContentsMargins(0, 0, 0, 0);
     pFrameSource->setLayout(pSourceLayout);
     m_pSplSource = new QSplitter(Qt::Horizontal, pFrameSource);
@@ -198,7 +198,7 @@ MainWindow::MainWindow(QWidget *parent):
         pFrameSource, ui->framePreset,  ui->frameOutput,
         ui->frameStreams, ui->frameLog, ui->frameMetadata, ui->frameSplit, ui->frameBrowser
     };
-    Q_LOOP(i, 0, DOCKS_COUNT) {
+    for (int i = 0; i < DOCKS_COUNT; i++) {
         m_pDocks[i] = new QDockWidget(dockNames[i], m_pDocksContainer);
         m_pDocks[i]->setObjectName(objNames[i]);
         m_pDocks[i]->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::TopDockWidgetArea |
@@ -210,7 +210,7 @@ MainWindow::MainWindow(QWidget *parent):
         m_pDocks[i]->setWidget(dockFrames[i]);
         m_pDocksContainer->addDockWidget(dockArea[i], m_pDocks[i]);
     }
-    Q_LOOP(i, DockIndex::LOG_DOCK, DockIndex::SPLIT_DOCK + 1) {
+    for (int i = DockIndex::LOG_DOCK; i < DockIndex::SPLIT_DOCK + 1; i++) {
         m_pDocks[i]->toggleViewAction()->setChecked(false);
         m_pDocks[i]->setVisible(false);
         m_pDocks[i]->setFloating(true);
@@ -337,7 +337,7 @@ void MainWindow::closeEvent(QCloseEvent *event) // Show prompt when close app
         stn.setValue("DocksContainer/state", m_pDocksContainer->saveState());
         stn.setValue("DocksContainer/geometry", m_pDocksContainer->saveGeometry());
         stn.beginWriteArray("DocksContainer/docks_geometry");
-            Q_LOOP(i, 0, DOCKS_COUNT) {
+            for (int i = 0; i < DOCKS_COUNT; i++) {
                 stn.setArrayIndex(i);
                 stn.setValue("DocksContainer/docks_geometry/dock_size", m_pDocks[i]->size());
             }
@@ -485,14 +485,14 @@ void MainWindow::setTrayIcon()
     m_pTrayIcon = new QSystemTrayIcon(this);
     m_pTrayIcon->setIcon(QIcon(QPixmap(":/resources/icons/svg/cine-encoder.svg")));
 
-    QMenu *trayMenu = new QMenu(this);
+    auto *trayMenu = new QMenu(this);
     const int ACT_COUNT = 3;
     QString actNames[ACT_COUNT] = {tr("Hide"), tr("Show"), tr("Exit")};
     FnVoidVoid actMethods[ACT_COUNT] = {
-        SLT(hide), SLT(onRestoreWindowState), SLT(onCloseWindow)
+            &MainWindow::hide, &MainWindow::onRestoreWindowState, &MainWindow::onCloseWindow
     };
-    Q_LOOP(i, 0, ACT_COUNT) {
-        QAction *act = new QAction(actNames[i], trayMenu);
+    for (int i = 0; i < ACT_COUNT; i++) {
+        auto *act = new QAction(actNames[i], trayMenu);
         connect(act, &QAction::triggered, this, actMethods[i]);
         trayMenu->addAction(act);
     }
@@ -527,52 +527,52 @@ void MainWindow::createConnections()
         ui->deselectTitles
     };
     FnVoidVoid btn_methods[BTN_COUNT] = {
-        SLT(onCloseWindow),  SLT(onHideWindow),    SLT(onExpandWindow),
-        SLT(onAddFiles),     SLT(onRemoveFile),    SLT(onSortUp),
-        SLT(onSortDown),     SLT(onStop),          SLT(onStart),
-        SLT(onSettings),     SLT(onClearMetadata), SLT(onUndoMetadata),
-        SLT(onAddExtStream), SLT(onClearTitles),   SLT(onUndoTitles),
-        SLT(onFramePrev),    SLT(onFrameNext),     SLT(onSetStartTime),
-        SLT(onSetEndTime),   SLT(onRemovePreset),  SLT(onEditPreset),
-        SLT(onApplyPreset),  SLT(onAddFiles),      SLT(onSetOutFolder),
-        SLT(onCloseWindow),  SLT(onResetLabels),   SLT(onReport),
-        SLT(onBack),         SLT(onForward),       SLT(onRemoveAllFiles),
-        SLT(onDeselectTitles)
+            &MainWindow::onCloseWindow,  &MainWindow::onHideWindow,    &MainWindow::onExpandWindow,
+            &MainWindow::onAddFiles,     &MainWindow::onRemoveFile,    &MainWindow::onSortUp,
+            &MainWindow::onSortDown,     &MainWindow::onStop,          &MainWindow::onStart,
+            &MainWindow::onSettings,     &MainWindow::onClearMetadata, &MainWindow::onUndoMetadata,
+            &MainWindow::onAddExtStream, &MainWindow::onClearTitles,   &MainWindow::onUndoTitles,
+            &MainWindow::onFramePrev,    &MainWindow::onFrameNext,     &MainWindow::onSetStartTime,
+            &MainWindow::onSetEndTime,   &MainWindow::onRemovePreset,  &MainWindow::onEditPreset,
+            &MainWindow::onApplyPreset,  &MainWindow::onAddFiles,      &MainWindow::onSetOutFolder,
+            &MainWindow::onCloseWindow,  &MainWindow::onResetLabels,   &MainWindow::onReport,
+            &MainWindow::onBack,         &MainWindow::onForward,       &MainWindow::onRemoveAllFiles,
+            &MainWindow::onDeselectTitles
     };
-    Q_LOOP(i, 0, BTN_COUNT)
+    for (int i = 0; i < BTN_COUNT; i++)
         connect(btns[i], &QPushButton::clicked, this, btn_methods[i]);
 
     // Streams actions
-    connect(ui->streamAudio, &QStreamView::onExtractTrack, this, SLT(onExtract));
-    connect(ui->streamSubtitle, &QStreamView::onExtractTrack, this, SLT(onExtract));
+    connect(ui->streamAudio, &QStreamView::onExtractTrack, this, &MainWindow::onExtract);
+    connect(ui->streamSubtitle, &QStreamView::onExtractTrack, this, &MainWindow::onExtract);
 
     // Table
     connect(ui->tableWidget, &QTableWidget::itemSelectionChanged,
-            this, SLT(onTableSelectionChanged));
+            this, &MainWindow::onTableSelectionChanged);
 
-    connect(ui->switchViewMode, &QDoubleButton::indexChanged, this, SLT(onViewMode));
+    connect(ui->switchViewMode, &QDoubleButton::indexChanged, this, &MainWindow::onViewMode);
 
     connect(ui->comboBoxMode, SIGNAL(currentIndexChanged(int)), this, SLOT(onComboModeChanged(int)));
-    connect(ui->sliderTimeline, &QSlider::valueChanged, this, SLT(onSliderTimelineChanged));
-    connect(ui->sliderResize, &QSlider::valueChanged, this, SLT(onSliderResizeChanged));
+    connect(ui->sliderTimeline, &QSlider::valueChanged, this, &MainWindow::onSliderTimelineChanged);
+    connect(ui->sliderResize, &QSlider::valueChanged, this, &MainWindow::onSliderResizeChanged);
 
-    connect(ui->treeWidget, &QTreeWidget::itemCollapsed, this, SLT(onTreeCollapsed));
-    connect(ui->treeWidget, &QTreeWidget::itemExpanded, this, SLT(onTreeExpanded));
-    connect(ui->treeWidget, &QTreeWidget::itemChanged, this, SLT(onTreeChanged));
-    connect(ui->treeWidget, &QTreeWidget::itemDoubleClicked, this, SLT(onTreeDblClicked));
+    connect(ui->treeWidget, &QTreeWidget::itemCollapsed, this, &MainWindow::onTreeCollapsed);
+    connect(ui->treeWidget, &QTreeWidget::itemExpanded, this, &MainWindow::onTreeExpanded);
+    connect(ui->treeWidget, &QTreeWidget::itemChanged, this, &MainWindow::onTreeChanged);
+    connect(ui->treeWidget, &QTreeWidget::itemDoubleClicked, this, &MainWindow::onTreeDblClicked);
 
-    connect(ui->treeDirs, &QTreeView::clicked, this, SLT(onTreeDirsClicked));
-    connect(ui->treeDirs, &QTreeView::doubleClicked, this, SLT(onTreeDirsDblClicked));
+    connect(ui->treeDirs, &QTreeView::clicked, this, &MainWindow::onTreeDirsClicked);
+    connect(ui->treeDirs, &QTreeView::doubleClicked, this, &MainWindow::onTreeDirsDblClicked);
 
     m_pEncoder = new Encoder(this);
-    connect(m_pEncoder, &Encoder::onEncodingMode, this, SLT(onEncodingMode));
-    connect(m_pEncoder, &Encoder::onEncodingStarted, this, SLT(onEncodingStarted));
-    connect(m_pEncoder, &Encoder::onEncodingInitError, this, SLT(onEncodingInitError));
-    connect(m_pEncoder, &Encoder::onEncodingProgress, this, SLT(onEncodingProgress));
-    connect(m_pEncoder, &Encoder::onEncodingLog, this, SLT(onEncodingLog));
-    connect(m_pEncoder, &Encoder::onEncodingCompleted, this, SLT(onEncodingCompleted));
-    connect(m_pEncoder, &Encoder::onEncodingAborted, this, SLT(onEncodingAborted));
-    connect(m_pEncoder, &Encoder::onEncodingError, this, SLT(onEncodingError));
+    connect(m_pEncoder, &Encoder::onEncodingMode, this, &MainWindow::onEncodingMode);
+    connect(m_pEncoder, &Encoder::onEncodingStarted, this, &MainWindow::onEncodingStarted);
+    connect(m_pEncoder, &Encoder::onEncodingInitError, this, &MainWindow::onEncodingInitError);
+    connect(m_pEncoder, &Encoder::onEncodingProgress, this, &MainWindow::onEncodingProgress);
+    connect(m_pEncoder, &Encoder::onEncodingLog, this, &MainWindow::onEncodingLog);
+    connect(m_pEncoder, &Encoder::onEncodingCompleted, this, &MainWindow::onEncodingCompleted);
+    connect(m_pEncoder, &Encoder::onEncodingAborted, this, &MainWindow::onEncodingAborted);
+    connect(m_pEncoder, &Encoder::onEncodingError, this, &MainWindow::onEncodingError);
 
     m_pTimer = new QTimer(this);
     connect(m_pTimer, SIGNAL(timeout()), this, SLOT(repeatHandler_Type_1()));
@@ -584,7 +584,7 @@ void MainWindow::createConnections()
     //************ Top menu actions ****************//
     m_pMenuBar = new QMenuBar(ui->frame_top);
     m_pMenuBar->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-    QGridLayout *pTopLayout = dynamic_cast<QGridLayout*>(ui->frame_top->layout());
+    auto *pTopLayout = dynamic_cast<QGridLayout*>(ui->frame_top->layout());
     if (pTopLayout)
         pTopLayout->addWidget(m_pMenuBar, 0, 5, Qt::AlignVCenter);
     QMenu *menuFiles = m_pMenuBar->addMenu(tr("File"));
@@ -598,10 +598,10 @@ void MainWindow::createConnections()
     m_pActRemoveFile = new QAction(tr("Remove from the list"), menuFiles);
     m_pActRemoveAllFiles = new QAction(tr("Clear the list"), menuFiles);
     m_pActCloseWindow = new QAction(tr("Close"), menuFiles);
-    connect(m_pActAddFiles, &QAction::triggered, this, SLT(onAddFiles));
-    connect(m_pActRemoveFile, &QAction::triggered, this, SLT(onRemoveFile));
-    connect(m_pActRemoveAllFiles, &QAction::triggered, this, SLT(onRemoveAllFiles));
-    connect(m_pActCloseWindow, &QAction::triggered, this, SLT(onCloseWindow));
+    connect(m_pActAddFiles, &QAction::triggered, this, &MainWindow::onAddFiles);
+    connect(m_pActRemoveFile, &QAction::triggered, this, &MainWindow::onRemoveFile);
+    connect(m_pActRemoveAllFiles, &QAction::triggered, this, &MainWindow::onRemoveAllFiles);
+    connect(m_pActCloseWindow, &QAction::triggered, this, &MainWindow::onCloseWindow);
     menuFiles->addAction(m_pActAddFiles);
     menuFiles->addAction(m_pActRemoveFile);
     menuFiles->addAction(m_pActRemoveAllFiles);
@@ -610,8 +610,8 @@ void MainWindow::createConnections()
 
     m_pActStart = new QAction(tr("Encode/Pause"), menuEdit);
     m_pActStop = new QAction(tr("Stop"), menuEdit);
-    connect(m_pActStart, &QAction::triggered, this, SLT(onStart));
-    connect(m_pActStop, &QAction::triggered, this, SLT(onStop));
+    connect(m_pActStart, &QAction::triggered, this, &MainWindow::onStart);
+    connect(m_pActStop, &QAction::triggered, this, &MainWindow::onStop);
     menuEdit->addAction(m_pActStart);
     menuEdit->addAction(m_pActStop);
 
@@ -621,12 +621,12 @@ void MainWindow::createConnections()
     m_pActDeselectAudio = new QAction(tr("Deselect audio streams"), menuTools);
     m_pActDeselectSubtitles = new QAction(tr("Deselect subtitles"), menuTools);
     m_pActSplitVideo = new QAction(tr("Split video"), menuTools);
-    connect(m_pActEditMetadata, &QAction::triggered, this, SLT(showMetadataEditor));
-    connect(m_pActSelectAudio, &QAction::triggered, this, SLT(showAudioStreams));
-    connect(m_pActSelectSubtitles, &QAction::triggered, this, SLT(showSubtitles));
-    connect(m_pActDeselectAudio, &QAction::triggered, this, SLT(clearAudioStreams));
-    connect(m_pActDeselectSubtitles, &QAction::triggered, this, SLT(clearSubtitleStreams));
-    connect(m_pActSplitVideo, &QAction::triggered, this, SLT(showVideoSplitter));
+    connect(m_pActEditMetadata, &QAction::triggered, this, &MainWindow::showMetadataEditor);
+    connect(m_pActSelectAudio, &QAction::triggered, this, &MainWindow::showAudioStreams);
+    connect(m_pActSelectSubtitles, &QAction::triggered, this, &MainWindow::showSubtitles);
+    connect(m_pActDeselectAudio, &QAction::triggered, this, &MainWindow::clearAudioStreams);
+    connect(m_pActDeselectSubtitles, &QAction::triggered, this, &MainWindow::clearSubtitleStreams);
+    connect(m_pActSplitVideo, &QAction::triggered, this, &MainWindow::showVideoSplitter);
     menuTools->addAction(m_pActEditMetadata);
     menuTools->addSeparator();
     menuTools->addAction(m_pActSelectAudio);
@@ -638,19 +638,19 @@ void MainWindow::createConnections()
     menuTools->addAction(m_pActSplitVideo);
 
     m_pActResetView = new QAction(tr("Reset state"), menuView);
-    connect(m_pActResetView, &QAction::triggered, this, SLT(resetView));
-    Q_LOOP(i, 0, DOCKS_COUNT)
+    connect(m_pActResetView, &QAction::triggered, this, &MainWindow::resetView);
+    for (int i = 0; i < DOCKS_COUNT; i++)
         menuView->addAction(m_pDocks[i]->toggleViewAction());
     menuView->addAction(m_pActResetView);
 
     m_pActSettings = new QAction(tr("Settings"), menuPreferences);
-    connect(m_pActSettings, &QAction::triggered, this, SLT(onSettings));
+    connect(m_pActSettings, &QAction::triggered, this, &MainWindow::onSettings);
     menuPreferences->addAction(m_pActSettings);
 
     m_pActAbout = new QAction(tr("About"), menuAbout);
     m_pActDonate = new QAction(tr("Donate"), menuAbout);
-    connect(m_pActAbout, &QAction::triggered, this, SLT(onActionAbout));
-    connect(m_pActDonate, &QAction::triggered, this, SLT(onActionDonate));
+    connect(m_pActAbout, &QAction::triggered, this, &MainWindow::onActionAbout);
+    connect(m_pActDonate, &QAction::triggered, this, &MainWindow::onActionDonate);
     menuAbout->addAction(m_pActAbout);
     menuAbout->addSeparator();
     menuAbout->addAction(m_pActDonate);
@@ -673,15 +673,15 @@ void MainWindow::createConnections()
     m_pItemMenu->addAction(m_pActDeselectSubtitles);
     m_pItemMenu->addSeparator();
     m_pItemMenu->addAction(m_pActSplitVideo);
-    connect(ui->tableWidget, &QTableWidget::customContextMenuRequested, this, SLT(provideContextMenu));
+    connect(ui->tableWidget, &QTableWidget::customContextMenuRequested, this, &MainWindow::provideContextMenu);
 
     //********** File Browser actions **************//
     ui->listFiles->setContextMenuPolicy(Qt::CustomContextMenu);
     m_pFilesItemMenu = new QMenu(ui->listFiles);
     m_pActAddToTask = new QAction(tr("Add to task"), m_pFilesItemMenu);
-    connect(m_pActAddToTask, &QAction::triggered, this, SLT(onAddToTask));
+    connect(m_pActAddToTask, &QAction::triggered, this, &MainWindow::onAddToTask);
     m_pFilesItemMenu->addAction(m_pActAddToTask);
-    connect(ui->listFiles, &QListView::customContextMenuRequested, this, SLT(provideListContextMenu));
+    connect(ui->listFiles, &QListView::customContextMenuRequested, this, &MainWindow::provideListContextMenu);
 
     //*********** Tree menu actions ****************//
     ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -691,12 +691,12 @@ void MainWindow::createConnections()
     auto *actRemovePreset = new QAction(tr("Remove"), this);
     auto *actApplyPreset = new QAction(tr("Apply"), this);
     auto *actEditPreset = new QAction(tr("Edit"), this);
-    connect(actAddSection, &QAction::triggered, this, SLT(onAddSection));
-    connect(actAddPreset, &QAction::triggered, this, SLT(onAddPreset));
-    connect(actRenamePreset, &QAction::triggered, this, SLT(onRenamePreset));
-    connect(actRemovePreset, &QAction::triggered, this, SLT(onRemovePreset));
-    connect(actApplyPreset, &QAction::triggered, this, SLT(onApplyPreset));
-    connect(actEditPreset, &QAction::triggered, this, SLT(onEditPreset));
+    connect(actAddSection, &QAction::triggered, this, &MainWindow::onAddSection);
+    connect(actAddPreset, &QAction::triggered, this, &MainWindow::onAddPreset);
+    connect(actRenamePreset, &QAction::triggered, this, &MainWindow::onRenamePreset);
+    connect(actRemovePreset, &QAction::triggered, this, &MainWindow::onRemovePreset);
+    connect(actApplyPreset, &QAction::triggered, this, &MainWindow::onApplyPreset);
+    connect(actEditPreset, &QAction::triggered, this, &MainWindow::onEditPreset);
 
     m_pSectionMenu = new QMenu(this);
     m_pSectionMenu->addAction(actAddSection);
@@ -712,16 +712,16 @@ void MainWindow::createConnections()
     m_pPresetMenu->addSeparator();
     m_pPresetMenu->addAction(actApplyPreset);
     m_pPresetMenu->addAction(actEditPreset);
-    connect(ui->treeWidget, &QTreeWidget::customContextMenuRequested, this, SLT(providePresetContextMenu));
+    connect(ui->treeWidget, &QTreeWidget::customContextMenuRequested, this, &MainWindow::providePresetContextMenu);
 
     //********** Preset menu actions ***************//
-    QMenu *addPresetMenu = new QMenu(ui->addPreset);
+    auto *addPresetMenu = new QMenu(ui->addPreset);
     auto *_actAddSection = new QAction(tr("Add section"), this);
     auto *_actAddPreset = new QAction(tr("Add new preset"), this);
     _actAddSection->setIcon(QIcon(":/resources/icons/svg/folder_light.svg"));
     _actAddPreset->setIcon(QIcon(":/resources/icons/svg/file.svg"));
-    connect(_actAddSection, &QAction::triggered, this, SLT(onAddSection));
-    connect(_actAddPreset, &QAction::triggered, this, SLT(onAddPreset));
+    connect(_actAddSection, &QAction::triggered, this, &MainWindow::onAddSection);
+    connect(_actAddPreset, &QAction::triggered, this, &MainWindow::onAddPreset);
     addPresetMenu->addAction(_actAddSection);
     addPresetMenu->addSeparator();
     addPresetMenu->addAction(_actAddPreset);
@@ -750,7 +750,7 @@ void MainWindow::createConnections()
     foreach (QLineEdit *lineEdit, videoMetadata)
         connectAction(lineEdit, true);
 
-    Q_LOOP(i, VIDEO_TITLE, VIDEO_DESCRIPTION + 1) {
+    for (int i = VIDEO_TITLE; i < VIDEO_DESCRIPTION + 1; i++) {
         Q_ASSERT(i < 6);
         connect(videoMetadata[i], &QLineEdit::editingFinished, this, [=](){
             if (m_row != -1) {
@@ -785,9 +785,9 @@ void MainWindow::setParameters()    // Set parameters
     m_pSpl->addWidget(ui->dirsWidget);
     m_pSpl->addWidget(ui->filesWidget);
 
-    QStandardItemModel *model_d = new QStandardItemModel(this);
+    auto *model_d = new QStandardItemModel(this);
     model_d->setHorizontalHeaderItem(0, new QStandardItem(tr("Folders")));
-    QHeaderView *hv_d = new QHeaderView(Qt::Horizontal, ui->dirsWidget);
+    auto *hv_d = new QHeaderView(Qt::Horizontal, ui->dirsWidget);
     QFont fnt = hv_d->font();
     fnt.setItalic(true);
     fnt.setBold(true);
@@ -797,23 +797,23 @@ void MainWindow::setParameters()    // Set parameters
     hv_d->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->dirsLayout->addWidget(hv_d);
 
-    QStandardItemModel *model_f = new QStandardItemModel(this);
+    auto *model_f = new QStandardItemModel(this);
     model_f->setHorizontalHeaderItem(0, new QStandardItem(tr("Files")));
-    QHeaderView *hv_f = new QHeaderView(Qt::Horizontal, ui->filesWidget);
+    auto *hv_f = new QHeaderView(Qt::Horizontal, ui->filesWidget);
     hv_f->setFont(fnt);
     hv_f->setFixedHeight(28 * Helper::scaling());
     hv_f->setModel(model_f);
     hv_f->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->filesLayout->addWidget(hv_f);
     setBrowser();
-    FileIconProvider *fip = new FileIconProvider();
+    auto *fip = new FileIconProvider();
     m_pDirModel->setIconProvider(fip);
     ui->lineEditFileFilter->hide();
 
     //************** Combo boxes *******************//
     auto comboBoxes = findChildren<QComboBox*>();
     foreach (auto combo, comboBoxes) {
-        QListView *_view = new QListView(combo);
+        auto *_view = new QListView(combo);
         _view->setTextElideMode(Qt::ElideMiddle);
         combo->setView(_view);
     }
@@ -1010,14 +1010,14 @@ void MainWindow::setParameters()    // Set parameters
         ui->treeWidget->setCurrentItem(__item);
     }
     // Print(NUM_ROWS << " x " << NUM_COLUMNS);
-    Q_LOOP(i, 7, 41)
+    for (int i = 7; i < 41; i++)
         ui->treeWidget->hideColumn(i);
 
     //*********** Other parameters *****************//
     if (dockSizesX.count() < DOCKS_COUNT || dockSizesY.count() < DOCKS_COUNT) {
         float coeffX[DOCKS_COUNT] = {0.39f, 0.39f, 0.61f, 0.23f, 0.23f, 0.23f, 0.23f, 0.39f};
         float coeffY[DOCKS_COUNT] = {0.16f, 0.5f, 0.1f, 0.9f, 0.9f, 0.9f, 0.9f, 0.3f};
-        Q_LOOP(i, 0, DOCKS_COUNT) {
+        for (int i = 0; i < DOCKS_COUNT; i++) {
             const int dockWidth = static_cast<int>(coeffX[i] * WINDOW_SIZE.width());
             const int dockHeight = static_cast<int>(coeffY[i] * WINDOW_SIZE.height());
             dockSizesX.append(dockWidth);
@@ -1220,7 +1220,7 @@ void MainWindow::setDocksParameters(const QList<int>& dockSizesX, const QList<in
     QList<QDockWidget*> docksVis;
     QList<int> dockVisSizesX;
     QList<int> dockVisSizesY;
-    Q_LOOP(i, 0, DOCKS_COUNT) {
+    for (int i = 0; i < DOCKS_COUNT; i++) {
         if (m_pDocks[i]->isVisible() && !m_pDocks[i]->isFloating()){
             docksVis.append(m_pDocks[i]);
             dockVisSizesX.append(dockSizesX.at(i));
@@ -1229,7 +1229,7 @@ void MainWindow::setDocksParameters(const QList<int>& dockSizesX, const QList<in
     }
     m_pDocksContainer->resizeDocks(docksVis, dockVisSizesX, Qt::Horizontal);
     m_pDocksContainer->resizeDocks(docksVis, dockVisSizesY, Qt::Vertical);
-    Q_LOOP(i, 0, DOCKS_COUNT) {
+    for (int i = 0; i < DOCKS_COUNT; i++) {
         if (m_pDocks[i]->isVisible() && m_pDocks[i]->isFloating()){
             m_pDocks[i]->setFloating(false); // Bypassing the error with detached docks in some Linux distributions
             m_pDocks[i]->setFloating(true);
@@ -1593,17 +1593,17 @@ void MainWindow::get_current_data() // Get current data
                                                 curFps + curAr + curSpace +
                                                 curColorSampling + curDepth + curBitrate);
 
-    Q_LOOP(i, 0, _FIELDS(m_row, audioFormats).size()) {
-        const QString audioFormat = _FIELDS(m_row, audioFormats)[i];
-        const QString audioLang = _FIELDS(m_row, audioLangs)[i];
-        const QString audioCh = Helper::recalcChannels(_FIELDS(m_row, audioChannels)[i]) + " ch";
+    for (int i = 0; i < m_data[m_row].fields[Data::audioFormats].size(); i++) {
+        const QString audioFormat = m_data[m_row].fields[Data::audioFormats][i];
+        const QString audioLang = m_data[m_row].fields[Data::audioLangs][i];
+        const QString audioCh = Helper::recalcChannels(m_data[m_row].fields[Data::audioChannels][i]) + " ch";
         sourceParam += QString("\n%1 %2: %3, %4, %5").arg(tr("Audio"), numToStr(i + 1),
                                                    audioFormat, audioCh, audioLang);
     }
 
-    Q_LOOP(i, 0, _FIELDS(m_row, subtFormats).size()) {
-        const QString subtFormat = _FIELDS(m_row, subtFormats)[i];
-        const QString subtLang = _FIELDS(m_row, subtLangs)[i];
+    for (int i = 0; i < m_data[m_row].fields[Data::subtFormats].size(); i++) {
+        const QString subtFormat = m_data[m_row].fields[Data::subtFormats][i];
+        const QString subtLang = m_data[m_row].fields[Data::subtLangs][i];
         sourceParam += QString("\n%1 %2: %3, %4").arg(tr("Subtitle"), numToStr(i + 1),
                                                    subtFormat, subtLang);
     }
@@ -1636,15 +1636,15 @@ void MainWindow::get_current_data() // Get current data
         lineEdit->setCursorPosition(0);
 
     //********** Set audio widgets *****************//
-    if (!_FIELDS(m_row, audioFormats).empty() ||
-            !_FIELDS(m_row, externAudioFormats).empty()) {
+    if (!m_data[m_row].fields[Data::audioFormats].empty() ||
+            !m_data[m_row].fields[Data::externAudioFormats].empty()) {
         m_pAudioLabel->setVisible(false);
         ui->streamAudio->setList(extension, m_data[m_row]);
     }
 
     //********* Set subtitle widgets ***************//
-    if (!_FIELDS(m_row, subtFormats).empty() ||
-            !_FIELDS(m_row, externSubtFormats).empty()) {
+    if (!m_data[m_row].fields[Data::subtFormats].empty() ||
+            !m_data[m_row].fields[Data::externSubtFormats].empty()) {
         m_pSubtitleLabel->setVisible(false);
         ui->streamSubtitle->setList(extension, m_data[m_row]);
     }
@@ -1668,7 +1668,7 @@ void MainWindow::setTheme(const int ind_theme)   // Set theme
     }
     m_pAnimation->setFileName(spinnerFile);
 
-    Q_LOOP(i, ColumnIndex::COLORRANGE, ColumnIndex::MASTERDISPLAY + 1) {
+    for (int i = ColumnIndex::COLORRANGE; i < ColumnIndex::MASTERDISPLAY + 1; i++) {
         m_showHdrFlag ? ui->tableWidget->showColumn(i) :
                         ui->tableWidget->hideColumn(i);
     }
@@ -1762,7 +1762,7 @@ void MainWindow::changeEvent(QEvent *event)
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
     if (event->type() == QEvent::KeyPress) {
-        QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+        auto *keyEvent = dynamic_cast<QKeyEvent*>(event);
         if (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) {
             ui->frameMiddle->setFocus();
             return true;
@@ -1786,7 +1786,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
     } else
     if (watched == m_pTableLabel) {
         if (event->type() == QEvent::MouseButtonPress) {
-            QMouseEvent* mouse_event = dynamic_cast<QMouseEvent*>(event);
+            auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
             if (mouse_event->button() == Qt::LeftButton) {
                 onAddFiles();
                 return true;
@@ -2141,14 +2141,14 @@ void MainWindow::onRemoveAllFiles()  // Remove all files from table
 void MainWindow::onSort(const bool up)
 {
     const int rowsCount = ui->tableWidget->rowCount();
-    Q_LOOP(i, 0, rowsCount) {
+    for (int i = 0; i < rowsCount; i++) {
         auto *id = new QTableWidgetItem(numToStr(i));
         ui->tableWidget->setItem(i, ColumnIndex::T_ID, id);
     }
     Qt::SortOrder srt = (up) ? Qt::AscendingOrder : Qt::DescendingOrder;
     ui->tableWidget->sortByColumn(ColumnIndex::FILENAME, srt);
     QVector<int> order(0);
-    Q_LOOP(i, 0, rowsCount)
+    for (int i = 0; i < rowsCount; i++)
         order.push_back(GETTEXT(i, T_ID).toInt());
     Helper::reorder(m_data, order);
 }
@@ -2220,7 +2220,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
     prg.setModal(true);
     setProgressEnabled(false);
     MediaInfo MI;
-    Q_LOOP(i, 0, openFileNames.size()) {
+    for (int i = 0; i < openFileNames.size(); i++) {
         const QString file = openFileNames.at(i);
         const QString inputFolder = QFileInfo(file).absolutePath();
         const QString inputFile = QFileInfo(file).fileName();
@@ -2307,42 +2307,42 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
 
             m_data.resize(numRows + 1);
             m_data[numRows].clear();
-            Q_LOOP(j, 27, 33)
+            for (int j = 27; j < 33; j++)
                 m_data[numRows].videoMetadata.push_back(arr_items[j]);
 
             for (int column = ColumnIndex::FILENAME; column <= ColumnIndex::T_HEIGHT; column++) {
-                QTableWidgetItem *__item = new QTableWidgetItem(arr_items[column]);
+                auto *__item = new QTableWidgetItem(arr_items[column]);
                 if (column >= ColumnIndex::FORMAT && column <= ColumnIndex::MASTERDISPLAY)
                     __item->setTextAlignment(Qt::AlignCenter);
                 ui->tableWidget->setItem(numRows, column, __item);
             }
 
-            QTableWidgetItem *__startTime = new QTableWidgetItem("0");
-            QTableWidgetItem *__endTime = new QTableWidgetItem("0");
+            auto *__startTime = new QTableWidgetItem("0");
+            auto *__endTime = new QTableWidgetItem("0");
             ui->tableWidget->setItem(numRows, ColumnIndex::T_STARTTIME, __startTime);
             ui->tableWidget->setItem(numRows, ColumnIndex::T_ENDTIME, __endTime);
 
-            Q_LOOP(j, 0, MAX_AUDIO_STREAMS) {
+            for (int j = 0; j < MAX_AUDIO_STREAMS; j++) {
                 QString audioFormat = AINFO(size_t(j), "Format");
                 const int smplrt_int = static_cast<int>(AINFO(size_t(j), "SamplingRate").toFloat() / 1000);
                 const QString smplrt = (smplrt_int != 0) ? numToStr(smplrt_int) : "";
                 if (!audioFormat.isEmpty()) {
                     audioFormat += QString("  %1 kHz").arg(smplrt);
-                    _CHECKS(numRows, audioChecks).push_back(Helper::isAudioSupported(extension, audioFormat));
-                    _FIELDS(numRows, audioFormats).push_back(audioFormat);
-                    _FIELDS(numRows, audioChannels).push_back(AINFO(size_t(j), "Channels"));
-                    _FIELDS(numRows, audioChLayouts).push_back(AINFO(size_t(j), "ChannelLayout"));
-                    _FIELDS(numRows, audioDuration).push_back(AINFO(size_t(j), "Duration"));
-                    _FIELDS(numRows, audioLangs).push_back(AINFO(size_t(j), "Language"));
-                    _FIELDS(numRows, audioTitles).push_back(AINFO(size_t(j), "Title"));
+                    m_data[numRows].checks[Data::audioChecks].push_back(Helper::isAudioSupported(extension, audioFormat));
+                    m_data[m_row].fields[Data::audioFormats].push_back(audioFormat);
+                    m_data[m_row].fields[Data::audioChannels].push_back(AINFO(size_t(j), "Channels"));
+                    m_data[m_row].fields[Data::audioChLayouts].push_back(AINFO(size_t(j), "ChannelLayout"));
+                    m_data[m_row].fields[Data::audioDuration].push_back(AINFO(size_t(j), "Duration"));
+                    m_data[m_row].fields[Data::audioLangs].push_back(AINFO(size_t(j), "Language"));
+                    m_data[m_row].fields[Data::audioTitles].push_back(AINFO(size_t(j), "Title"));
                     const QString deflt = AINFO(size_t(j), "Default");
-                    _CHECKS(numRows, audioDef).push_back(deflt == "Yes" ? true : false);
+                    m_data[numRows].checks[Data::audioDef].push_back(deflt == "Yes");
                 } else {
                     break;
                 }
             }
 
-            Q_LOOP(j, 0, MAX_SUBTITLES) {
+            for (int j = 0; j < MAX_SUBTITLES; j++) {
                 const QString subtitleFormat = SINFO(size_t(j), "Format");
                 if (!subtitleFormat.isEmpty()) {
                     bool select;
@@ -2353,14 +2353,14 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                     {
                         select = Helper::isSubtitleSupported(extension, subtitleFormat);
                     }
-                    _CHECKS(numRows, subtChecks).push_back(select);
-                    _FIELDS(numRows, subtFormats).push_back(subtitleFormat);
-                    _FIELDS(numRows, subtDuration).push_back(SINFO(size_t(j), "Duration"));
-                    _FIELDS(numRows, subtLangs).push_back(SINFO(size_t(j), "Language"));
-                    _FIELDS(numRows, subtTitles).push_back(SINFO(size_t(j), "Title"));
+                    m_data[numRows].checks[Data::subtChecks].push_back(select);
+                    m_data[m_row].fields[Data::subtFormats].push_back(subtitleFormat);
+                    m_data[m_row].fields[Data::subtDuration].push_back(SINFO(size_t(j), "Duration"));
+                    m_data[m_row].fields[Data::subtLangs].push_back(SINFO(size_t(j), "Language"));
+                    m_data[m_row].fields[Data::subtTitles].push_back(SINFO(size_t(j), "Title"));
                     const QString deflt = SINFO(size_t(j), "Default");
-                    _CHECKS(numRows, subtDef).push_back(deflt == "Yes" ? true : false);
-                    _CHECKS(numRows, subtBurn).push_back(false);
+                    m_data[numRows].checks[Data::subtDef].push_back(deflt == "Yes");
+                    m_data[numRows].checks[Data::subtBurn].push_back(false);
                 } else {
                     break;
                 }
@@ -2433,8 +2433,8 @@ void MainWindow::onTableSelectionChanged()
         m_endTime = 0.0;
 
         //************** Reset data ********************//
-        Q_LOOP(i, 0, AMOUNT_HDR_PARAMS)
-            m_hdr[i] = "";
+        for (auto & i : m_hdr)
+            i = "";
     }
 }
 
@@ -2481,7 +2481,7 @@ void MainWindow::resetView()
     QList<int> dockSizesY = {};
     float coeffX[DOCKS_COUNT] = {0.39f, 0.39f, 0.61f, 0.23f, 0.23f, 0.23f, 0.23f, 0.39f};
     float coeffY[DOCKS_COUNT] = {0.16f, 0.5f, 0.1f, 0.9f, 0.9f, 0.9f, 0.9f, 0.3f};
-    Q_LOOP(i, 0, DOCKS_COUNT) {
+    for (int i = 0; i < DOCKS_COUNT; i++) {
         int dockWidth = static_cast<int>(coeffX[i] * this->width());
         int dockHeight = static_cast<int>(coeffY[i] * this->height());
         dockSizesX.append(dockWidth);
@@ -2601,10 +2601,10 @@ void MainWindow::get_output_filename()  // Get output data
 {
     ui->textBrowser_2->clear();
     ui->textBrowser_2->setText(m_curParams[CurParamIndex::OUTPUT_PARAM]);
-    const int _CODEC = m_curParams[CurParamIndex::CODEC].toInt();
-    const int _CONTAINER = m_curParams[CurParamIndex::CONTAINER].toInt();
+    const int CE_CODEC = m_curParams[CurParamIndex::CODEC].toInt();
+    const int CE_CONTAINER = m_curParams[CurParamIndex::CONTAINER].toInt();
     Tables t;
-    extension = t.arr_container[_CODEC][_CONTAINER].toLower();
+    extension = t.arr_container[CE_CODEC][CE_CONTAINER].toLower();
     QString suffix;
     if (m_suffixType == 0) {
         QString row_qstr = numToStr(m_row);
@@ -2703,15 +2703,15 @@ void MainWindow::onAddExtStream()
                             const QString smplrt = (smplrt_int != 0) ? numToStr(smplrt_int) : "";
                             if (!audioFormat.isEmpty()) {
                                 audioFormat += QString("  %1 kHz").arg(smplrt);
-                                _CHECKS(m_row, externAudioChecks).push_back(Helper::isAudioSupported(m_curParams[CurParamIndex::CONTAINER], audioFormat));
-                                _FIELDS(m_row, externAudioFormats).push_back(audioFormat);
-                                _FIELDS(m_row, externAudioChannels).push_back(AINFO(0, "Channels"));
-                                _FIELDS(m_row, externAudioChLayouts).push_back(AINFO(0, "ChannelsLayouts"));
-                                _FIELDS(m_row, externAudioDuration).push_back(AINFO(0, "Duration"));
-                                _FIELDS(m_row, externAudioLangs).push_back(AINFO(0, "Language"));
-                                _FIELDS(m_row, externAudioTitles).push_back(AINFO(0, "Title"));
-                                _FIELDS(m_row, externAudioPath).push_back(path);
-                                _CHECKS(m_row, externAudioDef).push_back(false);
+                                m_data[m_row].checks[Data::externAudioChecks].push_back(Helper::isAudioSupported(m_curParams[CurParamIndex::CONTAINER], audioFormat));
+                                m_data[m_row].fields[Data::externAudioFormats].push_back(audioFormat);
+                                m_data[m_row].fields[Data::externAudioChannels].push_back(AINFO(0, "Channels"));
+                                m_data[m_row].fields[Data::externAudioChLayouts].push_back(AINFO(0, "ChannelsLayouts"));
+                                m_data[m_row].fields[Data::externAudioDuration].push_back(AINFO(0, "Duration"));
+                                m_data[m_row].fields[Data::externAudioLangs].push_back(AINFO(0, "Language"));
+                                m_data[m_row].fields[Data::externAudioTitles].push_back(AINFO(0, "Title"));
+                                m_data[m_row].fields[Data::externAudioPath].push_back(path);
+                                m_data[m_row].checks[Data::externAudioDef].push_back(false);
                             }
                         } else {
                             showInfoMessage(tr("File: \'%1\' is not audio file!").arg(path));
@@ -2721,14 +2721,14 @@ void MainWindow::onAddExtStream()
                         if (vcnt == 0 && scnt == 1) {
                             const QString subtitleFormat = SINFO(0, "Format");
                             if (!subtitleFormat.isEmpty()) {
-                                _CHECKS(m_row, externSubtChecks).push_back(false);// Helper::isSubtitleSupported(m_curParams[CurParamIndex::CONTAINER], subtitleFormat));
-                                _FIELDS(m_row, externSubtFormats).push_back(subtitleFormat);
-                                _FIELDS(m_row, externSubtDuration).push_back(SINFO(0, "Duration"));
-                                _FIELDS(m_row, externSubtLangs).push_back(SINFO(0, "Language"));
-                                _FIELDS(m_row, externSubtTitles).push_back(SINFO(0, "Title"));
-                                _FIELDS(m_row, externSubtPath).push_back(path);
-                                _CHECKS(m_row, externSubtDef).push_back(false);
-                                _CHECKS(m_row, externSubtBurn).push_back(false);
+                                m_data[m_row].checks[Data::externSubtChecks].push_back(false);// Helper::isSubtitleSupported(m_curParams[CurParamIndex::CONTAINER], subtitleFormat));
+                                m_data[m_row].fields[Data::externSubtFormats].push_back(subtitleFormat);
+                                m_data[m_row].fields[Data::externSubtDuration].push_back(SINFO(0, "Duration"));
+                                m_data[m_row].fields[Data::externSubtLangs].push_back(SINFO(0, "Language"));
+                                m_data[m_row].fields[Data::externSubtTitles].push_back(SINFO(0, "Title"));
+                                m_data[m_row].fields[Data::externSubtPath].push_back(path);
+                                m_data[m_row].checks[Data::externSubtDef].push_back(false);
+                                m_data[m_row].checks[Data::externSubtBurn].push_back(false);
                             }
                         } else {
                             showInfoMessage(tr("File: \'%1\' is not subtitle file!").arg(path));
@@ -2739,11 +2739,11 @@ void MainWindow::onAddExtStream()
                     showInfoMessage(tr("File: \'%1\' cannot be opened!").arg(path));
                 }
             }
-            if (!_FIELDS(m_row, externAudioFormats).empty()) {
+            if (!m_data[m_row].fields[Data::externAudioFormats].empty()) {
                 m_pAudioLabel->setVisible(false);
                 ui->streamAudio->setList(extension, m_data[m_row]);
             }
-            if (!_FIELDS(m_row, externSubtFormats).empty()) {
+            if (!m_data[m_row].fields[Data::externSubtFormats].empty()) {
                 m_pSubtitleLabel->setVisible(false);
                 ui->streamSubtitle->setList(extension, m_data[m_row]);
             }
@@ -3080,7 +3080,7 @@ void MainWindow::setItemStyle(QTreeWidgetItem *item)
     item->setTextAlignment(0, Qt::AlignLeft | Qt::AlignVCenter);
     item->setForeground(0, foregroundChildColor);
     item->setFont(0, font);
-    Q_LOOP(column, 1, 7) {
+    for (int column = 1; column < 7; column++) {
         item->setTextAlignment(column, Qt::AlignCenter);
         item->setForeground(column, foregroundChildColor);
         item->setFont(column, font);
@@ -3127,21 +3127,21 @@ void MainWindow::updatePresetTable()
 {
     int CHILD_COUNT = 0;
     const int TOP_LEVEL_ITEMS_COUNT = ui->treeWidget->topLevelItemCount();
-    Q_LOOP(i, 0, TOP_LEVEL_ITEMS_COUNT)
+    for (int i = 0; i < TOP_LEVEL_ITEMS_COUNT; i++)
         CHILD_COUNT += ui->treeWidget->topLevelItem(i)->childCount();
 
     const int ROWS_COUNT = TOP_LEVEL_ITEMS_COUNT + CHILD_COUNT;  // Count of all rows
-    Q_LOOP(i, 0, PARAMETERS_COUNT + 1)
+    for (int i = 0; i < PARAMETERS_COUNT + 1; i++)
       m_preset_table[i].resize(ROWS_COUNT);
 
     int row = 0;
-    Q_LOOP(top, 0, TOP_LEVEL_ITEMS_COUNT) {
+    for (int top = 0; top < TOP_LEVEL_ITEMS_COUNT; top++) {
         m_preset_table[0][row] = ui->treeWidget->topLevelItem(top)->text(0);
         m_preset_table[PARAMETERS_COUNT][row] = "TopLevelItem";
         CHILD_COUNT = ui->treeWidget->topLevelItem(top)->childCount();
-        Q_LOOP(child, 0, CHILD_COUNT) {
+        for (int child = 0; child < CHILD_COUNT; child++) {
             row++;
-            Q_LOOP(column, 0, PARAMETERS_COUNT)
+            for (int column = 0; column < PARAMETERS_COUNT; column++)
                 m_preset_table[column][row] = ui->treeWidget->topLevelItem(top)->child(child)->text(column+7);
             m_preset_table[PARAMETERS_COUNT][row] = "ChildItem";
         }
@@ -3222,7 +3222,7 @@ bool MainWindow::showDialogMessage(const QString &message)
 
 void MainWindow::showPopup(const QString &text, PopupMessage::Icon icon)
 {
-    PopupMessage *msg = new PopupMessage(this, icon, text);
+    auto *msg = new PopupMessage(this, icon, text);
     msg->show();
     addReport(text, static_cast<ReportLog::Icon>(icon));
 }
@@ -3266,8 +3266,8 @@ void MainWindow::showInfoMessage(const QString &message, const bool timer_mode)
 void MainWindow::onExtract(QStreamView::Content type, int num)
 {
     const float duration = (type == QStreamView::Content::Audio) ?
-                _FIELDS(m_row, audioDuration).at(num).toFloat() :
-                _FIELDS(m_row, subtDuration).at(num).toFloat();
+                m_data[m_row].fields[Data::audioDuration].at(num).toFloat() :
+                m_data[m_row].fields[Data::subtDuration].at(num).toFloat();
     StreamData data;
     data.cont_type = ContentType(type);
     data.input_file = m_input_file;

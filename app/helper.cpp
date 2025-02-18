@@ -31,7 +31,7 @@ Helper::DesktopEnv Helper::m_desktopEnv = Helper::DesktopEnv::UNDEF;
 QStringList Helper::makeStringsFFMPEGReady(const QStringList stringList)
 {
     QStringList ret;
-    Q_LOOP(k, 0, stringList.count())
+    for (int k = 0; k < stringList.count(); k++)
     {
         ret.append(makeFileStringFFMPEGReady(stringList[k]));
     }
