@@ -152,49 +152,49 @@ void QStreamView::setList(QString extension, Data &data)
                                        stub);
             m_pLayout->addWidget(cell);
         }
-        for (int i = 0; i < FIELDS(externAudioFormats).size(); i++) {
-            QWidget *cell = createCell(CHECKS(externAudioChecks)[i],
+        for (int i = 0; i < data.fields[Data::externAudioFormats].size(); i++) {
+            QWidget *cell = createCell(data.checks[Data::externAudioChecks][i],
                                        extension,
-                                       FIELDS(externAudioFormats)[i],
-                                       FIELDS(externAudioDuration)[i],
-                                       FIELDS(externAudioLangs)[i],
-                                       FIELDS(externAudioTitles)[i],
-                                       FIELDS(externAudioChannels)[i],
-                                       FIELDS(externAudioChLayouts)[i],
-                                       FIELDS(externAudioPath)[i],
-                                       CHECKS(externAudioDef)[i],
+                                       data.fields[Data::externAudioFormats][i],
+                                       data.fields[Data::externAudioDuration][i],
+                                       data.fields[Data::externAudioLangs][i],
+                                       data.fields[Data::externAudioTitles][i],
+                                       data.fields[Data::externAudioChannels][i],
+                                       data.fields[Data::externAudioChLayouts][i],
+                                       data.fields[Data::externAudioPath][i],
+                                       data.checks[Data::externAudioDef][i],
                                        stub,
                                        true);
             m_pLayout->addWidget(cell);
         }
     } else
     if (m_type == Content::Subtitle) {
-        for (int i = 0; i < FIELDS(subtFormats).size(); i++) {
-            QWidget *cell = createCell(CHECKS(subtChecks)[i],
+        for (int i = 0; i < data.fields[Data::subtFormats].size(); i++) {
+            QWidget *cell = createCell(data.checks[Data::subtChecks][i],
                                        extension,
-                                       FIELDS(subtFormats)[i],
-                                       FIELDS(subtDuration)[i],
-                                       FIELDS(subtLangs)[i],
-                                       FIELDS(subtTitles)[i],
+                                       data.fields[Data::subtFormats][i],
+                                       data.fields[Data::subtDuration][i],
+                                       data.fields[Data::subtLangs][i],
+                                       data.fields[Data::subtTitles][i],
                                        "",
                                        "",
                                        "",
-                                       CHECKS(subtDef)[i],
-                                       CHECKS(subtBurn)[i]);
+                                       data.checks[Data::subtDef][i],
+                                       data.checks[Data::subtBurn][i]);
             m_pLayout->addWidget(cell);
         }
-        for (int i = 0; i < FIELDS(externSubtFormats).size(); i++) {
-            QWidget *cell = createCell(CHECKS(externSubtChecks)[i],
+        for (int i = 0; i < data.fields[Data::externSubtFormats].size(); i++) {
+            QWidget *cell = createCell(data.checks[Data::externSubtChecks][i],
                                        extension,
-                                       FIELDS(externSubtFormats)[i],
-                                       FIELDS(externSubtDuration)[i],
-                                       FIELDS(externSubtLangs)[i],
-                                       FIELDS(externSubtTitles)[i],
+                                       data.fields[Data::externSubtFormats][i],
+                                       data.fields[Data::externSubtDuration][i],
+                                       data.fields[Data::externSubtLangs][i],
+                                       data.fields[Data::externSubtTitles][i],
                                        "",
                                        "",
-                                       FIELDS(externSubtPath)[i],
-                                       CHECKS(externSubtDef)[i],
-                                       CHECKS(externSubtBurn)[i],
+                                       data.fields[Data::externSubtPath][i],
+                                       data.checks[Data::externSubtDef][i],
+                                       data.checks[Data::externSubtBurn][i],
                                        true);
             m_pLayout->addWidget(cell);
         }
@@ -349,7 +349,7 @@ bool QStreamView::eventFilter(QObject *obj, QEvent *event)
 
 void QStreamView::resetCheckFlags(const int ind)
 {
-    Q_LOOP(i, 1, m_pLayout->count()) {
+    for (int i = 1; i < m_pLayout->count(); i++) {
         if (i != ind) {
             QLayoutItem *item = m_pLayout->itemAt(i);
             if (item && item->widget()) {
@@ -372,7 +372,7 @@ void QStreamView::resetCheckFlags(const int ind)
 
 void QStreamView::resetDefFlags(const int ind)
 {
-    Q_LOOP(i, 1, m_pLayout->count()) {
+    for (int i = 1; i < m_pLayout->count(); i++) {
         if (i != ind) {
             QLayoutItem *item = m_pLayout->itemAt(i);
             if (item && item->widget()) {
@@ -395,7 +395,7 @@ void QStreamView::resetDefFlags(const int ind)
 
 void QStreamView::resetBurnFlags(const int ind)
 {
-    Q_LOOP(i, 1, m_pLayout->count()) {
+    for (int i = 1; i < m_pLayout->count(); i++) {
         if (i != ind) {
             QLayoutItem *item = m_pLayout->itemAt(i);
             if (item && item->widget()) {

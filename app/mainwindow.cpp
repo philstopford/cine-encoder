@@ -79,8 +79,8 @@
 #define SINFO(a, b) QString::fromStdWString(MI.Get(Stream_Text, a, __T(b)))
 #define GETTEXT(row, col) ui->tableWidget->item(row, ColumnIndex::col)->text()
 #define SLT(method) &MainWindow::method
-#define _CHECKS(row, chk) m_data[row].checks[Data::chk]
-#define _FIELDS(row, fld) m_data[row].fields[Data::fld]
+// #define _CHECKS(row, chk) m_data[row].checks[Data::chk]
+// #define _FIELDS(row, fld) m_data[row].fields[Data::fld]
 
 typedef void(MainWindow::*FnVoidVoid)(void);
 typedef void(MainWindow::*FnVoidInt)(int);
@@ -198,7 +198,7 @@ MainWindow::MainWindow(QWidget *parent):
         pFrameSource, ui->framePreset,  ui->frameOutput,
         ui->frameStreams, ui->frameLog, ui->frameMetadata, ui->frameSplit, ui->frameBrowser
     };
-    Q_LOOP(i, 0, DOCKS_COUNT) {
+    for (int i = 0; i < DOCKS_COUNT; i++) {
         m_pDocks[i] = new QDockWidget(dockNames[i], m_pDocksContainer);
         m_pDocks[i]->setObjectName(objNames[i]);
         m_pDocks[i]->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::TopDockWidgetArea |
@@ -210,7 +210,7 @@ MainWindow::MainWindow(QWidget *parent):
         m_pDocks[i]->setWidget(dockFrames[i]);
         m_pDocksContainer->addDockWidget(dockArea[i], m_pDocks[i]);
     }
-    Q_LOOP(i, DockIndex::LOG_DOCK, DockIndex::SPLIT_DOCK + 1) {
+    for (int i = DockIndex::LOG_DOCK; i < DockIndex::SPLIT_DOCK + 1; i++) {
         m_pDocks[i]->toggleViewAction()->setChecked(false);
         m_pDocks[i]->setVisible(false);
         m_pDocks[i]->setFloating(true);
@@ -259,7 +259,7 @@ void MainWindow::closeEvent(QCloseEvent *event) // Show prompt when close app
 
         QFile xmlFile(XMLPRESETFILE);
         if (!xmlFile.open(QFile::WriteOnly | QFile::Text)) { // Open file in write only mode
-            qDebug() << QString("Cannot write file %1(%2).").arg(XMLPRESETFILE).arg(xmlFile.errorString());
+            qDebug() << QString("Cannot write file %1(%2).").arg(XMLPRESETFILE, xmlFile.errorString());
             return;
         }
         QXmlStreamWriter stream(&xmlFile);
@@ -337,9 +337,9 @@ void MainWindow::closeEvent(QCloseEvent *event) // Show prompt when close app
         stn.setValue("DocksContainer/state", m_pDocksContainer->saveState());
         stn.setValue("DocksContainer/geometry", m_pDocksContainer->saveGeometry());
         stn.beginWriteArray("DocksContainer/docks_geometry");
-            Q_LOOP(i, 0, DOCKS_COUNT) {
+            for (int j = 0; j < DOCKS_COUNT; j++) {
                 stn.setArrayIndex(i);
-                stn.setValue("DocksContainer/docks_geometry/dock_size", m_pDocks[i]->size());
+                stn.setValue("DocksContainer/docks_geometry/dock_size", m_pDocks[j]->size());
             }
             stn.endArray();
         stn.endGroup();
@@ -363,7 +363,7 @@ void MainWindow::saveXMLSettingsFile()
 {
     QFile xmlSettingsFile(XMLSETTINGSFILE);
     if (!xmlSettingsFile.open(QFile::WriteOnly | QFile::Text)) { // Open file in write only mode
-        qDebug() << QString("Cannot write file %1(%2).").arg(XMLSETTINGSFILE).arg(xmlSettingsFile.errorString());
+        qDebug() << QString("Cannot write file %1(%2).").arg(XMLSETTINGSFILE, xmlSettingsFile.errorString());
         return;
     }
     QXmlStreamWriter streamSettings(&xmlSettingsFile);
@@ -485,14 +485,14 @@ void MainWindow::setTrayIcon()
     m_pTrayIcon = new QSystemTrayIcon(this);
     m_pTrayIcon->setIcon(QIcon(QPixmap(":/resources/icons/svg/cine-encoder.svg")));
 
-    QMenu *trayMenu = new QMenu(this);
+    auto *trayMenu = new QMenu(this);
     const int ACT_COUNT = 3;
     QString actNames[ACT_COUNT] = {tr("Hide"), tr("Show"), tr("Exit")};
     FnVoidVoid actMethods[ACT_COUNT] = {
         SLT(hide), SLT(onRestoreWindowState), SLT(onCloseWindow)
     };
-    Q_LOOP(i, 0, ACT_COUNT) {
-        QAction *act = new QAction(actNames[i], trayMenu);
+    for (int i = 0; i < ACT_COUNT; i++) {
+        auto *act = new QAction(actNames[i], trayMenu);
         connect(act, &QAction::triggered, this, actMethods[i]);
         trayMenu->addAction(act);
     }
@@ -539,7 +539,7 @@ void MainWindow::createConnections()
         SLT(onBack),         SLT(onForward),       SLT(onRemoveAllFiles),
         SLT(onDeselectTitles)
     };
-    Q_LOOP(i, 0, BTN_COUNT)
+    for (int i = 0; i < BTN_COUNT; i++)
         connect(btns[i], &QPushButton::clicked, this, btn_methods[i]);
 
     // Streams actions
@@ -584,7 +584,7 @@ void MainWindow::createConnections()
     //************ Top menu actions ****************//
     m_pMenuBar = new QMenuBar(ui->frame_top);
     m_pMenuBar->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-    QGridLayout *pTopLayout = dynamic_cast<QGridLayout*>(ui->frame_top->layout());
+    auto *pTopLayout = dynamic_cast<QGridLayout*>(ui->frame_top->layout());
     if (pTopLayout)
         pTopLayout->addWidget(m_pMenuBar, 0, 5, Qt::AlignVCenter);
     QMenu *menuFiles = m_pMenuBar->addMenu(tr("File"));
@@ -639,7 +639,7 @@ void MainWindow::createConnections()
 
     m_pActResetView = new QAction(tr("Reset state"), menuView);
     connect(m_pActResetView, &QAction::triggered, this, SLT(resetView));
-    Q_LOOP(i, 0, DOCKS_COUNT)
+    for (int i = 0; i < DOCKS_COUNT; i++)
         menuView->addAction(m_pDocks[i]->toggleViewAction());
     menuView->addAction(m_pActResetView);
 
@@ -715,7 +715,7 @@ void MainWindow::createConnections()
     connect(ui->treeWidget, &QTreeWidget::customContextMenuRequested, this, SLT(providePresetContextMenu));
 
     //********** Preset menu actions ***************//
-    QMenu *addPresetMenu = new QMenu(ui->addPreset);
+    auto *addPresetMenu = new QMenu(ui->addPreset);
     auto *_actAddSection = new QAction(tr("Add section"), this);
     auto *_actAddPreset = new QAction(tr("Add new preset"), this);
     _actAddSection->setIcon(QIcon(":/resources/icons/svg/folder_light.svg"));
@@ -750,7 +750,7 @@ void MainWindow::createConnections()
     foreach (QLineEdit *lineEdit, videoMetadata)
         connectAction(lineEdit, true);
 
-    Q_LOOP(i, VIDEO_TITLE, VIDEO_DESCRIPTION + 1) {
+    for (int i = VIDEO_TITLE; i < VIDEO_DESCRIPTION + 1; i++) {
         Q_ASSERT(i < 6);
         connect(videoMetadata[i], &QLineEdit::editingFinished, this, [=](){
             if (m_row != -1) {
@@ -785,9 +785,9 @@ void MainWindow::setParameters()    // Set parameters
     m_pSpl->addWidget(ui->dirsWidget);
     m_pSpl->addWidget(ui->filesWidget);
 
-    QStandardItemModel *model_d = new QStandardItemModel(this);
+    auto *model_d = new QStandardItemModel(this);
     model_d->setHorizontalHeaderItem(0, new QStandardItem(tr("Folders")));
-    QHeaderView *hv_d = new QHeaderView(Qt::Horizontal, ui->dirsWidget);
+    auto *hv_d = new QHeaderView(Qt::Horizontal, ui->dirsWidget);
     QFont fnt = hv_d->font();
     fnt.setItalic(true);
     fnt.setBold(true);
@@ -797,23 +797,23 @@ void MainWindow::setParameters()    // Set parameters
     hv_d->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->dirsLayout->addWidget(hv_d);
 
-    QStandardItemModel *model_f = new QStandardItemModel(this);
+    auto *model_f = new QStandardItemModel(this);
     model_f->setHorizontalHeaderItem(0, new QStandardItem(tr("Files")));
-    QHeaderView *hv_f = new QHeaderView(Qt::Horizontal, ui->filesWidget);
+    auto *hv_f = new QHeaderView(Qt::Horizontal, ui->filesWidget);
     hv_f->setFont(fnt);
     hv_f->setFixedHeight(28 * Helper::scaling());
     hv_f->setModel(model_f);
     hv_f->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->filesLayout->addWidget(hv_f);
     setBrowser();
-    FileIconProvider *fip = new FileIconProvider();
+    auto *fip = new FileIconProvider();
     m_pDirModel->setIconProvider(fip);
     ui->lineEditFileFilter->hide();
 
     //************** Combo boxes *******************//
     auto comboBoxes = findChildren<QComboBox*>();
     foreach (auto combo, comboBoxes) {
-        QListView *_view = new QListView(combo);
+        auto *_view = new QListView(combo);
         _view->setTextElideMode(Qt::ElideMiddle);
         combo->setView(_view);
     }
@@ -883,7 +883,6 @@ void MainWindow::setParameters()    // Set parameters
         ui->tableWidget->hideColumn(i);
 
     //************* Read settings ******************//
-    const QString sysLang = Helper::getSysLanguage();
     QList<int> dockSizesX{};
     QList<int> dockSizesY{};
     SETTINGS(stn);
@@ -1010,14 +1009,14 @@ void MainWindow::setParameters()    // Set parameters
         ui->treeWidget->setCurrentItem(__item);
     }
     // Print(NUM_ROWS << " x " << NUM_COLUMNS);
-    Q_LOOP(i, 7, 41)
+    for (int i = 7; i < 41; i++)
         ui->treeWidget->hideColumn(i);
 
     //*********** Other parameters *****************//
     if (dockSizesX.count() < DOCKS_COUNT || dockSizesY.count() < DOCKS_COUNT) {
         float coeffX[DOCKS_COUNT] = {0.39f, 0.39f, 0.61f, 0.23f, 0.23f, 0.23f, 0.23f, 0.39f};
         float coeffY[DOCKS_COUNT] = {0.16f, 0.5f, 0.1f, 0.9f, 0.9f, 0.9f, 0.9f, 0.3f};
-        Q_LOOP(i, 0, DOCKS_COUNT) {
+        for (int i = 0; i < DOCKS_COUNT; i++) {
             const int dockWidth = static_cast<int>(coeffX[i] * WINDOW_SIZE.width());
             const int dockHeight = static_cast<int>(coeffY[i] * WINDOW_SIZE.height());
             dockSizesX.append(dockWidth);
@@ -1054,7 +1053,7 @@ void MainWindow::setParameters()    // Set parameters
     ui->listFiles->setRootIndex(m_pFileModel->setRootPath(m_openDir));
 }
 
-void MainWindow::readXMLSettingsFile(QString xmlFileName)
+void MainWindow::readXMLSettingsFile(const QString& xmlFileName)
 {
     int switchViewMode = 0;
     int switchCutMode = 0;
@@ -1220,7 +1219,7 @@ void MainWindow::setDocksParameters(const QList<int>& dockSizesX, const QList<in
     QList<QDockWidget*> docksVis;
     QList<int> dockVisSizesX;
     QList<int> dockVisSizesY;
-    Q_LOOP(i, 0, DOCKS_COUNT) {
+    for (int i = 0; i < DOCKS_COUNT; i++) {
         if (m_pDocks[i]->isVisible() && !m_pDocks[i]->isFloating()){
             docksVis.append(m_pDocks[i]);
             dockVisSizesX.append(dockSizesX.at(i));
@@ -1229,7 +1228,7 @@ void MainWindow::setDocksParameters(const QList<int>& dockSizesX, const QList<in
     }
     m_pDocksContainer->resizeDocks(docksVis, dockVisSizesX, Qt::Horizontal);
     m_pDocksContainer->resizeDocks(docksVis, dockVisSizesY, Qt::Vertical);
-    Q_LOOP(i, 0, DOCKS_COUNT) {
+    for (int i = 0; i < DOCKS_COUNT; i++) {
         if (m_pDocks[i]->isVisible() && m_pDocks[i]->isFloating()){
             m_pDocks[i]->setFloating(false); // Bypassing the error with detached docks in some Linux distributions
             m_pDocks[i]->setFloating(true);
@@ -1593,17 +1592,17 @@ void MainWindow::get_current_data() // Get current data
                                                 curFps + curAr + curSpace +
                                                 curColorSampling + curDepth + curBitrate);
 
-    Q_LOOP(i, 0, _FIELDS(m_row, audioFormats).size()) {
-        const QString audioFormat = _FIELDS(m_row, audioFormats)[i];
-        const QString audioLang = _FIELDS(m_row, audioLangs)[i];
-        const QString audioCh = Helper::recalcChannels(_FIELDS(m_row, audioChannels)[i]) + " ch";
+    for (int i = 0; i < m_data[m_row].fields[Data::audioFormats].size(); i++) {
+        const QString audioFormat = m_data[m_row].fields[Data::audioFormats][i];
+        const QString audioLang = m_data[m_row].fields[Data::audioLangs][i];
+        const QString audioCh = Helper::recalcChannels(m_data[m_row].fields[Data::audioChannels][i]) + " ch";
         sourceParam += QString("\n%1 %2: %3, %4, %5").arg(tr("Audio"), numToStr(i + 1),
                                                    audioFormat, audioCh, audioLang);
     }
 
-    Q_LOOP(i, 0, _FIELDS(m_row, subtFormats).size()) {
-        const QString subtFormat = _FIELDS(m_row, subtFormats)[i];
-        const QString subtLang = _FIELDS(m_row, subtLangs)[i];
+    for (int i = 0; i < m_data[m_row].fields[Data::subtFormats].size(); i++) {
+        const QString subtFormat = m_data[m_row].fields[Data::subtFormats][i];
+        const QString subtLang = m_data[m_row].fields[Data::subtLangs][i];
         sourceParam += QString("\n%1 %2: %3, %4").arg(tr("Subtitle"), numToStr(i + 1),
                                                    subtFormat, subtLang);
     }
@@ -1636,15 +1635,15 @@ void MainWindow::get_current_data() // Get current data
         lineEdit->setCursorPosition(0);
 
     //********** Set audio widgets *****************//
-    if (!_FIELDS(m_row, audioFormats).empty() ||
-            !_FIELDS(m_row, externAudioFormats).empty()) {
+    if (!m_data[m_row].fields[Data::audioFormats].empty() ||
+            !m_data[m_row].fields[Data::externAudioFormats].empty()) {
         m_pAudioLabel->setVisible(false);
         ui->streamAudio->setList(extension, m_data[m_row]);
     }
 
     //********* Set subtitle widgets ***************//
-    if (!_FIELDS(m_row, subtFormats).empty() ||
-            !_FIELDS(m_row, externSubtFormats).empty()) {
+    if (!m_data[m_row].fields[Data::subtFormats].empty() ||
+            !m_data[m_row].fields[Data::externSubtFormats].empty()) {
         m_pSubtitleLabel->setVisible(false);
         ui->streamSubtitle->setList(extension, m_data[m_row]);
     }
@@ -1668,7 +1667,7 @@ void MainWindow::setTheme(const int ind_theme)   // Set theme
     }
     m_pAnimation->setFileName(spinnerFile);
 
-    Q_LOOP(i, ColumnIndex::COLORRANGE, ColumnIndex::MASTERDISPLAY + 1) {
+    for (int i = ColumnIndex::COLORRANGE; i < ColumnIndex::MASTERDISPLAY + 1; i++) {
         m_showHdrFlag ? ui->tableWidget->showColumn(i) :
                         ui->tableWidget->hideColumn(i);
     }
@@ -2141,14 +2140,14 @@ void MainWindow::onRemoveAllFiles()  // Remove all files from table
 void MainWindow::onSort(const bool up)
 {
     const int rowsCount = ui->tableWidget->rowCount();
-    Q_LOOP(i, 0, rowsCount) {
+    for (int i = 0; i < rowsCount; i++) {
         auto *id = new QTableWidgetItem(numToStr(i));
         ui->tableWidget->setItem(i, ColumnIndex::T_ID, id);
     }
     Qt::SortOrder srt = (up) ? Qt::AscendingOrder : Qt::DescendingOrder;
     ui->tableWidget->sortByColumn(ColumnIndex::FILENAME, srt);
     QVector<int> order(0);
-    Q_LOOP(i, 0, rowsCount)
+    for (int i = 0; i < rowsCount; i++)
         order.push_back(GETTEXT(i, T_ID).toInt());
     Helper::reorder(m_data, order);
 }
@@ -2220,7 +2219,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
     prg.setModal(true);
     setProgressEnabled(false);
     MediaInfo MI;
-    Q_LOOP(i, 0, openFileNames.size()) {
+    for (int i = 0; i < openFileNames.size(); i++) {
         const QString file = openFileNames.at(i);
         const QString inputFolder = QFileInfo(file).absolutePath();
         const QString inputFile = QFileInfo(file).fileName();
@@ -2307,7 +2306,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
 
             m_data.resize(numRows + 1);
             m_data[numRows].clear();
-            Q_LOOP(j, 27, 33)
+            for (int j = 27; j < 33; j++)
                 m_data[numRows].videoMetadata.push_back(arr_items[j]);
 
             for (int column = ColumnIndex::FILENAME; column <= ColumnIndex::T_HEIGHT; column++) {
@@ -2322,27 +2321,27 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             ui->tableWidget->setItem(numRows, ColumnIndex::T_STARTTIME, __startTime);
             ui->tableWidget->setItem(numRows, ColumnIndex::T_ENDTIME, __endTime);
 
-            Q_LOOP(j, 0, MAX_AUDIO_STREAMS) {
+            for (int j = 0; j < MAX_AUDIO_STREAMS; j++) {
                 QString audioFormat = AINFO(size_t(j), "Format");
                 const int smplrt_int = static_cast<int>(AINFO(size_t(j), "SamplingRate").toFloat() / 1000);
                 const QString smplrt = (smplrt_int != 0) ? numToStr(smplrt_int) : "";
                 if (!audioFormat.isEmpty()) {
                     audioFormat += QString("  %1 kHz").arg(smplrt);
-                    _CHECKS(numRows, audioChecks).push_back(Helper::isAudioSupported(extension, audioFormat));
-                    _FIELDS(numRows, audioFormats).push_back(audioFormat);
-                    _FIELDS(numRows, audioChannels).push_back(AINFO(size_t(j), "Channels"));
-                    _FIELDS(numRows, audioChLayouts).push_back(AINFO(size_t(j), "ChannelLayout"));
-                    _FIELDS(numRows, audioDuration).push_back(AINFO(size_t(j), "Duration"));
-                    _FIELDS(numRows, audioLangs).push_back(AINFO(size_t(j), "Language"));
-                    _FIELDS(numRows, audioTitles).push_back(AINFO(size_t(j), "Title"));
+                    m_data[numRows].checks[Data::audioChecks].push_back(Helper::isAudioSupported(extension, audioFormat));
+                    m_data[numRows].fields[Data::audioFormats].push_back(audioFormat);
+                    m_data[numRows].fields[Data::audioChannels].push_back(AINFO(size_t(j), "Channels"));
+                    m_data[numRows].fields[Data::audioChLayouts].push_back(AINFO(size_t(j), "ChannelLayout"));
+                    m_data[numRows].fields[Data::audioDuration].push_back(AINFO(size_t(j), "Duration"));
+                    m_data[numRows].fields[Data::audioLangs].push_back(AINFO(size_t(j), "Language"));
+                    m_data[numRows].fields[Data::audioTitles].push_back(AINFO(size_t(j), "Title"));
                     const QString deflt = AINFO(size_t(j), "Default");
-                    _CHECKS(numRows, audioDef).push_back(deflt == "Yes" ? true : false);
+                    m_data[numRows].checks[Data::audioDef].push_back(deflt == "Yes" ? true : false);
                 } else {
                     break;
                 }
             }
 
-            Q_LOOP(j, 0, MAX_SUBTITLES) {
+            for (int j = 0; j < MAX_SUBTITLES; j++) {
                 const QString subtitleFormat = SINFO(size_t(j), "Format");
                 if (!subtitleFormat.isEmpty()) {
                     bool select;
@@ -2353,14 +2352,14 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                     {
                         select = Helper::isSubtitleSupported(extension, subtitleFormat);
                     }
-                    _CHECKS(numRows, subtChecks).push_back(select);
-                    _FIELDS(numRows, subtFormats).push_back(subtitleFormat);
-                    _FIELDS(numRows, subtDuration).push_back(SINFO(size_t(j), "Duration"));
-                    _FIELDS(numRows, subtLangs).push_back(SINFO(size_t(j), "Language"));
-                    _FIELDS(numRows, subtTitles).push_back(SINFO(size_t(j), "Title"));
+                    m_data[numRows].checks[Data::subtChecks].push_back(select);
+                    m_data[numRows].fields[Data::subtFormats].push_back(subtitleFormat);
+                    m_data[numRows].fields[Data::subtDuration].push_back(SINFO(size_t(j), "Duration"));
+                    m_data[numRows].fields[Data::subtLangs].push_back(SINFO(size_t(j), "Language"));
+                    m_data[numRows].fields[Data::subtTitles].push_back(SINFO(size_t(j), "Title"));
                     const QString deflt = SINFO(size_t(j), "Default");
-                    _CHECKS(numRows, subtDef).push_back(deflt == "Yes" ? true : false);
-                    _CHECKS(numRows, subtBurn).push_back(false);
+                    m_data[numRows].checks[Data::subtDef].push_back(deflt == "Yes" ? true : false);
+                    m_data[numRows].checks[Data::subtBurn].push_back(false);
                 } else {
                     break;
                 }
@@ -2433,8 +2432,8 @@ void MainWindow::onTableSelectionChanged()
         m_endTime = 0.0;
 
         //************** Reset data ********************//
-        Q_LOOP(i, 0, AMOUNT_HDR_PARAMS)
-            m_hdr[i] = "";
+        for (auto & i : m_hdr)
+            i = "";
     }
 }
 
@@ -2481,7 +2480,7 @@ void MainWindow::resetView()
     QList<int> dockSizesY = {};
     float coeffX[DOCKS_COUNT] = {0.39f, 0.39f, 0.61f, 0.23f, 0.23f, 0.23f, 0.23f, 0.39f};
     float coeffY[DOCKS_COUNT] = {0.16f, 0.5f, 0.1f, 0.9f, 0.9f, 0.9f, 0.9f, 0.3f};
-    Q_LOOP(i, 0, DOCKS_COUNT) {
+    for (int i = 0; i < DOCKS_COUNT; i++) {
         int dockWidth = static_cast<int>(coeffX[i] * this->width());
         int dockHeight = static_cast<int>(coeffY[i] * this->height());
         dockSizesX.append(dockWidth);
@@ -2719,15 +2718,15 @@ void MainWindow::onAddExtStream()
                             const QString smplrt = (smplrt_int != 0) ? numToStr(smplrt_int) : "";
                             if (!audioFormat.isEmpty()) {
                                 audioFormat += QString("  %1 kHz").arg(smplrt);
-                                _CHECKS(m_row, externAudioChecks).push_back(Helper::isAudioSupported(m_curParams[CurParamIndex::CONTAINER], audioFormat));
-                                _FIELDS(m_row, externAudioFormats).push_back(audioFormat);
-                                _FIELDS(m_row, externAudioChannels).push_back(AINFO(0, "Channels"));
-                                _FIELDS(m_row, externAudioChLayouts).push_back(AINFO(0, "ChannelsLayouts"));
-                                _FIELDS(m_row, externAudioDuration).push_back(AINFO(0, "Duration"));
-                                _FIELDS(m_row, externAudioLangs).push_back(AINFO(0, "Language"));
-                                _FIELDS(m_row, externAudioTitles).push_back(AINFO(0, "Title"));
-                                _FIELDS(m_row, externAudioPath).push_back(path);
-                                _CHECKS(m_row, externAudioDef).push_back(false);
+                                m_data[m_row].checks[Data::externAudioChecks].push_back(Helper::isAudioSupported(m_curParams[CurParamIndex::CONTAINER], audioFormat));
+                                m_data[m_row].fields[Data::externAudioFormats].push_back(audioFormat);
+                                m_data[m_row].fields[Data::externAudioChannels].push_back(AINFO(0, "Channels"));
+                                m_data[m_row].fields[Data::externAudioChLayouts].push_back(AINFO(0, "ChannelsLayouts"));
+                                m_data[m_row].fields[Data::externAudioDuration].push_back(AINFO(0, "Duration"));
+                                m_data[m_row].fields[Data::externAudioLangs].push_back(AINFO(0, "Language"));
+                                m_data[m_row].fields[Data::externAudioTitles].push_back(AINFO(0, "Title"));
+                                m_data[m_row].fields[Data::externAudioPath].push_back(path);
+                                m_data[m_row].checks[Data::externAudioDef].push_back(false);
                             }
                         } else {
                             showInfoMessage(tr("File: \'%1\' is not audio file!").arg(path));
@@ -2737,14 +2736,14 @@ void MainWindow::onAddExtStream()
                         if (vcnt == 0 && scnt == 1) {
                             const QString subtitleFormat = SINFO(0, "Format");
                             if (!subtitleFormat.isEmpty()) {
-                                _CHECKS(m_row, externSubtChecks).push_back(false);// Helper::isSubtitleSupported(m_curParams[CurParamIndex::CONTAINER], subtitleFormat));
-                                _FIELDS(m_row, externSubtFormats).push_back(subtitleFormat);
-                                _FIELDS(m_row, externSubtDuration).push_back(SINFO(0, "Duration"));
-                                _FIELDS(m_row, externSubtLangs).push_back(SINFO(0, "Language"));
-                                _FIELDS(m_row, externSubtTitles).push_back(SINFO(0, "Title"));
-                                _FIELDS(m_row, externSubtPath).push_back(path);
-                                _CHECKS(m_row, externSubtDef).push_back(false);
-                                _CHECKS(m_row, externSubtBurn).push_back(false);
+                                m_data[m_row].checks[Data::externSubtChecks].push_back(false);// Helper::isSubtitleSupported(m_curParams[CurParamIndex::CONTAINER], subtitleFormat));
+                                m_data[m_row].fields[Data::externSubtFormats].push_back(subtitleFormat);
+                                m_data[m_row].fields[Data::externSubtDuration].push_back(SINFO(0, "Duration"));
+                                m_data[m_row].fields[Data::externSubtLangs].push_back(SINFO(0, "Language"));
+                                m_data[m_row].fields[Data::externSubtTitles].push_back(SINFO(0, "Title"));
+                                m_data[m_row].fields[Data::externSubtPath].push_back(path);
+                                m_data[m_row].checks[Data::externSubtDef].push_back(false);
+                                m_data[m_row].checks[Data::externSubtBurn].push_back(false);
                             }
                         } else {
                             showInfoMessage(tr("File: \'%1\' is not subtitle file!").arg(path));
@@ -2755,11 +2754,11 @@ void MainWindow::onAddExtStream()
                     showInfoMessage(tr("File: \'%1\' cannot be opened!").arg(path));
                 }
             }
-            if (!_FIELDS(m_row, externAudioFormats).empty()) {
+            if (!m_data[m_row].fields[Data::externAudioFormats].empty()) {
                 m_pAudioLabel->setVisible(false);
                 ui->streamAudio->setList(extension, m_data[m_row]);
             }
-            if (!_FIELDS(m_row, externSubtFormats).empty()) {
+            if (!m_data[m_row].fields[Data::externSubtFormats].empty()) {
                 m_pSubtitleLabel->setVisible(false);
                 ui->streamSubtitle->setList(extension, m_data[m_row]);
             }
@@ -3096,7 +3095,7 @@ void MainWindow::setItemStyle(QTreeWidgetItem *item)
     item->setTextAlignment(0, Qt::AlignLeft | Qt::AlignVCenter);
     item->setForeground(0, foregroundChildColor);
     item->setFont(0, font);
-    Q_LOOP(column, 1, 7) {
+    for (int column = 1; column < 7; column++) {
         item->setTextAlignment(column, Qt::AlignCenter);
         item->setForeground(column, foregroundChildColor);
         item->setFont(column, font);
@@ -3143,21 +3142,21 @@ void MainWindow::updatePresetTable()
 {
     int CHILD_COUNT = 0;
     const int TOP_LEVEL_ITEMS_COUNT = ui->treeWidget->topLevelItemCount();
-    Q_LOOP(i, 0, TOP_LEVEL_ITEMS_COUNT)
+    for (int i = 0; i < TOP_LEVEL_ITEMS_COUNT; i++)
         CHILD_COUNT += ui->treeWidget->topLevelItem(i)->childCount();
 
     const int ROWS_COUNT = TOP_LEVEL_ITEMS_COUNT + CHILD_COUNT;  // Count of all rows
-    Q_LOOP(i, 0, PARAMETERS_COUNT + 1)
+    for (int i = 0; i < PARAMETERS_COUNT + 1; i++)
       m_preset_table[i].resize(ROWS_COUNT);
 
     int row = 0;
-    Q_LOOP(top, 0, TOP_LEVEL_ITEMS_COUNT) {
+    for (int top = 0; top < TOP_LEVEL_ITEMS_COUNT; top++) {
         m_preset_table[0][row] = ui->treeWidget->topLevelItem(top)->text(0);
         m_preset_table[PARAMETERS_COUNT][row] = "TopLevelItem";
         CHILD_COUNT = ui->treeWidget->topLevelItem(top)->childCount();
-        Q_LOOP(child, 0, CHILD_COUNT) {
+        for (int child = 0; child < CHILD_COUNT; child++) {
             row++;
-            Q_LOOP(column, 0, PARAMETERS_COUNT)
+            for (int column = 0; column < PARAMETERS_COUNT; column++)
                 m_preset_table[column][row] = ui->treeWidget->topLevelItem(top)->child(child)->text(column+7);
             m_preset_table[PARAMETERS_COUNT][row] = "ChildItem";
         }
@@ -3282,8 +3281,8 @@ void MainWindow::showInfoMessage(const QString &message, const bool timer_mode)
 void MainWindow::onExtract(QStreamView::Content type, int num)
 {
     const float duration = (type == QStreamView::Content::Audio) ?
-                _FIELDS(m_row, audioDuration).at(num).toFloat() :
-                _FIELDS(m_row, subtDuration).at(num).toFloat();
+                           m_data[m_row].fields[Data::audioDuration].at(num).toFloat() :
+                           m_data[m_row].fields[Data::subtDuration].at(num).toFloat();
     StreamData data;
     data.cont_type = ContentType(type);
     data.input_file = m_input_file;

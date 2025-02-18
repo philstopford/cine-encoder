@@ -101,7 +101,7 @@ private:
     void updatePresetTable();
     void saveXMLSettingsFile();
     int doesParamsContain(QString findMe);
-    void readXMLSettingsFile(QString xmlFileName);
+    void readXMLSettingsFile(const QString& xmlFileName);
 
     // ====================================
     Ui::Widget *ui;
