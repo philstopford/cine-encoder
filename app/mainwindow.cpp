@@ -2541,10 +2541,24 @@ QString MainWindow::setThumbnail(QString curFilename,
                              const int quality,
                              const int destination)
 {
-    QString qualityParam("-vf scale=480:-1 -compression_level 10 -pred mixed "
-                         "-pix_fmt rgb24 -sws_flags +accurate_rnd+full_chroma_int");
+    QStringList qualityParam;
     if (quality == PreviewRes::RES_LOW)
-        qualityParam = QString("-vf scale=144:-1,format=pal8,dctdnoiz=4.5");
+    {
+        qualityParam.append("-vf");
+        qualityParam.append("scale=144:-1,format=pal8,dctdnoiz=4.5");
+    }
+    else {
+        qualityParam.append("-vf");
+        qualityParam.append("scale=480:-1");
+        qualityParam.append("-compression_level");
+        qualityParam.append("10");
+        qualityParam.append("-pred");
+        qualityParam.append("mixed");
+        qualityParam.append("-pix_fmt");
+        qualityParam.append("rgb24");
+        qualityParam.append("-sws_flags");
+        qualityParam.append("+accurate_rnd+full_chroma_int");
+    }
     const QString time_qstr = QString::number(time, 'f', 3);
     const QString tmb_name = curFilename.replace(".", "_").replace(" ", "_") + time_qstr;
     QString tmb_file = THUMBNAILPATH + QString("/%1.png").arg(tmb_name);
@@ -2556,13 +2570,15 @@ QString MainWindow::setThumbnail(QString curFilename,
         cmd.append("100M");
         cmd.append("-analyzeduration");
         cmd.append("50M");
-        if (destination == PreviewDest::PREVIEW)
-            cmd.append("-skip_frame nokey");
+        if (destination == PreviewDest::PREVIEW) {
+            cmd.append("-skip_frame");
+            cmd.append("nokey");
+        }
         cmd.append("-ss");
         cmd.append(time_qstr);
         cmd.append("-i");
         cmd.append(m_input_file);
-        cmd.append(qualityParam.split(" "));
+        cmd.append(qualityParam);
         cmd.append("-vframes");
         cmd.append("1");
         cmd.append("-y");
