@@ -19,11 +19,8 @@
 #include <QComboBox>
 #include <QListView>
 #include <QMouseEvent>
-#include <QCloseEvent>
-#include <QResizeEvent>
 #include <QTimer>
 #include <iostream>
-#include <math.h>
 
 #define SLT(method) &StreamConverter::method
 
@@ -99,7 +96,7 @@ StreamConverter::StreamConverter(QWidget *parent,
         ui->stackedWidget->setCurrentIndex(0);
     });
     connect(ui->stackedWidget, &QStackedWidget::currentChanged, this, [this](int index) {
-        bool status = (index == 0) ? false : true;
+        bool status = index != 0;
         ui->buttonExport->setVisible(!status);
         ui->buttonPause->setVisible(status);
         ui->buttonStop->setVisible(status);
@@ -213,7 +210,7 @@ void StreamConverter::showEvent(QShowEvent *event)
         // Fill interface
         auto comboBoxes = findChildren<QComboBox*>();
         foreach (auto combo, comboBoxes) {
-            QListView *_view = new QListView(combo);
+                auto *_view = new QListView(combo);
             _view->setTextElideMode(Qt::ElideMiddle);
             combo->setView(_view);
         }
@@ -258,7 +255,7 @@ void StreamConverter::closeEvent(QCloseEvent *event)
 bool StreamConverter::eventFilter(QObject *watched, QEvent *event)
 {
     if (event->type() == QEvent::KeyPress) {
-        QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+        auto *keyEvent = dynamic_cast<QKeyEvent*>(event);
         if (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) {
             ui->frameMiddle->setFocus();
             return true;
@@ -321,17 +318,7 @@ void StreamConverter::onComboBox_audio_codec_textChanged(const QString &arg1)
         ui->comboBox_audio_bitrate->setCurrentIndex(2);
         ui->comboBox_audio_container->addItems({"Opus", "MKA"});
     }
-    else if (arg1 == "Pulse Code Modulation 16 bit") {
-        ui->comboBox_audio_bitrate->addItems({tr("Auto")});
-        ui->comboBox_audio_bitrate->setEnabled(false);
-        ui->comboBox_audio_container->addItems({"WAV", "MKA"});
-    }
-    else if (arg1 == "Pulse Code Modulation 24 bit") {
-        ui->comboBox_audio_bitrate->addItems({tr("Auto")});
-        ui->comboBox_audio_bitrate->setEnabled(false);
-        ui->comboBox_audio_container->addItems({"WAV", "MKA"});
-    }
-    else if (arg1 == "Pulse Code Modulation 32 bit") {
+    else if ((arg1 == "Pulse Code Modulation 16 bit") || (arg1 == "Pulse Code Modulation 24 bit") || (arg1 == "Pulse Code Modulation 32 bit")) {
         ui->comboBox_audio_bitrate->addItems({tr("Auto")});
         ui->comboBox_audio_bitrate->setEnabled(false);
         ui->comboBox_audio_container->addItems({"WAV", "MKA"});

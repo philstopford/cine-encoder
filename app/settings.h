@@ -71,8 +71,8 @@ private:
     void onCloseWindow();
     void onButtonApply();
     void onButtonReset();
-    void showEvent(QShowEvent*);
-    virtual bool eventFilter(QObject*, QEvent*) final;
+    void showEvent(QShowEvent*) override;
+    bool eventFilter(QObject*, QEvent*) final;
 
     void onButtonOutputPath();
     void onButtonTempPath();

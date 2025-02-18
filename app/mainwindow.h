@@ -57,10 +57,10 @@ class MainWindow : public BaseWindow
     Q_OBJECT
 public:
     MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    ~MainWindow() override;
 
 private:
-    void setFloating(const int index, const QPoint &offset, const QSize &size);
+    void setFloating(int index, const QPoint &offset, const QSize &size);
     void createConnections();
     void onActionAbout();
     void onActionDonate();
@@ -70,25 +70,25 @@ private:
     void setStatus(const QString &status);
     void setWidgetsEnabled(bool);
     void setProgressEnabled(bool);
-    void showInfoMessage(const QString &message, const bool timer_mode = false);
+    void showInfoMessage(const QString &message, bool timer_mode = false);
     bool showDialogMessage(const QString &message);
     void showPopup(const QString &text, PopupMessage::Icon icon = PopupMessage::Icon::Info);
     void addReport(const QString &log, ReportLog::Icon icon = ReportLog::Icon::Info);
-    void setTheme(const int ind_theme);
+    void setTheme(int ind_theme);
     QString setThumbnail(QString curFilename,
-                         const double time,
-                         const int quality,
-                         const int destination);
+                         double time,
+                         int quality,
+                         int destination);
 
     void provideContextMenu(const QPoint &position);
     void providePresetContextMenu(const QPoint &position);
-    void resizeTableRows(const int rows_height);
+    void resizeTableRows(int rows_height);
     void resetView();
 
     // ============= Preset Window =============
     void setDefaultPresets();
     void setItemStyle(QTreeWidgetItem *item) const;
-    void updateCurPresetPos(const int index_top, const int index_child);
+    void updateCurPresetPos(int index_top, int index_child);
     static void updateInfoFields(const QString &codec_qstr,
                           const QString &mode_qstr,
                           const QString &container_qstr,
@@ -97,7 +97,7 @@ private:
                           const QString &preset_qstr,
                           const QString &acodec_qstr,
                           QTreeWidgetItem *item,
-                          const bool defaultNameFlag);
+                          bool defaultNameFlag);
     void updatePresetTable();
     void saveXMLSettingsFile();
     static int doesParamsContain(const QString& findMe);
@@ -257,7 +257,7 @@ private slots:
     void onRemoveAllFiles();
     void onStart();
     void onStop();
-    void onSort(const bool up);
+    void onSort(bool up);
     void onSortDown();
     void onSortUp();
     void setParameters();
@@ -278,7 +278,7 @@ private slots:
     void onEncodingMode(const QString &mode);
     void onEncodingStarted();
     void onEncodingInitError(const QString &_message);
-    void onEncodingProgress(const int percent, const float rem_time);
+    void onEncodingProgress(int percent, float rem_time);
     void onEncodingLog(const QString &log);
     void onEncodingCompleted();
     void onEncodingAborted();

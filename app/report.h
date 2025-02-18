@@ -21,7 +21,7 @@ public:
 
 private:
     virtual void showEvent(QShowEvent*) final;
-    void onItemEntered(QTableWidgetItem*);
+    static void onItemEntered(QTableWidgetItem*);
     void moveWidget();
     Ui::Report *ui;
     bool m_activated;

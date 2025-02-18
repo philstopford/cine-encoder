@@ -26,7 +26,7 @@
 
 #define SLT(method) &Preset::method
 
-typedef void(Preset::*FnVoidVoid)(void);
+typedef void(Preset::*FnVoidVoid)();
 typedef void(Preset::*FnVoidInt)(int);
 typedef void(Preset::*FnVoidStr)(const QString&);
 
