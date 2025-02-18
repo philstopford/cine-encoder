@@ -16,7 +16,7 @@
 #include <QDir>
 #include <QMap>
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include <ctime>
 #include <algorithm>
 
@@ -34,9 +34,7 @@ EncoderStream::EncoderStream(QObject *parent) :
 }
 
 EncoderStream::~EncoderStream()
-{
-
-}
+= default;
 
 /************************************************
 ** Encoder

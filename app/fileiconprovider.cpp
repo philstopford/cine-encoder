@@ -2,14 +2,10 @@
 
 
 FileIconProvider::FileIconProvider()
-{
-
-}
+= default;
 
 FileIconProvider::~FileIconProvider()
-{
-
-}
+= default;
 
 QIcon FileIconProvider::icon(const QFileInfo &info) const
 {

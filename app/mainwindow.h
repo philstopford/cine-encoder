@@ -87,9 +87,9 @@ private:
 
     // ============= Preset Window =============
     void setDefaultPresets();
-    void setItemStyle(QTreeWidgetItem *item);
+    void setItemStyle(QTreeWidgetItem *item) const;
     void updateCurPresetPos(const int index_top, const int index_child);
-    void updateInfoFields(const QString &codec_qstr,
+    static void updateInfoFields(const QString &codec_qstr,
                           const QString &mode_qstr,
                           const QString &container_qstr,
                           const QString &bqr_qstr,
@@ -100,7 +100,7 @@ private:
                           const bool defaultNameFlag);
     void updatePresetTable();
     void saveXMLSettingsFile();
-    int doesParamsContain(QString findMe);
+    static int doesParamsContain(const QString& findMe);
     void readXMLSettingsFile(const QString& xmlFileName);
 
     // ====================================
@@ -261,7 +261,7 @@ private slots:
     void onSortDown();
     void onSortUp();
     void setParameters();
-    bool readXMLPresetFile(QString file);
+    bool readXMLPresetFile(const QString& file);
     void setDocksParameters(const QList<int>& dockSizesX, const QList<int>& dockSizesY);
 
     void showEvent(QShowEvent*);
@@ -317,7 +317,7 @@ private slots:
     void onAddSection();
     void onAddPreset();
     void onRenamePreset();
-    void setPresetIcon(QTreeWidgetItem *item, bool collapsed);
+    void setPresetIcon(QTreeWidgetItem *item, bool collapsed) const;
     void onTreeCollapsed(QTreeWidgetItem *item);
     void onTreeExpanded(QTreeWidgetItem *item);
     void onTreeChanged(QTreeWidgetItem *item, int column);

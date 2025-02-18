@@ -44,6 +44,7 @@
 #include <sstream>
 #include <QXmlStreamWriter>
 #include <QString>
+#include <utility>
 
 #if defined (Q_OS_UNIX)
     #ifndef UNICODE
@@ -89,7 +90,7 @@ namespace MainWindowPrivate
 {
     QLabel* createLabel(QWidget *parent, const char *name, const QString &text)
     {
-        QLabel *label = new QLabel(parent);
+        auto *label = new QLabel(parent);
         label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         label->setObjectName(QString::fromUtf8(name));
         label->setAlignment(Qt::AlignCenter);
@@ -134,7 +135,7 @@ MainWindow::MainWindow(QWidget *parent):
     ui->setupUi(centralWidget());
     setTitleBar(ui->frame_top);
     //*************** Set labels *****************//
-    QHBoxLayout *pTableLayout = new QHBoxLayout(ui->tableWidget);
+    auto *pTableLayout = new QHBoxLayout(ui->tableWidget);
     ui->tableWidget->setLayout(pTableLayout);
     m_pTableLabel = MainWindowPrivate::createLabel(ui->tableWidget, "TableWidgetLabel", tr("No media"));
     pTableLayout->addWidget(m_pTableLabel);
@@ -144,7 +145,7 @@ MainWindow::MainWindow(QWidget *parent):
     ui->gridLayoutSubtitle->addWidget(m_pSubtitleLabel);
 
     //************** Create docks ******************//
-    QGridLayout *pMiddleLayout = new QGridLayout(ui->frameMiddle);
+    auto *pMiddleLayout = new QGridLayout(ui->frameMiddle);
     ui->frameMiddle->setLayout(pMiddleLayout);
     m_pDocksContainer = new QMainWindow(ui->frameMiddle);
     pMiddleLayout->addWidget(m_pDocksContainer);
@@ -163,13 +164,13 @@ MainWindow::MainWindow(QWidget *parent):
     m_pDocksContainer->setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
     m_pDocksContainer->setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
 
-    QGridLayout *pCentralDockLayout = new QGridLayout(m_pCentralDock);
+    auto *pCentralDockLayout = new QGridLayout(m_pCentralDock);
     m_pCentralDock->setLayout(pCentralDockLayout);
     pCentralDockLayout->addWidget(ui->frameTask);
     pCentralDockLayout->setContentsMargins(0, 0, 0, 0);
 
-    QFrame *pFrameSource = new QFrame(ui->frameMiddle);
-    QGridLayout *pSourceLayout = new QGridLayout(pFrameSource);
+    auto *pFrameSource = new QFrame(ui->frameMiddle);
+    auto *pSourceLayout = new QGridLayout(pFrameSource);
     pSourceLayout->setContentsMargins(0, 0, 0, 0);
     pFrameSource->setLayout(pSourceLayout);
     m_pSplSource = new QSplitter(Qt::Horizontal, pFrameSource);
@@ -337,9 +338,9 @@ void MainWindow::closeEvent(QCloseEvent *event) // Show prompt when close app
         stn.setValue("DocksContainer/state", m_pDocksContainer->saveState());
         stn.setValue("DocksContainer/geometry", m_pDocksContainer->saveGeometry());
         stn.beginWriteArray("DocksContainer/docks_geometry");
-            for (int j = 0; j < DOCKS_COUNT; j++) {
+            for (auto & m_pDock : m_pDocks) {
                 stn.setArrayIndex(i);
-                stn.setValue("DocksContainer/docks_geometry/dock_size", m_pDocks[j]->size());
+                stn.setValue("DocksContainer/docks_geometry/dock_size", m_pDock->size());
             }
             stn.endArray();
         stn.endGroup();
@@ -941,14 +942,14 @@ void MainWindow::setParameters()    // Set parameters
     m_temp_folder = "";
     m_output_folder = "";
     m_batch_mode = false;
-    m_hideInTrayFlag = 0;
-    m_language = 0;
+    m_hideInTrayFlag = false;
+    m_language = nullptr;
     m_font = "";
     m_fontSize = 8;
     m_rowHeight = 0;
     m_subtitles_font = "";
     m_subtitles_fontSize = 8;
-    m_subtitles_color = "#ffffff";
+    m_subtitles_color = 0xffffff;
     m_subtitles_background = false;
     m_subtitles_deselectall = true;
     m_subtitles_background_alpha = 150;
@@ -964,8 +965,8 @@ void MainWindow::setParameters()    // Set parameters
     ui->treeWidget->header()->setFont(fnt);
     ui->treeWidget->setHeaderHidden(false);
     ui->treeWidget->setAlternatingRowColors(true);
-    int NUM_ROWS = m_preset_table[0].size();
-    int NUM_COLUMNS = m_preset_table.size();
+    auto NUM_ROWS = m_preset_table[0].size();
+    auto NUM_COLUMNS = m_preset_table.size();
     QString type;
     QFont parentFont;
     parentFont.setBold(true);
@@ -1005,8 +1006,8 @@ void MainWindow::setParameters()    // Set parameters
         }
     }
     if (m_pos_top != -1 && m_pos_cld != -1) {
-        QTreeWidgetItem *__item = ui->treeWidget->topLevelItem(m_pos_top)->child(m_pos_cld);
-        ui->treeWidget->setCurrentItem(__item);
+        QTreeWidgetItem *item = ui->treeWidget->topLevelItem(m_pos_top)->child(m_pos_cld);
+        ui->treeWidget->setCurrentItem(item);
     }
     // Print(NUM_ROWS << " x " << NUM_COLUMNS);
     for (int i = 7; i < 41; i++)
@@ -1236,7 +1237,7 @@ void MainWindow::setDocksParameters(const QList<int>& dockSizesX, const QList<in
     }
 }
 
-int MainWindow::doesParamsContain(QString findMe)
+int MainWindow::doesParamsContain(const QString& findMe)
 {
     int index = -1;
     for (int i = 0; i < PARAMETERS_COUNT; i++)
@@ -1251,7 +1252,7 @@ int MainWindow::doesParamsContain(QString findMe)
     return index;
 }
 
-bool MainWindow::readXMLPresetFile(QString file)
+bool MainWindow::readXMLPresetFile(const QString& file)
 {
     const bool debug = false;
     m_preset_table.clear();
@@ -1337,22 +1338,22 @@ bool MainWindow::readXMLPresetFile(QString file)
             // Dump the table for review.
             if (debug) {
                 std::list<std::list<std::string>> list_of_list_of_strings;
-                for (int pp = 0; pp < PARAMETERS_COUNT + 1; pp++) {
+                for (auto & pp : ptable_list) {
                     std::list<std::string> list_of_strings;
                     for (int pr = 0; pr < presets_added; pr++) {
-                        list_of_strings.push_back(ptable_list[pp][pr].toStdString());
+                        list_of_strings.push_back(pp[pr].toStdString());
                     }
 
                     list_of_list_of_strings.push_back(list_of_strings);
                 }
             }
 
-            for (int i = 0; i < PARAMETERS_COUNT + 1; i++)
+            for (auto & i : ptable_list)
             {
                 QList<QString> parlist;
                 for (int j = 0; j < presets_added; j++)
                 {
-                    QString sss = ptable_list[i][j];
+                    QString sss = i[j];
                     parlist.append(sss);
                 }
                 m_preset_table.append(parlist);
@@ -1391,7 +1392,7 @@ void MainWindow::onHideWindow()    // Hide window
 
 void MainWindow::onReport()
 {
-    Report *rpt = new Report(this, m_reportLog);
+    auto *rpt = new Report(this, m_reportLog);
     rpt->show();
 }
 
@@ -1761,7 +1762,7 @@ void MainWindow::changeEvent(QEvent *event)
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
     if (event->type() == QEvent::KeyPress) {
-        QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+        auto *keyEvent = dynamic_cast<QKeyEvent*>(event);
         if (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) {
             ui->frameMiddle->setFocus();
             return true;
@@ -1785,7 +1786,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
     } else
     if (watched == m_pTableLabel) {
         if (event->type() == QEvent::MouseButtonPress) {
-            QMouseEvent* mouse_event = dynamic_cast<QMouseEvent*>(event);
+            auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
             if (mouse_event->button() == Qt::LeftButton) {
                 onAddFiles();
                 return true;
@@ -2220,7 +2221,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
     setProgressEnabled(false);
     MediaInfo MI;
     for (int i = 0; i < openFileNames.size(); i++) {
-        const QString file = openFileNames.at(i);
+        const QString& file = openFileNames.at(i);
         const QString inputFolder = QFileInfo(file).absolutePath();
         const QString inputFile = QFileInfo(file).fileName();
         if (MI.Open(file.toStdWString()) == 1) {
@@ -2310,16 +2311,16 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                 m_data[numRows].videoMetadata.push_back(arr_items[j]);
 
             for (int column = ColumnIndex::FILENAME; column <= ColumnIndex::T_HEIGHT; column++) {
-                QTableWidgetItem *__item = new QTableWidgetItem(arr_items[column]);
+                auto *item = new QTableWidgetItem(arr_items[column]);
                 if (column >= ColumnIndex::FORMAT && column <= ColumnIndex::MASTERDISPLAY)
-                    __item->setTextAlignment(Qt::AlignCenter);
-                ui->tableWidget->setItem(numRows, column, __item);
+                    item->setTextAlignment(Qt::AlignCenter);
+                ui->tableWidget->setItem(numRows, column, item);
             }
 
-            QTableWidgetItem *__startTime = new QTableWidgetItem("0");
-            QTableWidgetItem *__endTime = new QTableWidgetItem("0");
-            ui->tableWidget->setItem(numRows, ColumnIndex::T_STARTTIME, __startTime);
-            ui->tableWidget->setItem(numRows, ColumnIndex::T_ENDTIME, __endTime);
+            auto *startTime = new QTableWidgetItem("0");
+            auto *endTime = new QTableWidgetItem("0");
+            ui->tableWidget->setItem(numRows, ColumnIndex::T_STARTTIME, startTime);
+            ui->tableWidget->setItem(numRows, ColumnIndex::T_ENDTIME, endTime);
 
             for (int j = 0; j < MAX_AUDIO_STREAMS; j++) {
                 QString audioFormat = AINFO(size_t(j), "Format");
@@ -2335,7 +2336,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                     m_data[numRows].fields[Data::audioLangs].push_back(AINFO(size_t(j), "Language"));
                     m_data[numRows].fields[Data::audioTitles].push_back(AINFO(size_t(j), "Title"));
                     const QString deflt = AINFO(size_t(j), "Default");
-                    m_data[numRows].checks[Data::audioDef].push_back(deflt == "Yes" ? true : false);
+                    m_data[numRows].checks[Data::audioDef].push_back(deflt == "Yes");
                 } else {
                     break;
                 }
@@ -2358,7 +2359,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                     m_data[numRows].fields[Data::subtLangs].push_back(SINFO(size_t(j), "Language"));
                     m_data[numRows].fields[Data::subtTitles].push_back(SINFO(size_t(j), "Title"));
                     const QString deflt = SINFO(size_t(j), "Default");
-                    m_data[numRows].checks[Data::subtDef].push_back(deflt == "Yes" ? true : false);
+                    m_data[numRows].checks[Data::subtDef].push_back(deflt == "Yes");
                     m_data[numRows].checks[Data::subtBurn].push_back(false);
                 } else {
                     break;
@@ -2616,10 +2617,10 @@ void MainWindow::get_output_filename()  // Get output data
 {
     ui->textBrowser_2->clear();
     ui->textBrowser_2->setText(m_curParams[CurParamIndex::OUTPUT_PARAM]);
-    const int _CODEC = m_curParams[CurParamIndex::CODEC].toInt();
-    const int _CONTAINER = m_curParams[CurParamIndex::CONTAINER].toInt();
+    const int CE_CODEC = m_curParams[CurParamIndex::CODEC].toInt();
+    const int CE_CONTAINER = m_curParams[CurParamIndex::CONTAINER].toInt();
     Tables t;
-    extension = t.arr_container[_CODEC][_CONTAINER].toLower();
+    extension = t.arr_container[CE_CODEC][CE_CONTAINER].toLower();
     QString suffix;
     if (m_suffixType == 0) {
         QString row_qstr = numToStr(m_row);
@@ -3018,7 +3019,7 @@ class params
     }
 
     public: void copy_values_from(QVector<QString> copy_from) {
-        values = QVector<QString>(copy_from);
+        values = QVector<QString>(std::move(copy_from));
         values.detach();
     }
 };
@@ -3076,7 +3077,7 @@ void MainWindow::onRenamePreset()
     }
 }
 
-void MainWindow::setItemStyle(QTreeWidgetItem *item)
+void MainWindow::setItemStyle(QTreeWidgetItem *item) const
 {
     QFont font = qApp->font();
     font.setItalic(true);
@@ -3165,7 +3166,7 @@ void MainWindow::updatePresetTable()
     Print(m_preset_table[0].size() << " x " << m_preset_table.size());
 }
 
-void MainWindow::setPresetIcon(QTreeWidgetItem *item, bool collapsed)
+void MainWindow::setPresetIcon(QTreeWidgetItem *item, bool collapsed) const
 {
     QString file;
     switch (m_theme) {
@@ -3237,7 +3238,7 @@ bool MainWindow::showDialogMessage(const QString &message)
 
 void MainWindow::showPopup(const QString &text, PopupMessage::Icon icon)
 {
-    PopupMessage *msg = new PopupMessage(this, icon, text);
+    auto *msg = new PopupMessage(this, icon, text);
     msg->show();
     addReport(text, static_cast<ReportLog::Icon>(icon));
 }

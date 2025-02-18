@@ -18,7 +18,6 @@
 #include <QStyleFactory>
 #include <QMessageBox>
 #include <QTranslator>
-#include <QMap>
 #include <iostream>
 #include <QXmlStreamReader>
 #include "mainwindow.h"
