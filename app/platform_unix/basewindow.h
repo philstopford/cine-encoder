@@ -22,7 +22,7 @@ class BaseWindow: public QMainWindow
     Q_OBJECT
 public:
     explicit BaseWindow(QWidget *parent = nullptr, bool isReizable = true);
-    virtual ~BaseWindow();
+    ~BaseWindow() override;
     int exec();
     void acceptDialog();
     void closeDialog();
@@ -36,14 +36,15 @@ signals:
 protected:
     void setTitleBar(QWidget*);
     void setMaskWidget(QWidget*);
-    void onExpandWindow();
-    virtual void showEvent(QShowEvent*) override;
-    virtual void mouseMoveEvent(QMouseEvent *) override;
-    virtual void mousePressEvent(QMouseEvent *) override;
-    virtual void mouseReleaseEvent(QMouseEvent *) override;
-    virtual void resizeEvent(QResizeEvent *) override;
-    virtual void changeEvent(QEvent*) override;
-    virtual bool eventFilter(QObject *watched, QEvent *event) override;
+
+    virtual void onExpandWindow();
+    void showEvent(QShowEvent*) override;
+    void mouseMoveEvent(QMouseEvent *) override;
+    void mousePressEvent(QMouseEvent *) override;
+    void mouseReleaseEvent(QMouseEvent *) override;
+    void resizeEvent(QResizeEvent *) override;
+    void changeEvent(QEvent*) override;
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
     XUtils::CornerEdge m_resizingCornerEdge;

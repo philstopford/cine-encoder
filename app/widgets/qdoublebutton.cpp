@@ -8,7 +8,7 @@ QDoubleButton::QDoubleButton(QWidget *parent) :
     QWidget(parent),
     m_index(0)
 {
-    QHBoxLayout *lut = new QHBoxLayout(this);
+    auto *lut = new QHBoxLayout(this);
     lut->setContentsMargins(0,0,0,0);
     lut->setSpacing(0);
     setLayout(lut);
@@ -28,9 +28,7 @@ QDoubleButton::QDoubleButton(QWidget *parent) :
 }
 
 QDoubleButton::~QDoubleButton()
-{
-
-}
+= default;
 
 void QDoubleButton::setIcons(const QIcon &lIcon, const QIcon &rIcon)
 {

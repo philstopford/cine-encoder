@@ -16,7 +16,7 @@
 #include <QDir>
 #include <QMap>
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include <ctime>
 #include <algorithm>
 #include <QColor>
@@ -1184,7 +1184,6 @@ void Encoder::subtVF(const QString &input_file, const QString &subtitle_font, in
     switch (location)
     {
         case 0: // default
-            break;
         case 1: // bottom left
         case 2: // bottom center
         case 3: // bottom right
@@ -1262,7 +1261,7 @@ void Encoder::fpsVF(const QString &_fps, int CE_CODEC, int CE_FRAME_RATE, int CE
 }
 
 void Encoder::resizeVF(QString &_width, QString &_height, int CE_CODEC, int CE_WIDTH, int CE_HEIGHT, Tables &t,
-                       QString &resize_vf) const {
+                       QString &resize_vf) {
     // Keep with a QString here as there are no spaces in the parameters.
     resize_vf= "";
     const QString new_width = (t.arr_width[CE_WIDTH] != "Source") ? t.arr_width[CE_WIDTH] : _width;
@@ -1531,7 +1530,7 @@ void Encoder::completed(int exit_code)
     } else {
         if (_flag_hdr)
             QDir().remove(_temp_file);
-        emit onEncodingError(_error_message);
+        emit onEncodingError(_error_message, false);
     }
 }
 

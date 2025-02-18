@@ -17,11 +17,9 @@
 #include "helper.h"
 #include <QListView>
 #include <QMouseEvent>
-#include <QCloseEvent>
-#include <QResizeEvent>
 #include <QTimer>
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include <QColorDialog>
 #include <QFontDatabase>
 #include <QStringListModel>
@@ -225,7 +223,7 @@ void Preset::showEvent(QShowEvent *event)
         move(parentWidget()->geometry().center() - center);
         setStyleSheet(Helper::getCss(m_theme));
 
-        QTimer *timer = new QTimer(this);
+        auto *timer = new QTimer(this);
         timer->setInterval(450);
         connect(timer, &QTimer::timeout, this, &Preset::repeat_handler);
         timer->start();
@@ -233,12 +231,12 @@ void Preset::showEvent(QShowEvent *event)
         auto comboBoxes = findChildren<QComboBox*>();
         foreach (auto combo, comboBoxes) {
             //Print(combo->objectName().toStdString());
-            QListView *_view = new QListView(combo);
+            auto *_view = new QListView(combo);
             _view->setTextElideMode(Qt::ElideMiddle);
             combo->setView(_view);
         }
 
-        QDoubleValidator *doubleValidator = new QDoubleValidator(0.0, 10000.0, 3, this);
+        auto *doubleValidator = new QDoubleValidator(0.0, 10000.0, 3, this);
         doubleValidator->setNotation(QDoubleValidator::StandardNotation);
         ui->lineEdit_bitrate->setValidator(doubleValidator);
         ui->lineEdit_minrate->setValidator(doubleValidator);
@@ -300,12 +298,11 @@ void Preset::showEvent(QShowEvent *event)
 
         QFontDatabase database;
         QFontDatabase::WritingSystem values = QFontDatabase::WritingSystem::Latin;
-        const QStringList fontFamilies = database.families(values);
-        QStringListModel *fontModel = new QStringListModel(ui->comboBox_preset_subtitles_font);
+        const QStringList fontFamilies = QFontDatabase::families(values);
+        auto *fontModel = new QStringListModel(ui->comboBox_preset_subtitles_font);
         fontModel->setStringList(fontFamilies);
         ui->comboBox_preset_subtitles_font->blockSignals(true);
         ui->comboBox_preset_subtitles_font->setModel(fontModel);
-        const QString appFontFamily = qApp->font().family();
         const int fontInd = ui->comboBox_preset_subtitles_font->findText((*m_pNew_param)[CurParamIndex::SUBTITLE_FONT]);
         if (fontInd != -1) {
             ui->comboBox_preset_subtitles_font->setCurrentIndex(fontInd);
@@ -355,7 +352,7 @@ void Preset::showEvent(QShowEvent *event)
 bool Preset::eventFilter(QObject *watched, QEvent *event)
 {
     if (event->type() == QEvent::KeyPress) {
-        QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+        auto *keyEvent = dynamic_cast<QKeyEvent*>(event);
         if (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) {
             ui->frameMiddle->setFocus();
             return true;
@@ -536,7 +533,7 @@ void Preset::onComboBoxFrameRate_indexChanged(int index)
 {
     int codec = ui->comboBox_codec->currentIndex();
     bool blendingFlag = (codec >= CODEC_QSV_FIRST && codec <= CODEC_QSV_LAST) ||
-            (codec >= CODEC_VAAPI_FIRST && codec <= CODEC_VAAPI_LAST) ? true : false;
+                        (codec >= CODEC_VAAPI_FIRST && codec <= CODEC_VAAPI_LAST);
     if (index == 0) {
         ui->comboBoxBlending->setCurrentIndex(0);
         ui->comboBoxBlending->setEnabled(false);
@@ -551,17 +548,13 @@ void Preset::onComboBoxFrameRate_indexChanged(int index)
     m_repeat++;
 }
 
-void Preset::calculateDAR(QString width, QString height)
+void Preset::calculateDAR(const QString& width, const QString& height)
 {
     if (width == tr("Source") && height == tr("Source")) {
         ui->lineEdit_DAR->setText(tr("Source"));
     }
     else
-    if (width == tr("Source") && height != tr("Source")) {
-        ui->lineEdit_DAR->setText(tr("Undef"));
-    }
-    else
-    if (width != tr("Source") && height == tr("Source")) {
+    if ((width == tr("Source") && height != tr("Source")) || (width != tr("Source") && height == tr("Source"))) {
         ui->lineEdit_DAR->setText(tr("Undef"));
     }
     else
@@ -757,22 +750,6 @@ void Preset::onComboBox_codec_textChanged(const QString &arg1)  // Change curren
             disableHDR();
         }
 
-        else if (arg1 == tr("Intel QSV H.264/AVC 4:2:0 8 bit")) {
-            ui->comboBox_container->setCurrentIndex(2);
-            ui->comboBoxAspectRatio->setCurrentIndex(0);
-            ui->comboBoxAspectRatio->setEnabled(true);
-            ui->comboBox_width->setEnabled(true);
-            ui->comboBox_height->setEnabled(true);
-            ui->comboBoxFrameRate->setEnabled(true);
-            ui->comboBox_profile->setCurrentIndex(Profile::HIGH);
-            ui->comboBox_preset->setCurrentIndex(4);
-            ui->comboBox_level->setCurrentIndex(0);
-            ui->comboBox_pixfmt->setCurrentIndex(Pixformat::PIXFORMAT_AUTO);
-            ui->comboBox_mode->setEnabled(true);
-            ui->comboBox_pass->setEnabled(false);
-            disableHDR();
-        }
-
         else if (arg1 == tr("Intel QSV VP9 4:2:0 10 bit")) {
             ui->comboBoxAspectRatio->setCurrentIndex(0);
             ui->comboBoxAspectRatio->setEnabled(false);
@@ -816,7 +793,8 @@ void Preset::onComboBox_codec_textChanged(const QString &arg1)  // Change curren
             disableHDR();
         }
 
-        else if (arg1 == tr("Intel VAAPI H.264/AVC 4:2:0 8 bit")) {
+        else if ((arg1 == tr("Intel QSV H.264/AVC 4:2:0 8 bit")) ||
+                (arg1 == tr("Intel VAAPI H.264/AVC 4:2:0 8 bit"))) {
             ui->comboBox_container->setCurrentIndex(2);
             ui->comboBoxAspectRatio->setCurrentIndex(0);
             ui->comboBoxAspectRatio->setEnabled(true);
@@ -1208,23 +1186,11 @@ void Preset::onComboBox_audio_codec_textChanged(const QString &arg1) // Change c
                                                      "1024k", "960k", "768k", "640k", "576k", "512k", "448k", "384k"});
         ui->comboBox_audio_bitrate->setCurrentIndex(4);
     }
-    else if (arg1 == "Vorbis") {
+    else if ((arg1 == "Vorbis") || (arg1 == "Opus")) {
         ui->comboBox_audio_bitrate->addItems({"448k", "384k", "256k", "128k", "96k", "64k"});
         ui->comboBox_audio_bitrate->setCurrentIndex(2);
     }
-    else if (arg1 == "Opus") {
-        ui->comboBox_audio_bitrate->addItems({"448k", "384k", "256k", "128k", "96k", "64k"});
-        ui->comboBox_audio_bitrate->setCurrentIndex(2);
-    }
-    else if (arg1 == "PCM 16 bit") {
-        ui->comboBox_audio_bitrate->addItems({tr("Auto")});
-        ui->comboBox_audio_bitrate->setEnabled(false);
-    }
-    else if (arg1 == "PCM 24 bit") {
-        ui->comboBox_audio_bitrate->addItems({tr("Auto")});
-        ui->comboBox_audio_bitrate->setEnabled(false);
-    }
-    else if (arg1 == "PCM 32 bit") {
+    else if ((arg1 == "PCM 16 bit") || (arg1 == "PCM 24 bit") || (arg1 == "PCM 32 bit")) {
         ui->comboBox_audio_bitrate->addItems({tr("Auto")});
         ui->comboBox_audio_bitrate->setEnabled(false);
     }
@@ -1301,7 +1267,7 @@ void Preset::subtitles_color_change()
                                           0);
 
     if (cdialog.exec() == QDialog::Accepted) {
-        m_pPresetSubtitlesColor_temp = cdialog.getColor();
+        m_pPresetSubtitlesColor_temp = QColorDialog::getColor();
         m_pPresetSubtitlesColor_temp.setAlpha(0);
 
         QString s("background: " + m_pPresetSubtitlesColor_temp.name() + ";");
@@ -1311,7 +1277,7 @@ void Preset::subtitles_color_change()
 }
 
 void Preset::subtitles_background_color_change() {
-    QColor color = QColor((*m_pNew_param)[CurParamIndex::SUBTITLE_BACKGROUND_COLOR]);
+    auto color = QColor((*m_pNew_param)[CurParamIndex::SUBTITLE_BACKGROUND_COLOR]);
     // int alpha = (*m_pNew_param)[CurParamIndex::SUBTITLE_BACKGROUND_ALPHA].toInt();
     m_pPresetSubtitlesBackgroundColor_temp = QColor(color.red(),
                                                     color.green(),
@@ -1319,7 +1285,7 @@ void Preset::subtitles_background_color_change() {
                                                     color.alpha());
     QColorDialog cdialog(m_pPresetSubtitlesBackgroundColor_temp);
     if (cdialog.exec() == QDialog::Accepted) {
-        m_pPresetSubtitlesBackgroundColor_temp = cdialog.getColor();
+        m_pPresetSubtitlesBackgroundColor_temp = QColorDialog::getColor();
         m_pPresetSubtitlesBackgroundColor_temp = QColor(m_pPresetSubtitlesBackgroundColor_temp.red(),
                                                         m_pPresetSubtitlesBackgroundColor_temp.green(),
                                                         m_pPresetSubtitlesBackgroundColor_temp.blue(),

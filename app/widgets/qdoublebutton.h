@@ -9,8 +9,8 @@ class QDoubleButton : public QWidget
 {
     Q_OBJECT
 public:
-    QDoubleButton(QWidget *parent);
-    ~QDoubleButton();
+    explicit QDoubleButton(QWidget *parent);
+    ~QDoubleButton() override;
     void setIcons(const QIcon &lIcon,
                   const QIcon &rIcon);
     uchar currentIndex();

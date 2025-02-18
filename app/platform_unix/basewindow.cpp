@@ -30,7 +30,7 @@ BaseWindow::BaseWindow(QWidget *parent, bool isReizable) :
 {
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowModal);
-    QWidget *ui_widget = new QWidget(this);
+    auto *ui_widget = new QWidget(this);
     setCentralWidget(ui_widget);
     setMaskWidget(ui_widget);
     m_resizingCornerEdge = XUtils::CornerEdge::kInvalid;
@@ -41,9 +41,7 @@ BaseWindow::BaseWindow(QWidget *parent, bool isReizable) :
 }
 
 BaseWindow::~BaseWindow()
-{
-
-}
+= default;
 
 int BaseWindow::exec()
 {
@@ -79,7 +77,7 @@ void BaseWindow::setMaskWidget(QWidget* maskwidget)
     m_maskwidget->setAttribute(Qt::WA_Hover, true);
     m_maskwidget->setAttribute(Qt::WA_NoMousePropagation, true);
     m_maskwidget->installEventFilter(this);
-    QGraphicsDropShadowEffect *shadow = new QGraphicsDropShadowEffect(m_maskwidget);
+    auto *shadow = new QGraphicsDropShadowEffect(m_maskwidget);
     shadow->setBlurRadius(25.0);
     shadow->setColor(QColor(0, 0, 0, 80));
     shadow->setOffset(0.0);
@@ -163,7 +161,7 @@ bool BaseWindow::eventFilter(QObject *watched, QEvent *event)
     } else
     if (watched == m_titlebar) {
         if ((event->type() == QEvent::MouseButtonPress)) {
-            QMouseEvent* mouse_event = dynamic_cast<QMouseEvent*>(event);
+            auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
             if (mouse_event->buttons() & Qt::LeftButton) {
                 XUtils::SendButtonRelease(this, mouse_event->pos(), mouse_event->globalPosition().toPoint());
                 XUtils::MoveWindow(this, Qt::LeftButton);
@@ -171,7 +169,7 @@ bool BaseWindow::eventFilter(QObject *watched, QEvent *event)
             }
         } else
         if (event->type() == QEvent::MouseButtonDblClick) {
-            QMouseEvent* mouse_event = dynamic_cast<QMouseEvent*>(event);
+            auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
             if (mouse_event->buttons() & Qt::LeftButton) {
                 if (m_isResizable)
                     onExpandWindow();

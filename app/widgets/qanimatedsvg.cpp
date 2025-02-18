@@ -17,9 +17,7 @@ QAnimatedSvg::QAnimatedSvg(QLabel *parent, const QSize &size) :
 }
 
 QAnimatedSvg::~QAnimatedSvg()
-{
-
-}
+= default;
 
 void QAnimatedSvg::setFileName(const QString &fileName)
 {
@@ -53,7 +51,7 @@ void QAnimatedSvg::updateView()
         QPixmap rotPix(pix.size());
         rotPix.fill(QColor::fromRgb(0, 0, 0, 0));
         QSizeF size = QSizeF(pix.size());
-        QPainter *p = new QPainter(&rotPix);
+        auto *p = new QPainter(&rotPix);
         p->translate(size.height()/2, size.height()/2);
         p->rotate(m_degree);
         p->translate(-size.height()/2, -size.height()/2);

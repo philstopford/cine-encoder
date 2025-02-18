@@ -35,14 +35,14 @@ class Preset : public BaseWindow
     Q_OBJECT
 public:
     explicit Preset(QWidget *parent, QVector<QString> *pOld_param, int theme);
-    ~Preset();
+    ~Preset() override;
 
 private:
     void onCloseWindow();
     void onButtonApply();
     void lockSignals(bool status);
-    virtual void showEvent(QShowEvent*) final;
-    virtual bool eventFilter(QObject*, QEvent*) final;
+    void showEvent(QShowEvent*) final;
+    bool eventFilter(QObject*, QEvent*) final;
     // Transform
     void repeat_handler();
     void change_preset_name();
@@ -50,7 +50,7 @@ private:
     void onComboBox_width_textChanged(const QString&);
     void onComboBox_height_textChanged(const QString&);
     void onComboBoxFrameRate_indexChanged(int);
-    void calculateDAR(QString, QString);
+    void calculateDAR(const QString&, const QString&);
     // Video
     void disableHDR();
     void onComboBox_codec_textChanged(const QString&);

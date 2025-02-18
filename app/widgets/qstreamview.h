@@ -18,7 +18,7 @@ public:
         Internal, External
     };
     QStreamView(QWidget *parent);
-    ~QStreamView();
+    ~QStreamView() override;
     void setContentType(Content type);
     void clearList();
     void setList(QString container, Data &data);
@@ -30,10 +30,10 @@ signals:
     void onExtractTrack(QStreamView::Content type, int track);
 
 private:
-    virtual bool eventFilter(QObject*, QEvent*) final;
-    void resetCheckFlags(const int ind);
-    void resetDefFlags(const int ind);
-    void resetBurnFlags(const int ind);
+    bool eventFilter(QObject*, QEvent*) final;
+    void resetCheckFlags(int ind);
+    void resetDefFlags(int ind);
+    void resetBurnFlags(int ind);
     QWidget *createCell(bool &state,
                         QString &extension,
                         const QString &format,

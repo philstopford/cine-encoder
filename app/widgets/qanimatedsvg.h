@@ -11,7 +11,7 @@ class QAnimatedSvg : public QObject
     Q_OBJECT
 public:
     QAnimatedSvg(QLabel *parent, const QSize &size);
-    ~QAnimatedSvg();
+    ~QAnimatedSvg() override;
     void setFileName(const QString &);
     void start();
     void stop();

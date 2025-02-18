@@ -39,13 +39,13 @@ class Notification : public BaseWindow
     Q_OBJECT
 public:
     explicit Notification(QWidget *parent, MessConf mess_conf, const QString &title);
-    ~Notification();
+    ~Notification() override;
 
 private slots:
-    void onButtonPayPal();
-    void onButtonBitcoin();
+    static void onButtonPayPal();
+    static void onButtonBitcoin();
     void onCloseWindow();
-    virtual void showEvent(QShowEvent*) final;
+    void showEvent(QShowEvent*) final;
 
 private:
     void setMessage();

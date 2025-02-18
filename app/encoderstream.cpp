@@ -203,7 +203,7 @@ void EncoderStream::encode()   // Encode
     Print("Encode ...");
     QStringList arguments;
     m_pProcessEncoding->disconnect();
-    connect(m_pProcessEncoding, &QProcess::readyReadStandardOutput, this, &EncoderStream::progress);
+    connect(m_pProcessEncoding, SIGNAL(QProcess::readyReadStandardOutput), this, SLOT(EncoderStream::progress));
     connect(m_pProcessEncoding, SIGNAL(finished(int)), this, SLOT(completed(int)));
     emit onEncodingProgress(0, 0.0f);
 

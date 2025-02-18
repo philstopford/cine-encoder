@@ -351,7 +351,7 @@ void QStreamView::resetCheckFlags(const int ind)
         if (i != ind) {
             QLayoutItem *item = m_pLayout->itemAt(i);
             if (item && item->widget()) {
-                QCheckBox *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
+                auto *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
                 if (chkBox)
                     chkBox->setChecked(false);
             }
@@ -463,13 +463,13 @@ QWidget *QStreamView::createCell(bool &state,
         QLayoutItem *item = m_pLayout->itemAt(m_pLayout->indexOf(cell));
         if (item && item->widget()) {
             if (deflt) {
-                QCheckBox *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
+                auto *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
                 if (chkBox && !chkBox->isChecked()) {
                     chkBox->setChecked(true);
                     state = true;
                 }
             } else {
-                QRadioButton *brn_rbtn = item->widget()->findChild<QRadioButton*>("burnInto");
+                auto *brn_rbtn = item->widget()->findChild<QRadioButton*>("burnInto");
                 if (brn_rbtn && brn_rbtn->isChecked()) {
                     brn_rbtn->setChecked(false);
                     burn = false;

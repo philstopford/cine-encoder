@@ -71,7 +71,7 @@ public:
     void onEncodingMode(const QString &mode);
     void onEncodingStarted();
     void onEncodingInitError(const QString &_message);
-    void onEncodingProgress(const int percent, const float rem_time);
+    void onEncodingProgress(int percent, float rem_time);
     void onEncodingLog(const QString &log);
     void onEncodingAborted();
     void onEncodingError(const QString &_error_message, bool popup = false);
@@ -116,9 +116,9 @@ private slots:
     void completed(int exit_code);
     void abort();
 
-    void
+    static void
     resizeVF(QString &_width, QString &_height, int CE_CODEC, int CE_WIDTH, int CE_HEIGHT, Tables &t,
-             QString &resize_vf) const;
+             QString &resize_vf) ;
     static void
     fpsVF(const QString &_fps, int CE_CODEC, int CE_FRAME_RATE, int CE_BLENDING, Tables &t, QString &fps_vf,
           double &fps_dest) ;

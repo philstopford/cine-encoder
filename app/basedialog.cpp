@@ -36,14 +36,12 @@ BaseDialog::BaseDialog(QWidget *parent, bool isReizable) :
     setAttribute(Qt::WA_Hover, true);
     installEventFilter(this);
     setWindowIcon(QIcon(QPixmap(":/resources/icons/svg/cine-encoder.svg")));
-    QVBoxLayout *layout = new QVBoxLayout(this);
+    auto *layout = new QVBoxLayout(this);
     setLayout(layout);
 }
 
 BaseDialog::~BaseDialog()
-{
-
-}
+= default;
 
 void BaseDialog::setTitleBar(QWidget* titlebar)
 {
