@@ -304,7 +304,6 @@ void Preset::showEvent(QShowEvent *event)
         fontModel->setStringList(fontFamilies);
         ui->comboBox_preset_subtitles_font->blockSignals(true);
         ui->comboBox_preset_subtitles_font->setModel(fontModel);
-        const QString appFontFamily = qApp->font().family();
         const int fontInd = ui->comboBox_preset_subtitles_font->findText((*m_pNew_param)[CurParamIndex::SUBTITLE_FONT]);
         if (fontInd != -1) {
             ui->comboBox_preset_subtitles_font->setCurrentIndex(fontInd);

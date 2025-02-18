@@ -17,10 +17,10 @@ class Report : public BaseDialog
     Q_OBJECT
 public:
     explicit Report(QWidget *parent, const QVector<ReportLog> &reportLog);
-    ~Report();
+    ~Report() override;
 
 private:
-    virtual void showEvent(QShowEvent*) final;
+    void showEvent(QShowEvent*) final;
     void onItemEntered(QTableWidgetItem*);
     void moveWidget();
     Ui::Report *ui;

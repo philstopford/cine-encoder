@@ -36,14 +36,12 @@ BaseDialog::BaseDialog(QWidget *parent, bool isReizable) :
     setAttribute(Qt::WA_Hover, true);
     installEventFilter(this);
     setWindowIcon(QIcon(QPixmap(":/resources/icons/svg/cine-encoder.svg")));
-    QVBoxLayout *layout = new QVBoxLayout(this);
-    setLayout(layout);
+    QVBoxLayout layout = QVBoxLayout(this);
+    setLayout(&layout);
 }
 
 BaseDialog::~BaseDialog()
-{
-
-}
+= default;
 
 void BaseDialog::setTitleBar(QWidget* titlebar)
 {
@@ -57,11 +55,11 @@ void BaseDialog::setMaskWidget(QWidget* maskwidget)
     m_maskwidget->setAttribute(Qt::WA_Hover, true);
     m_maskwidget->setAttribute(Qt::WA_NoMousePropagation, true);
     m_maskwidget->installEventFilter(this);
-    QGraphicsDropShadowEffect *shadow = new QGraphicsDropShadowEffect(m_maskwidget);
-    shadow->setBlurRadius(25.0);
-    shadow->setColor(QColor(0, 0, 0, 80));
-    shadow->setOffset(0.0);
-    m_maskwidget->setGraphicsEffect(shadow);
+    QGraphicsDropShadowEffect shadow = QGraphicsDropShadowEffect(m_maskwidget);
+    shadow.setBlurRadius(25.0);
+    shadow.setColor(QColor(0, 0, 0, 80));
+    shadow.setOffset(0.0);
+    m_maskwidget->setGraphicsEffect(&shadow);
 }
 
 void BaseDialog::showEvent(QShowEvent *event)
@@ -87,7 +85,7 @@ void BaseDialog::changeEvent(QEvent *event)
 bool BaseDialog::eventFilter(QObject *watched, QEvent *event)
 {
     if (event->type() == QEvent::MouseButtonRelease) {
-        QMouseEvent* mouse_event = dynamic_cast<QMouseEvent*>(event);
+        auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
         if (mouse_event->button() == Qt::LeftButton) {
             setCursor(QCursor(Qt::ArrowCursor));
             m_clickPressedFlag = false;
@@ -103,7 +101,7 @@ bool BaseDialog::eventFilter(QObject *watched, QEvent *event)
     } else
     if (watched == m_titlebar) {
         if (event->type() == QEvent::MouseButtonPress) {
-            QMouseEvent* mouse_event = dynamic_cast<QMouseEvent*>(event);
+            auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
             if (mouse_event->button() == Qt::LeftButton) {
                 m_mouseClickCoordinate = mouse_event->pos() +
                         QPoint(BORDER-2, BORDER-2);
@@ -112,7 +110,7 @@ bool BaseDialog::eventFilter(QObject *watched, QEvent *event)
             }
         } else
         if ((event->type() == QEvent::MouseMove) && m_clickPressedFlag) {
-            QMouseEvent* mouse_event = dynamic_cast<QMouseEvent*>(event);
+            auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
             if (mouse_event->buttons() & Qt::LeftButton) {
                 if (isMaximized() && mouse_event->globalPosition().y() > 80) {
                     onExpandWindow();
@@ -128,7 +126,7 @@ bool BaseDialog::eventFilter(QObject *watched, QEvent *event)
             }
         } else
         if (event->type() == QEvent::MouseButtonDblClick) {
-            QMouseEvent* mouse_event = dynamic_cast<QMouseEvent*>(event);
+            auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
             if (mouse_event->buttons() & Qt::LeftButton) {
                 if (m_isResizable)
                     onExpandWindow();
@@ -177,7 +175,7 @@ bool BaseDialog::eventFilter(QObject *watched, QEvent *event)
                 setCursor(QCursor(Qt::ArrowCursor));
             } else
             if (event->type() == QEvent::MouseButtonPress) {
-                QMouseEvent* mouse_event = dynamic_cast<QMouseEvent*>(event);
+                auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
                 if (mouse_event->button() == Qt::LeftButton) {
                     m_oldPosX = this->pos().x();
                     m_oldPosY = this->pos().y();
@@ -227,7 +225,7 @@ bool BaseDialog::eventFilter(QObject *watched, QEvent *event)
                 }
             } else
             if (event->type() == QEvent::MouseMove) {
-                QMouseEvent* mouse_event = dynamic_cast<QMouseEvent*>(event);
+                auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
                 if (mouse_event->buttons() & Qt::LeftButton) {
                     const int index = m_clickPressedToResizeFlag.indexOf(true);
                     if (index != -1) {

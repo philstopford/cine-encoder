@@ -259,7 +259,7 @@ void MainWindow::closeEvent(QCloseEvent *event) // Show prompt when close app
 
         QFile xmlFile(XMLPRESETFILE);
         if (!xmlFile.open(QFile::WriteOnly | QFile::Text)) { // Open file in write only mode
-            qDebug() << QString("Cannot write file %1(%2).").arg(XMLPRESETFILE).arg(xmlFile.errorString());
+            qDebug() << QString("Cannot write file %1(%2).").arg(XMLPRESETFILE, xmlFile.errorString());
             return;
         }
         QXmlStreamWriter stream(&xmlFile);
@@ -363,7 +363,7 @@ void MainWindow::saveXMLSettingsFile()
 {
     QFile xmlSettingsFile(XMLSETTINGSFILE);
     if (!xmlSettingsFile.open(QFile::WriteOnly | QFile::Text)) { // Open file in write only mode
-        qDebug() << QString("Cannot write file %1(%2).").arg(XMLSETTINGSFILE).arg(xmlSettingsFile.errorString());
+        qDebug() << QString("Cannot write file %1(%2).").arg(XMLSETTINGSFILE, xmlSettingsFile.errorString());
         return;
     }
     QXmlStreamWriter streamSettings(&xmlSettingsFile);

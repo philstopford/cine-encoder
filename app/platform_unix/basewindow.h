@@ -36,7 +36,8 @@ signals:
 protected:
     void setTitleBar(QWidget*);
     void setMaskWidget(QWidget*);
-    void onExpandWindow();
+
+    virtual void onExpandWindow();
     virtual void showEvent(QShowEvent*) override;
     virtual void mouseMoveEvent(QMouseEvent *) override;
     virtual void mousePressEvent(QMouseEvent *) override;

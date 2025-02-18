@@ -17,18 +17,14 @@
 
 
 Helper::Helper()
-{
-
-}
+= default;
 
 Helper::~Helper()
-{
-
-}
+= default;
 
 Helper::DesktopEnv Helper::m_desktopEnv = Helper::DesktopEnv::UNDEF;
 
-QStringList Helper::makeStringsFFMPEGReady(const QStringList stringList)
+QStringList Helper::makeStringsFFMPEGReady(const QStringList& stringList)
 {
     QStringList ret;
     for (int k = 0; k < stringList.count(); k++)
@@ -285,15 +281,15 @@ QString Helper::getCss(int theme_index)
 
 // FIXME : Helpers may need to consider container for this to be really useful.....
 // Currently configuring to test with an MP4 target which is more constrained than MKV.
-bool Helper::isAudioSupported(const QString extension, const QString &format)
+bool Helper::isAudioSupported(const QString& extension, const QString &format)
 {
     const QVector<QString> unspFormats = {
         ""
     };
-    return unspFormats.indexOf(format) == -1 ? true: false;
+    return unspFormats.indexOf(format) == -1;
 }
 
-bool Helper::isSubtitleSupported(const QString extension, const QString &format)
+bool Helper::isSubtitleSupported(const QString& extension, const QString &format)
 {
     if (extension == "mp4") {
         const QVector<QString> unspFormats = {
@@ -302,7 +298,7 @@ bool Helper::isSubtitleSupported(const QString extension, const QString &format)
                 "D_WEBVTT/SUBTITLES",
                 // "Timed Text"
         };
-        return unspFormats.indexOf(format) == -1 ? true : false;
+        return unspFormats.indexOf(format) == -1;
     }
 
     // Assume supported.

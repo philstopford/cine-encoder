@@ -314,7 +314,7 @@ void Encoder::initVariables(const QString &temp_file, const QString &input_file,
     QString bgCol = _cur_param[SUBTITLE_BACKGROUND_COLOR];
     int bgAlpha = _cur_param[SUBTITLE_BACKGROUND_ALPHA].toInt();
     // Now we need to get the alpha set into the color.
-    QColor bgColor = QColor(bgCol);
+    auto bgColor = QColor(bgCol);
     bgColor.setAlpha(bgAlpha);
     CE_SUBTITLE_BACKGROUND_COLOR = bgColor.name();
     CE_SUBTITLE_LOCATION = _cur_param[SUBTITLE_LOCATION].toInt();
@@ -340,7 +340,7 @@ void Encoder::initVariables(const QString &temp_file, const QString &input_file,
 }
 
 Data &Encoder::video(QString &globalTitle, Data &data, QVector<QString> &videoMetadata,
-                     QStringList &_videoMetadataParam) const {
+                     QStringList &_videoMetadataParam) {
     if (globalTitle != "") {
         videoMetadata[0] = QString("-metadata:s:v:0 title=\"%1\" ").arg(Helper::makeFileStringFFMPEGReady(globalTitle).replace(" ", "\u00A0"));
         _videoMetadataParam.append({"-metadata:s:v:0",QString("title=\""+Helper::makeFileStringFFMPEGReady(globalTitle)+"\"")});
@@ -524,7 +524,7 @@ void Encoder::subtitles(const QString &input_file, const QString &subtitle_font,
     }
 }
 
-QStringList Encoder::levelModule(const Tables &t, int CE_CODEC, int CE_LEVEL) const {
+QStringList Encoder::levelModule(const Tables &t, int CE_CODEC, int CE_LEVEL) {
     const QString selected_level = t.arr_level[CE_CODEC][CE_LEVEL];
     QStringList level;
     if (selected_level != "" && selected_level != tr("Auto"))
@@ -671,7 +671,7 @@ Encoder::extSub(Data &data, int extTrackNum, QStringList &_subtitleMapParam, QSt
     }
 }
 
-QStringList Encoder::presetModule(const Tables &t, int CE_CODEC, int CE_PRESET) const {
+QStringList Encoder::presetModule(const Tables &t, int CE_CODEC, int CE_PRESET) {
     QStringList preset;
     const QString selected_preset = t.getCurrentPreset(CE_CODEC, CE_PRESET);
     if (selected_preset != "" && selected_preset != tr("None")) {
@@ -681,7 +681,7 @@ QStringList Encoder::presetModule(const Tables &t, int CE_CODEC, int CE_PRESET) 
 }
 
 void
-Encoder::audio(Data &data, QStringList &_audioMapParam, QStringList &_audioMetadataParam, int &audioNum) const {
+Encoder::audio(Data &data, QStringList &_audioMapParam, QStringList &_audioMetadataParam, int &audioNum) {
     audioNum= 0;
     auto length = data.checks[Data::audioChecks].size();
     QVector<QString> audioLang(length, ""),
@@ -811,7 +811,7 @@ QStringList Encoder::subModule(const QString &container) {
 }
 
 QStringList Encoder::modeModule(const Tables &t, int CE_CODEC, int CE_MODE, const QString &CE_BQR, const QString &CE_MINRATE,
-                                const QString &CE_MAXRATE, const QString &CE_BUFSIZE) const {
+                                const QString &CE_MAXRATE, const QString &CE_BUFSIZE) {
     QStringList mode;
     const QString bitrate = QString::number(1000000.0 * CE_BQR.toDouble(), 'f', 0);
     const QString minrate = QString::number(1000000.0 * CE_MINRATE.toDouble(), 'f', 0);
@@ -953,7 +953,7 @@ void Encoder::hdrDisplay(const QString _hdr[11], int CE_MASTER_DISPLAY, const QS
 void
 Encoder::hdrLum(const QString _hdr[], const QString &CE_MIN_LUM, const QString &CE_MAX_LUM, const QString &CE_MAX_CLL,
                 const QString &CE_MAX_FALL, QStringList &max_lum, QStringList &min_lum, QStringList &max_cll,
-                QStringList &max_fall) const {
+                QStringList &max_fall) {
     if (CE_MAX_LUM != "") {                           // max lum
         max_lum.append({"-s", QString("max-luminance=%1").arg(CE_MAX_LUM)});
     } else {
@@ -995,7 +995,7 @@ Encoder::hdrLum(const QString _hdr[], const QString &CE_MIN_LUM, const QString &
     }
 }
 
-void Encoder::hdrColorRange(const QString _hdr[], int CE_COLOR_RANGE, QStringList &color_range) const {
+void Encoder::hdrColorRange(const QString _hdr[], int CE_COLOR_RANGE, QStringList &color_range) {
     if (CE_COLOR_RANGE == 0) {                             // color range
         if (_hdr[CUR_COLOR_RANGE] == "Limited")
             color_range.append({"-color_range","tv"});
@@ -1100,7 +1100,7 @@ void Encoder::passModule(const Tables &t, int CE_CODEC, int CE_PASS, QStringList
 }
 
 QStringList Encoder::audioModule(const Tables &t, int CE_CODEC, int CE_AUDIO_CODEC, int CE_AUDIO_BITRATE, int CE_AUDIO_SAMPLING,
-                                 int CE_AUDIO_CHANNELS) const {
+                                 int CE_AUDIO_CHANNELS) {
     QStringList acodec;
     const QString selected_acodec = t.arr_acodec[CE_CODEC][CE_AUDIO_CODEC];
     QString selected_bitrate = "";
@@ -1219,8 +1219,8 @@ void Encoder::subtVF(const QString &input_file, const QString &subtitle_font, in
             }
             else
             {
-                QString _input_file(input_file);
-                burn_subt_vf.append(QString("subtitles='%1':%2:stream_index=%3").arg(_input_file, burn_string, numToStr(k)));
+                // QString _input_file(input_file);
+                burn_subt_vf.append(QString("subtitles='%1':%2:stream_index=%3").arg(input_file, burn_string, numToStr(k)));
             }
             _burn_subtitle = true;
             break;
@@ -1237,7 +1237,7 @@ void Encoder::subtVF(const QString &input_file, const QString &subtitle_font, in
 }
 
 void Encoder::fpsVF(const QString &_fps, int CE_CODEC, int CE_FRAME_RATE, int CE_BLENDING, Tables &t, QString &fps_vf,
-                    double &fps_dest) const {
+                    double &fps_dest) {
     // Keep with a QString here as there are no spaces in the parameters.
     fps_vf= "";
     if (t.frame_rate[CE_FRAME_RATE] != "Source") {
@@ -1266,7 +1266,7 @@ void Encoder::fpsVF(const QString &_fps, int CE_CODEC, int CE_FRAME_RATE, int CE
 }
 
 void Encoder::resizeVF(QString &_width, QString &_height, int CE_CODEC, int CE_WIDTH, int CE_HEIGHT, Tables &t,
-                       QString &resize_vf) const {
+                       QString &resize_vf) {
     // Keep with a QString here as there are no spaces in the parameters.
     resize_vf= "";
     const QString new_width = (t.arr_width[CE_WIDTH] != "Source") ? t.arr_width[CE_WIDTH] : _width;
@@ -1546,3 +1546,4 @@ void Encoder::abort()
         QDir().remove(_temp_file);
     emit onEncodingAborted();
 }
+

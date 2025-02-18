@@ -35,14 +35,14 @@ class Preset : public BaseWindow
     Q_OBJECT
 public:
     explicit Preset(QWidget *parent, QVector<QString> *pOld_param, int theme);
-    ~Preset();
+    ~Preset() override;
 
 private:
     void onCloseWindow();
     void onButtonApply();
     void lockSignals(bool status);
-    virtual void showEvent(QShowEvent*) final;
-    virtual bool eventFilter(QObject*, QEvent*) final;
+    void showEvent(QShowEvent*) final;
+    bool eventFilter(QObject*, QEvent*) final;
     // Transform
     void repeat_handler();
     void change_preset_name();

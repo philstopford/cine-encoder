@@ -10,7 +10,7 @@ class Helper : public QObject
 {
 public:
     explicit Helper();
-    ~Helper();
+    ~Helper() override;
 
     enum class FileDialogType : uint8_t {
         OPENVFILES, OPENAFILES, OPENSFILES, SELECTFOLDER
@@ -20,7 +20,7 @@ public:
         GNOME, OTHER, UNDEF
     };
 
-    static QStringList makeStringsFFMPEGReady(const QStringList stringList);
+    static QStringList makeStringsFFMPEGReady(const QStringList& stringList);
     static QString makeFileStringFFMPEGReady(const QString& fileString);
 
     static void detectEnv();
@@ -30,18 +30,18 @@ public:
                                const QString  &title,
                                const QString  &path,
                                QStringList    &result);
-    static QString timeConverter(const float time);
-    static QString timeConverter(const double time);
+    static QString timeConverter(float time);
+    static QString timeConverter(double time);
     static QString getSysLanguage();
     static QString elideText(QWidget *w,
                              const QString &text,
-                             const Qt::TextElideMode elide);
+                             Qt::TextElideMode elide);
     static QString recalcChannels(const QString &ch);
     static QString getCss(int theme_index);
-    static bool isAudioSupported(const QString extension, const QString &format);
-    static bool isSubtitleSupported(const QString extension, const QString &format);
+    static bool isAudioSupported(const QString& extension, const QString &format);
+    static bool isSubtitleSupported(const QString& extension, const QString &format);
     template<class T>
-    static void eraseRow(QVector<T> &v, const int row);
+    static void eraseRow(QVector<T> &v, int row);
     template<class T>
     static void reorder(QVector<T> &v, QVector<int> const &order);
     static void nonBlockDelay(int msec);

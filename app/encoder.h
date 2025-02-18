@@ -22,7 +22,7 @@
 
 #if defined (Q_OS_UNIX)
     #include <unistd.h>
-    #include <signal.h>
+    #include <csignal>
 #elif defined(Q_OS_WIN64)
     #include <windows.h>
 #endif
@@ -34,7 +34,7 @@ class Encoder : public QObject
     Q_OBJECT
 public:
     explicit Encoder(QObject *parent = nullptr);
-    ~Encoder();
+    ~Encoder() override;
 
     void initEncoding(const QString  &temp_file,
                       const QString  &input_file,
@@ -55,7 +55,7 @@ public:
                       const QString  &subtitle_font,
                       int            subtitle_font_size,
                       const QString  &subtitle_font_color,
-                      const bool     burn_background,
+                      bool     burn_background,
                       const QString  &subtitle_background_color,
                       int            subtitle_location,
                       int threads
@@ -71,7 +71,7 @@ public:
     void onEncodingMode(const QString &mode);
     void onEncodingStarted();
     void onEncodingInitError(const QString &_message);
-    void onEncodingProgress(const int percent, const float rem_time);
+    void onEncodingProgress(int percent, float rem_time);
     void onEncodingLog(const QString &log);
     void onEncodingAborted();
     void onEncodingError(const QString &_error_message, bool popup = false);
@@ -116,21 +116,21 @@ private slots:
     void completed(int exit_code);
     void abort();
 
-    void
+    static void
     resizeVF(QString &_width, QString &_height, int CE_CODEC, int CE_WIDTH, int CE_HEIGHT, Tables &t,
-             QString &resize_vf) const;
-    void
+             QString &resize_vf) ;
+    static void
     fpsVF(const QString &_fps, int CE_CODEC, int CE_FRAME_RATE, int CE_BLENDING, Tables &t, QString &fps_vf,
-          double &fps_dest) const;
+          double &fps_dest) ;
 
     void subtVF(const QString &input_file, const QString &subtitle_font, int subtitle_font_size,
-                const QString &subtitle_font_color, const bool burn_background,
+                const QString &subtitle_font_color, bool burn_background,
                 const QString &subtitle_background_color,
-                int subtitle_location, Data &data, QStringList &burn_subt_vf, const QString& width, const QString& height);
+                int subtitle_location, Constants::Data &data, QStringList &burn_subt_vf, const QString& width, const QString& height);
 
-    QStringList
+    static QStringList
     audioModule(const Tables &t, int CE_CODEC, int CE_AUDIO_CODEC, int CE_AUDIO_BITRATE, int CE_AUDIO_SAMPLING,
-                int CE_AUDIO_CHANNELS) const;
+                int CE_AUDIO_CHANNELS) ;
 
     void passModule(const Tables &t, int CE_CODEC, int CE_PASS, QStringList &pass, QStringList &pass1);
 
@@ -140,34 +140,34 @@ private slots:
                int CE_CODEC, double fps_dest, double minExtTime, QStringList &_splitStartParam,
                QStringList &_splitParam) const;
 
-    QString getLog() const;
+    [[nodiscard]] QString getLog() const;
 
-    void hdrColorRange(const QString _hdr[], int CE_COLOR_RANGE, QStringList &color_range) const;
+    static void hdrColorRange(const QString _hdr[], int CE_COLOR_RANGE, QStringList &color_range) ;
 
-    void hdrLum(const QString _hdr[], const QString &CE_MIN_LUM, const QString &CE_MAX_LUM, const QString &CE_MAX_CLL,
+    static void hdrLum(const QString _hdr[], const QString &CE_MIN_LUM, const QString &CE_MAX_LUM, const QString &CE_MAX_CLL,
                 const QString &CE_MAX_FALL, QStringList &max_lum, QStringList &min_lum, QStringList &max_cll,
-                QStringList &max_fall) const;
+                QStringList &max_fall) ;
 
     void
     hdrDisplay(const QString _hdr[], int CE_MASTER_DISPLAY, const QString &CE_CHROMA_COORD,
                const QString &CE_WHITE_COORD,
                QStringList &chroma_coord, QStringList &white_coord);
 
-    QStringList modeModule(const Tables &t, int CE_CODEC, int CE_MODE, const QString &CE_BQR, const QString &CE_MINRATE,
-                           const QString &CE_MAXRATE, const QString &CE_BUFSIZE) const;
+    static QStringList modeModule(const Tables &t, int CE_CODEC, int CE_MODE, const QString &CE_BQR, const QString &CE_MINRATE,
+                           const QString &CE_MAXRATE, const QString &CE_BUFSIZE) ;
 
     QStringList subModule(const QString &container);
 
     void colorPrimaries(const QString _hdr[], int CE_PRIMARY, int CE_REP_PRIM, QStringList &colorprim,
                         QStringList &colorprim_vf);
 
-    int extAudio(Data &data, QStringList &_audioMapParam, QStringList &_audioMetadataParam, int audioNum);
+    int extAudio(Constants::Data &data, QStringList &_audioMapParam, QStringList &_audioMetadataParam, int audioNum);
 
-    void audio(Data &data, QStringList &_audioMapParam, QStringList &_audioMetadataParam, int &audioNum) const;
+    static void audio(Constants::Data &data, QStringList &_audioMapParam, QStringList &_audioMetadataParam, int &audioNum) ;
 
-    QStringList presetModule(const Tables &t, int CE_CODEC, int CE_PRESET) const;
+    static QStringList presetModule(const Tables &t, int CE_CODEC, int CE_PRESET) ;
 
-    void extSub(Data &data, int extTrackNum, QStringList &_subtitleMapParam, QStringList &_subtitleMetadataParam,
+    void extSub(Constants::Data &data, int extTrackNum, QStringList &_subtitleMapParam, QStringList &_subtitleMetadataParam,
                 QStringList &_subtitleFormatParam,
                 int subtNum);
 
@@ -177,16 +177,16 @@ private slots:
     void colorMatrix(const QString hdr[], int CE_MATRIX, int CE_REP_MATRIX, QStringList &colormatrix,
                      QStringList &colormatrix_vf);
 
-    QStringList levelModule(const Tables &t, int CE_CODEC, int CE_LEVEL) const;
+    static QStringList levelModule(const Tables &t, int CE_CODEC, int CE_LEVEL) ;
 
     void subtitles(const QString &input_file, const QString &subtitle_font, int subtitle_font_size,
-                   const QString &subtitle_font_color, const bool burn_background,
+                   const QString &subtitle_font_color, bool burn_background,
                    const QString &subtitle_background_color,
-                   int subtitle_location, Data &data, QStringList &burn_subt_vf, QString& width, QString& height, QStringList &_subtitleMapParam,
+                   int subtitle_location, Constants::Data &data, QStringList &burn_subt_vf, QString& width, QString& height, QStringList &_subtitleMapParam,
                    QStringList &_subtitleMetadataParam,
                    QStringList &_subtitleFormatParam, int &subtNum);
 
-    QStringList getCodec(const Tables &t, int CE_CODEC, const QString &resize_vf, const QString &fps_vf,
+    [[nodiscard]] QStringList getCodec(const Tables &t, int CE_CODEC, const QString &resize_vf, const QString &fps_vf,
                          const QStringList &_videoMetadataParam, const QStringList &_audioMapParam,
                          const QStringList &_audioMetadataParam, const QStringList &burn_subt_vf,
                          const QStringList &_subtitleMapParam, const QStringList &_subtitleMetadataParam,
@@ -203,8 +203,8 @@ private slots:
                     const QStringList &min_lum, const QStringList &max_cll, const QStringList &max_fall,
                     const QStringList &chroma_coord, const QStringList &white_coord);
 
-    Data &video(QString &globalTitle, Data &data, QVector<QString> &videoMetadata,
-                QStringList &_videoMetadataParam) const;
+    static Constants::Data &video(QString &globalTitle, Constants::Data &data, QVector<QString> &videoMetadata,
+                QStringList &_videoMetadataParam) ;
 
     void initVariables(const QString &temp_file, const QString &input_file, const QString &output_file,
                        QVector<QString> &_cur_param, int *_fr_count, Tables &t, int &CE_CODEC, int &CE_MODE,

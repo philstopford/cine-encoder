@@ -26,12 +26,12 @@ class Progress : public BaseDialog
     Q_OBJECT
 public:
     explicit Progress(QWidget *parent, const QString &title);
-    ~Progress();
+    ~Progress() override;
     void setText(const QString &text);
-    void setPercent(const int percent);
+    void setPercent(int percent);
 
 protected:
-    virtual void showEvent(QShowEvent*) final;
+    void showEvent(QShowEvent*) final;
 
 private:
     Ui::Progress *ui;
