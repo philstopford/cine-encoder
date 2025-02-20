@@ -714,7 +714,7 @@ int Encoder::extAudio(Data &data, QStringList &_audioMapParam, QStringList &_aud
                      extAudioDef(length, "");
     int extTrackNum = 1;
 
-    for (int k = 0; length; k++) {
+    for (int k = 0; k < length; k++) {
         if (data.checks[Data::externAudioChecks][k]) {
             _extAudioPaths << "-i" << Helper::makeFileStringFFMPEGReady(data.fields[Data::externAudioPath][k]);
             extAudioMap[k] = QString("-map %1:a? ").arg(numToStr(extTrackNum));
