@@ -323,8 +323,8 @@ void Encoder::initVariables(const QString &temp_file, const QString &input_file,
     _input_file = input_file;
     _output_file = output_file;
     fr_count = _fr_count;//int _CONTAINER = _cur_param[CurParamIndex::CONTAINER].toInt();
-    _extAudioPaths.clear();
-    _extSubPaths.clear();
+    _extAudioPaths = QStringList();
+    _extSubPaths = QStringList();
     _preset_0 = QStringList();
     _preset_pass1.clear();
     _preset.clear();
