@@ -471,15 +471,9 @@ void Encoder::subtitles(const QString &input_file, const QString &subtitle_font,
     std::string debugstr2 = burn_subt_vf.join(" ").toStdString();
 
     auto length = data.checks[Data::subtChecks].size();
-    QVector<QString> subtitleLang(length, ""),
-                     subtitleTitle(length, ""),
-                     subtitleMap(length, ""),
-                     subtitleDef(length, ""),
-                     subtitleFormats(length, "");
     if (!_burn_subtitle) {
         for (int k = 0; k < length; k++) {
             if (data.checks[Data::subtChecks][k]) {
-                subtitleFormats[k] = data.fields[Data::subtFormats][k];
                 std::string subtitleFormat = data.fields[Data::subtFormats][k].toStdString();
                 // This one has some subtleties. mov_text worked fine except for certain
                 // files (mkv) that had a UTF-8 subtitle track which started complaining.
@@ -507,16 +501,9 @@ void Encoder::subtitles(const QString &input_file, const QString &subtitle_font,
                     _subtitleFormatParam.append({"-c:s", "copy"});
                     // _subtitleFormatParam.append({"-c:s", "dvd_subtitle"});
                 }
-                subtitleMap[k] = QString("-map 0:s:%1? ").arg(numToStr(k));
                 _subtitleMapParam.append({"-map", "0:s:"+numToStr(k)+"?"});
-                subtitleLang[k] = QString("-metadata:s:s:%1 language=%2 ")
-                                      .arg(numToStr(subtNum), Helper::makeFileStringFFMPEGReady(data.fields[Data::subtLangs][k]).replace(" ", "\u00A0"));
                 _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "language="+Helper::makeFileStringFFMPEGReady(data.fields[Data::subtLangs][k]) });
-                subtitleTitle[k] = QString("-metadata:s:s:%1 title=%2 ")
-                                       .arg(numToStr(subtNum), Helper::makeFileStringFFMPEGReady(data.fields[Data::subtTitles][k]).replace(" ", "\u00A0"));
                 _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "title="+Helper::makeFileStringFFMPEGReady(data.fields[Data::subtTitles][k]) });
-                subtitleDef[k] = QString("-disposition:s:%1 %2 ")
-                                     .arg(numToStr(subtNum), data.checks[Data::subtDef][k] ? "default" : "0");
                 _subtitleMetadataParam.append({"-disposition:s:"+numToStr(subtNum), data.checks[Data::subtDef][k] ? "default" : "0" });
                 subtNum++;
             }
@@ -629,16 +616,9 @@ Encoder::extSub(Data &data, int extTrackNum, QStringList &_subtitleMapParam, QSt
                 QStringList &_subtitleFormatParam,
                 int subtNum) {
     auto length = data.checks[Data::externSubtChecks].size();
-    QVector<QString> extSubLang(length, ""),
-                     extSubTitle(length, ""),
-                     extSubMap(length, ""),
-                     extSubFormat(length, ""),
-                     extSubDef(length, "");
-
     if (!_burn_subtitle) {
         for (int k = 0; k < length; k++) {
             if (data.checks[Data::externSubtChecks][k]) {
-                extSubFormat[k] = data.fields[Data::externSubtFormats][k];
                 std::string subtitleFormat = data.fields[Data::externSubtFormats][k].toStdString();
                 if (subtitleFormat == "UTF-8")
                 {
@@ -653,16 +633,9 @@ Encoder::extSub(Data &data, int extTrackNum, QStringList &_subtitleMapParam, QSt
                     _subtitleFormatParam.append({"-c:s", "dvd_subtitle"});
                 }
                 _extSubPaths << "-i" << Helper::makeFileStringFFMPEGReady(data.fields[Data::externSubtPath][k]);
-                extSubMap[k] = QString("-map %1:s? ").arg(numToStr(extTrackNum));
                 _subtitleMapParam.append({"-map", numToStr(extTrackNum)+":s?"});
-                extSubLang[k] = QString("-metadata:s:s:%1 language=%2 ")
-                                    .arg(numToStr(subtNum), Helper::makeFileStringFFMPEGReady(data.fields[Data::externSubtLangs][k]).replace(" ", "\u00A0"));
                 _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "language="+Helper::makeFileStringFFMPEGReady(data.fields[Data::externSubtLangs][k]) });
-                extSubTitle[k] = QString("-metadata:s:s:%1 title=%2 ")
-                                     .arg(numToStr(subtNum), Helper::makeFileStringFFMPEGReady(data.fields[Data::externSubtTitles][k]).replace(" ", "\u00A0"));
                 _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "title="+Helper::makeFileStringFFMPEGReady(data.fields[Data::externSubtTitles][k]) });
-                extSubDef[k] = QString("-disposition:s:%1 %2 ")
-                                   .arg(numToStr(subtNum), data.checks[Data::externSubtDef][k] ? "default" : "0");
                 _subtitleMetadataParam.append({"-disposition:s:"+numToStr(subtNum), data.checks[Data::externSubtDef][k] ? "default" : "0" });
                 subtNum++;
                 extTrackNum++;
@@ -684,22 +657,11 @@ void
 Encoder::audio(Data &data, QStringList &_audioMapParam, QStringList &_audioMetadataParam, int &audioNum) {
     audioNum= 0;
     auto length = data.checks[Data::audioChecks].size();
-    QVector<QString> audioLang(length, ""),
-                     audioTitle(length, ""),
-                     audioMap(length, ""),
-                     audioDef(length, "");
     for (int k = 0; k < length; k++) {
         if (data.checks[Data::audioChecks][k]) {
-            audioMap[k] = QString("-map 0:a:%1? ").arg(numToStr(k));
             _audioMapParam.append({"-map", "0:a:"+numToStr(k)+"?" });
-            audioLang[k] = QString("-metadata:s:a:%1 language=%2 ")
-                           .arg(numToStr(audioNum), Helper::makeFileStringFFMPEGReady(data.fields[Data::audioLangs][k]).replace(" ", "\u00A0"));
             _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"language="+Helper::makeFileStringFFMPEGReady(data.fields[Data::audioLangs][k])});
-            audioTitle[k] = QString("-metadata:s:a:%1 title=%2 ")
-                            .arg(numToStr(audioNum), Helper::makeFileStringFFMPEGReady(data.fields[Data::audioTitles][k]).replace(" ", "\u00A0"));
             _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"title="+Helper::makeFileStringFFMPEGReady(data.fields[Data::audioTitles][k])});
-            audioDef[k] = QString("-disposition:a:%1 %2 ")
-                           .arg(numToStr(audioNum), data.checks[Data::audioDef][k] ? "default" : "0");
             _audioMetadataParam.append({"-disposition:a:"+numToStr(audioNum),data.checks[Data::audioDef][k] ? "default" : "0"});
             audioNum++;
         }
@@ -708,25 +670,14 @@ Encoder::audio(Data &data, QStringList &_audioMapParam, QStringList &_audioMetad
 
 int Encoder::extAudio(Data &data, QStringList &_audioMapParam, QStringList &_audioMetadataParam, int audioNum) {
     auto length = data.checks[Data::externAudioChecks].size();
-    QVector<QString> extAudioLang(length, ""),
-                     extAudioTitle(length, ""),
-                     extAudioMap(length, ""),
-                     extAudioDef(length, "");
     int extTrackNum = 1;
 
     for (int k = 0; k < length; k++) {
         if (data.checks[Data::externAudioChecks][k]) {
             _extAudioPaths << "-i" << Helper::makeFileStringFFMPEGReady(data.fields[Data::externAudioPath][k]);
-            extAudioMap[k] = QString("-map %1:a? ").arg(numToStr(extTrackNum));
             _audioMapParam.append({"-map", numToStr(extTrackNum) + ":a?" });
-            extAudioLang[k] = QString("-metadata:s:a:%1 language=%2 ")
-                           .arg(numToStr(audioNum), Helper::makeFileStringFFMPEGReady(data.fields[Data::externAudioLangs][k]).replace(" ", "\u00A0"));
             _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"language="+Helper::makeFileStringFFMPEGReady(data.fields[Data::externAudioLangs][k])});
-            extAudioTitle[k] = QString("-metadata:s:a:%1 title=%2 ")
-                            .arg(numToStr(audioNum), Helper::makeFileStringFFMPEGReady(data.fields[Data::externAudioTitles][k]).replace(" ", "\u00A0"));
             _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"title="+Helper::makeFileStringFFMPEGReady(data.fields[Data::externAudioTitles][k])});
-            extAudioDef[k] = QString("-disposition:a:%1 %2 ")
-                           .arg(numToStr(audioNum), data.checks[Data::externAudioDef][k] ? "default" : "0");
             _audioMetadataParam.append({"-disposition:a:"+numToStr(audioNum),data.checks[Data::externAudioDef][k] ? "default" : "0"});
             audioNum++;
             extTrackNum++;
