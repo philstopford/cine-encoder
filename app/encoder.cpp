@@ -577,8 +577,10 @@ void Encoder::colorTransfer(const QString _hdr[], int CE_TRC, int CE_REP_TRC, QS
         {"HLG",                      "arib-std-b67"},
         {"BT2020 (10-bit)",          "bt2020-10"},
         {"BT2020 (12-bit)",          "bt2020-12"},
-        {"BT470 System M",           "bt470m"},
-        {"BT470 System B/G",         "bt470bg"},
+        // Workarounds for ffmpeg based on poking around for BT740 fails.
+        // Without this, ffmpeg chokes on the trc setting.
+        {"BT470 System M",           /*"bt470m"*/ "gamma22"},
+        {"BT470 System B/G",         /*"bt470bg"*/ "gamma28"},
         {"SMPTE 240M",               "smpte240m"},
         {"Linear",                   "linear"},
         {"Logarithmic (100:1)",      "log100"},
@@ -590,7 +592,7 @@ void Encoder::colorTransfer(const QString _hdr[], int CE_TRC, int CE_REP_TRC, QS
         {"BT601",                    "smpte170m"},
         {"",                         ""}
     };
-    const QString selected_transfer = arr_trc[CE_TRC];
+    QString selected_transfer = arr_trc[CE_TRC];
     if (!curr_transfer.contains(_hdr[CUR_TRANSFER])) {
         _message = tr("Can\'t find transfer characteristics %1 in source map.").arg(_hdr[CUR_TRANSFER]);
         emit onEncodingInitError(_message);
@@ -602,6 +604,16 @@ void Encoder::colorTransfer(const QString _hdr[], int CE_TRC, int CE_REP_TRC, QS
         }
     }
     else {
+        // Workaround for ffmpeg based on poking around.
+        // Without this, ffmpeg chokes on the trc setting.
+        if (selected_transfer == "bt470m")
+        {
+            selected_transfer = "gamma22";
+        }
+        if (selected_transfer == "bt470bg")
+        {
+            selected_transfer = "gamma28";
+        }
         transfer.append({"-color_trc", selected_transfer});
         if (CE_REP_TRC == 2) {
             transfer_vf.append(QString("zscale=t=%1").arg(selected_transfer));
