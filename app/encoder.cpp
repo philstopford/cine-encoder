@@ -1502,5 +1502,7 @@ void Encoder::abort()
     processEncoding->disconnect();
     if (_flag_hdr)
         QDir().remove(_temp_file);
+    else
+        QDir().remove(_output_file);
     emit onEncodingAborted();
 }
