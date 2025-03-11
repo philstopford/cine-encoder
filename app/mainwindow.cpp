@@ -2651,7 +2651,17 @@ void MainWindow::get_output_filename()  // Get output data
     m_output_file += QString("/") + _output_file_name;
 
     m_temp_file = (m_temp_folder == "") ? m_curPath : m_temp_folder;
-    m_temp_file += QString("/temp.mkv");
+
+    // Now we construct our temporary file name.
+    // To avoid collisions from multi-session, we append the system time in seconds
+    // since the epoch.
+    // Get the current time as a time_point
+    auto now = std::chrono::system_clock::now();
+
+    // Convert to time_t (epoch time in seconds)
+    std::time_t epochTime = std::chrono::system_clock::to_time_t(now);
+    std::string s_time = std::to_string(epochTime);
+    m_temp_file += QString("/" + prefix + "_" + QString::fromStdString(s_time) + ".mkv");
 }
 
 void MainWindow::onSetOutFolder()
