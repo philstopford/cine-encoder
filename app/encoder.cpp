@@ -320,8 +320,46 @@ void Encoder::initVariables(const QString &temp_file, const QString &input_file,
     CE_SUBTITLE_LOCATION = _cur_param[SUBTITLE_LOCATION].toInt();
     Print("Make preset...");
     _temp_file = temp_file;
+    // Check for file name collisions and add a suffix as needed.
+    if (QDir().exists(_temp_file))
+    {
+        auto tokens = _temp_file.split(".");
+        auto token_length = tokens.count();
+        auto base_name = QString();
+        for (int i = 0; i < token_length - 1; i++)
+        {
+            base_name += tokens[i];
+        }
+        int tmpCounter = 0;
+        auto new_file_name = base_name + "_" + QString::number(tmpCounter) + "." + tokens[token_length - 1];
+        while (QDir().exists(new_file_name))
+        {
+            new_file_name = base_name + "_" + QString::number(tmpCounter) + "." + tokens[token_length - 1];
+            tmpCounter++;
+        }
+        _temp_file = new_file_name;
+    }
     _input_file = input_file;
     _output_file = output_file;
+    // Check for file name collisions and add a suffix as needed.
+    if (QDir().exists(_output_file))
+    {
+        auto tokens = _output_file.split(".");
+        auto token_length = tokens.count();
+        auto base_name = QString();
+        for (int i = 0; i < token_length - 1; i++)
+        {
+            base_name += tokens[i];
+        }
+        int tmpCounter = 0;
+        auto new_file_name = base_name + "_" + QString::number(tmpCounter) + "." + tokens[token_length - 1];
+        while (QDir().exists(new_file_name))
+        {
+            new_file_name = base_name + "_" + QString::number(tmpCounter) + "." + tokens[token_length - 1];
+            tmpCounter++;
+        }
+        _output_file = new_file_name;
+    }
     fr_count = _fr_count;//int _CONTAINER = _cur_param[CurParamIndex::CONTAINER].toInt();
     _extAudioPaths = QStringList();
     _extSubPaths = QStringList();
