@@ -66,11 +66,12 @@ Settings::Settings(QWidget *parent):
 
     // Combo boxes
     QComboBox *boxes[] = {
-        ui->comboBoxPrefixType, ui->comboBoxSuffixType, ui->comboBox_font, ui->comboBox_subtitles_font
+        ui->comboBoxPrefixType, ui->comboBoxSuffixType, ui->comboBox_font, ui->comboBox_subtitles_font, ui->comboBox_priority
     };
     FnVoidInt boxes_methods[] = {
         &Settings::onComboBoxPrefixType_indexChanged, &Settings::onComboBoxSuffixType_indexChanged,
-        &Settings::onComboBoxFont_indexChanged, &Settings::onComboBoxSubtitlesFont_indexChanged
+        &Settings::onComboBoxFont_indexChanged, &Settings::onComboBoxSubtitlesFont_indexChanged,
+        &Settings::onComboBoxFfmpegPriority_indexChanged
     };
     // Release build, this crashes out and i gets to 12.... No idea.
     /*
@@ -81,6 +82,9 @@ Settings::Settings(QWidget *parent):
      */
     // Do it manually to prevent the failure.
     int j = 0;
+    connect(boxes[j], static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            this, boxes_methods[j]);
+    j++;
     connect(boxes[j], static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             this, boxes_methods[j]);
     j++;
@@ -115,6 +119,7 @@ void Settings::setParameters(QString    *pOutputFolder,
                              bool       *pShowHdrFlag,
                              int        *pTimerInterval,
                              int        *pThreads,
+                             int        *pFfmpegPrio,
                              int        *pTheme,
                              QString    *pPrefixName,
                              QString    *pSuffixName,
@@ -143,6 +148,7 @@ void Settings::setParameters(QString    *pOutputFolder,
     m_pMultiInstances = pMultiInstances;
     m_pTimerInterval = pTimerInterval;
     m_pThreads = pThreads;
+    m_pFFMpegPrio = pFfmpegPrio;
     m_pTheme = pTheme;
     m_pPrefixName = pPrefixName;
     m_pSuffixName = pSuffixName;
@@ -183,6 +189,15 @@ void Settings::setParameters(QString    *pOutputFolder,
     if (*m_pMultiInstances) {
         ui->checkBox_allowDuplicates->setChecked(true);
     }
+
+    if (*m_pFFMpegPrio < lowest) {
+        *m_pFFMpegPrio = lowest;
+    }
+    if (*m_pFFMpegPrio > highest) {
+        *m_pFFMpegPrio = highest;
+    }
+    ui->comboBox_priority->setCurrentIndex(*m_pFFMpegPrio);
+
     QMap<QString, int> langIndex;
     langIndex["en"] = 0;
     langIndex["zh"] = 1;
@@ -312,6 +327,17 @@ void Settings::onButtonApply()
         *m_pLanguage = arrLang[lang_index];
         restart_needed = true;
     }
+
+    /*===================== Prio ==================*/
+    const int prio_index = ui->comboBox_priority->currentIndex();
+    *m_pFFMpegPrio = prio_index;
+    if (prio_index < lowest) {
+        *m_pFFMpegPrio = lowest;
+    }
+    if (prio_index > highest) {
+        *m_pFFMpegPrio = highest;
+    }
+
     /*==================== Paths ==================*/
     *m_pTempFolder = ui->lineEdit_tempPath->text();
     *m_pOutputFolder = ui->lineEdit_outPath->text();
@@ -381,6 +407,7 @@ void Settings::onButtonReset()
     ui->checkBox_showHDR->setChecked(false);
     ui->checkBox_tray->setChecked(false);
     ui->checkBox_protection->setChecked(false);
+    ui->comboBox_priority->setCurrentIndex(normal);
     ui->checkBox_allowDuplicates->setChecked(false);
     ui->spinBox_protectionTimer->setEnabled(false);
     ui->spinBox_threads->setValue(0);
@@ -473,6 +500,17 @@ void Settings::onCheckBoxProtectFlag_clicked()
 {
     int stts_protect = ui->checkBox_protection->checkState();
     ui->spinBox_protectionTimer->setEnabled(stts_protect == 2);
+}
+
+void Settings::onComboBoxFfmpegPriority_indexChanged(int index)
+{
+    if (index < lowest) {
+        index = lowest;
+    }
+    if (index > highest) {
+        index = highest;
+    }
+    *m_pFFMpegPrio = index;
 }
 
 void Settings::onComboBoxPrefixType_indexChanged(int index)

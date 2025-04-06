@@ -261,8 +261,27 @@ void EncoderStream::encode()   // Encode
     else
     {
         // Assume Linux - Qt doesn't report Linux directly.
-        // Low priority, to be kind.
-        program << "nice" << "-n" << "19" << "ffmpeg";
+        QString nicelevel;
+        switch (*m_prio)
+        {
+            case Constants::lowest:
+                nicelevel = "19";
+                break;
+            case Constants::low:
+                nicelevel = "9";
+                break;
+            case Constants::normal:
+            default:
+                nicelevel = "0";
+                break;
+            case Constants::high:
+                nicelevel = "-9";
+                break;
+            case Constants::highest:
+                nicelevel = "-19";
+                break;
+        }
+        program << "nice" << "-n" << nicelevel << "ffmpeg";
     }
     m_pProcessEncoding->start(program.join(" "), arguments);
     if (!m_pProcessEncoding->waitForStarted()) {

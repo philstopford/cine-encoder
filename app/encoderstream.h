@@ -64,6 +64,7 @@ private:
 
     StreamData *m_pData;
     QProcess   *m_pProcessEncoding;
+    int *m_prio;
 
 private slots:
     void encode();

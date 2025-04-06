@@ -219,7 +219,8 @@ private:
                 m_timerInterval,
                 m_subtitles_background_alpha,
                 m_subtitles_location,
-                m_threads;
+                m_threads,
+                m_ffmpeg_prio;
 
     QString     m_language,
                 m_output_folder,

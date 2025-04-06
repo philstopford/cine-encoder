@@ -49,6 +49,7 @@ public:
                        bool       *pShowHdrFlag,
                        int        *pTimerInterval,
                        int        *pThreads,
+                       int        *pFfmpegPrio,
                        int        *pTheme,
                        QString    *pPrefixName,
                        QString    *pSuffixName,
@@ -77,6 +78,7 @@ private:
     void onButtonOutputPath();
     void onButtonTempPath();
     void onCheckBoxProtectFlag_clicked();
+    void onComboBoxFfmpegPriority_indexChanged(int);
     void onComboBoxPrefixType_indexChanged(int);
     void onComboBoxSuffixType_indexChanged(int);
     void onComboBoxFont_indexChanged(int);
@@ -107,7 +109,8 @@ private:
             *m_pThreads,
             *m_pTheme,
             *m_pSubtitlesBackgroundAlpha,
-            *m_pSubtitlesLocation;
+            *m_pSubtitlesLocation,
+            *m_pFFMpegPrio;
 
     bool    *m_pShowHdrFlag,
             *m_pProtectFlag,

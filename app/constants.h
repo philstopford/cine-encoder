@@ -58,6 +58,8 @@
 
 
 namespace Constants {
+    enum ffmpeg_prios {lowest, low, normal, high, highest};
+
     // ***************** Table Widget Columns *********************//
     enum ColumnIndex {
         FILENAME,   FORMAT,     RESOLUTION,    DURATION,     FPS,

@@ -465,6 +465,9 @@ void MainWindow::saveXMLSettingsFile()
     streamSettings.writeStartElement("threads");
     streamSettings.writeCharacters(numToStr(m_threads));
     streamSettings.writeEndElement();
+    streamSettings.writeStartElement("ffmpeg_prio");
+    streamSettings.writeCharacters(numToStr(m_ffmpeg_prio));
+    streamSettings.writeEndElement();
 
     streamSettings.writeEndElement();
     xmlSettingsFile.close();
@@ -956,6 +959,7 @@ void MainWindow::setParameters()    // Set parameters
     m_subtitles_background_color = "#000000";
     m_subtitles_location = 0;
     m_threads = 0;
+    m_ffmpeg_prio = Constants::normal;
 
     // Read settings from XML, to overwrite defaults above as-found.
     readXMLSettingsFile(XMLSETTINGSFILE);
@@ -1195,6 +1199,19 @@ void MainWindow::readXMLSettingsFile(const QString& xmlFileName)
                     QString val = stream.readElementText();
                     m_threads = val.toInt();
                 }
+                if (nnn == QString("ffmpeg_prio")) {
+                    QString val = stream.readElementText();
+                    int tmp = val.toInt();
+                    if (tmp > Constants::highest)
+                    {
+                        tmp = Constants::highest;
+                    }
+                    if (tmp < Constants::lowest)
+                    {
+                        tmp = Constants::lowest;
+                    }
+                    m_ffmpeg_prio = tmp;
+                }
                 if (nnn == QString("row_size")) {
                     QString val = stream.readElementText();
                     m_rowHeight = val.toInt();
@@ -1423,6 +1440,7 @@ void MainWindow::onSettings()
                            &m_showHdrFlag,
                            &m_timerInterval,
                            &m_threads,
+                           &m_ffmpeg_prio,
                            &m_theme,
                            &m_prefixName,
                            &m_suffixName,
