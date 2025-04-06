@@ -22,13 +22,6 @@
 #include <algorithm>
 #include <QColor>
 #if defined(Q_OS_WIN64)
-#ifdef __MINGW64__
-#ifdef _UNICODE
-            #define _itot _itow
-        #else
-            #define _itot itoa
-        #endif
-#endif
 #include <windows.h>
 #endif
 
