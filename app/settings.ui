@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>610</width>
-    <height>801</height>
+    <height>830</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1452,7 +1452,7 @@
                            <string notr="true"/>
                           </property>
                           <property name="text">
-                           <string>Enable overheating protection (for 25 sec)</string>
+                           <string>Enable overheating protection (25 s)</string>
                           </property>
                          </widget>
                         </item>
@@ -1536,6 +1536,18 @@
                         </item>
                         <item row="3" column="2" colspan="2">
                          <widget class="QComboBox" name="comboBox_priority">
+                          <property name="minimumSize">
+                           <size>
+                            <width>246</width>
+                            <height>24</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>246</width>
+                            <height>30</height>
+                           </size>
+                          </property>
                           <property name="currentIndex">
                            <number>2</number>
                           </property>
