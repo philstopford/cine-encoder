@@ -71,6 +71,9 @@ private slots:
     void progress();
     void completed(int);
     void abort();
+#if defined(Q_OS_WIN64)
+    static void set_process_prio_win();
+#endif
 };
 
 #endif // ENCODERSTREAM_H
