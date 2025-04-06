@@ -315,7 +315,7 @@ void EncoderStream::set_process_prio_win()
     }
 
     auto nicelevel;
-    switch (_prio)
+    switch (*m_prio)
     {
         case Constants::lowest:
             nicelevel = IDLE_PRIORITY_CLASS;
