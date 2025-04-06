@@ -252,11 +252,11 @@ void EncoderStream::encode()   // Encode
               << m_preset << "-y" << Helper::makeFileStringFFMPEGReady(m_output_file);
     std::cout << arguments.join(" ").toStdString();
     //qDebug() << arguments;
-    QStringList program;
+    QString program;
     QOperatingSystemVersion ostype = QOperatingSystemVersion::current();
     if ((ostype.type() == QOperatingSystemVersion::Windows) || (ostype.type() == QOperatingSystemVersion::Windows))
     {
-        program << "ffmpeg";
+        program = "ffmpeg";
     }
     else
     {
@@ -281,9 +281,13 @@ void EncoderStream::encode()   // Encode
                 nicelevel = "-19";
                 break;
         }
-        program << "nice" << "-n" << nicelevel << "ffmpeg";
+        program = "nice";
+        QStringList new_args;
+        new_args << "-n" << nicelevel << "ffmpeg";
+        new_args.append(arguments);
+        arguments = new_args;
     }
-    m_pProcessEncoding->start(program.join(" "), arguments);
+    m_pProcessEncoding->start(program, arguments);
     if (!m_pProcessEncoding->waitForStarted()) {
         Print("cmd command not found!!!");
         m_pProcessEncoding->disconnect();

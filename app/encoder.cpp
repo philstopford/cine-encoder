@@ -15,6 +15,7 @@
 #include "helper.h"
 #include <QDir>
 #include <QMap>
+#include <QOperatingSystemVersion>
 #include <iostream>
 #include <cmath>
 #include <ctime>
@@ -62,9 +63,11 @@ void Encoder::initEncoding(const QString  &temp_file,
                            const bool burn_background,
                            const QString &subtitle_background_color,
                            int subtitle_location,
-                           int threads
+                           int threads,
+                           int prio
                            )
 {
+    _prio = prio;
     Tables t;
     int CE_CODEC;
     int CE_MODE;
@@ -1365,7 +1368,43 @@ void Encoder::encode()   // Encode
     std::string args = arguments.join(" ").toStdString();
     std::cout << args;
 
-    processEncoding->start("ffmpeg", arguments);
+    QString program;
+    QOperatingSystemVersion ostype = QOperatingSystemVersion::current();
+    if ((ostype.type() == QOperatingSystemVersion::Windows) || (ostype.type() == QOperatingSystemVersion::Windows))
+    {
+        program = "ffmpeg";
+    }
+    else
+    {
+        // Assume Linux - Qt doesn't report Linux directly.
+        QString nicelevel;
+        switch (_prio)
+        {
+            case Constants::lowest:
+                nicelevel = "19";
+                break;
+            case Constants::low:
+                nicelevel = "9";
+                break;
+            case Constants::normal:
+            default:
+                nicelevel = "0";
+                break;
+            case Constants::high:
+                nicelevel = "-9";
+                break;
+            case Constants::highest:
+                nicelevel = "-19";
+                break;
+        }
+        program = "nice";
+        QStringList new_args;
+        new_args << "-n" << nicelevel << "ffmpeg";
+        new_args.append(arguments);
+        arguments = new_args;
+    }
+    processEncoding->start(program, arguments);
+    // processEncoding->start("ffmpeg", arguments);
     if (!processEncoding->waitForStarted()) {
         Print("cmd command not found!!!");
         processEncoding->disconnect();

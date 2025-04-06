@@ -58,7 +58,8 @@ public:
                       bool     burn_background,
                       const QString  &subtitle_background_color,
                       int            subtitle_location,
-                      int threads
+                      int threads,
+                      int prio
                       );
 
     QProcess::ProcessState getEncodingState();
@@ -84,7 +85,8 @@ private:
             _mux_mode;
 
     int     *fr_count,
-            _threads;
+            _threads,
+            _prio;
 
     int     frames_processed, tpf_slot;
 
