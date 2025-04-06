@@ -21,6 +21,16 @@
 #include <ctime>
 #include <algorithm>
 #include <QColor>
+#if defined(Q_OS_WIN64)
+#ifdef __MINGW64__
+#ifdef _UNICODE
+            #define _itot _itow
+        #else
+            #define _itot itoa
+        #endif
+#endif
+#include <windows.h>
+#endif
 
 
 #define rnd(num) static_cast<int>(round(num))
@@ -1411,7 +1421,53 @@ void Encoder::encode()   // Encode
         _message = tr("An unknown error occurred!\n Possible FFMPEG not installed.\n");
             emit onEncodingInitError(_message);
     }
+#if defined(Q_OS_WIN64)
+    set_process_prio_win();
+#endif
 }
+
+// Completely untested.
+#if defined(Q_OS_WIN64)
+void Encoder::set_process_prio_win()
+{
+    // Get the process handle
+    HANDLE hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, processEncoding.processId());
+    if (hProcess == nullptr) {
+        qWarning("Failed to open process");
+        return;
+    }
+
+    auto nicelevel;
+    switch (_prio)
+    {
+        case Constants::lowest:
+            nicelevel = IDLE_PRIORITY_CLASS;
+            break;
+        case Constants::low:
+            nicelevel = BELOW_NORMAL_PRIORITY_CLASS;
+            break;
+        case Constants::normal:
+        default:
+            nicelevel = NORMAL_PRIORITY_CLASS;
+            break;
+        case Constants::high:
+            nicelevel = ABOVE_NORMAL_PRIORITY_CLASS;
+            break;
+        case Constants::highest:
+            nicelevel = HIGH_PRIORITY_CLASS;
+            break;
+    }
+
+    // Set the priority class
+    if (!SetPriorityClass(hProcess, priority)) {
+        qWarning("Failed to set process priority");
+    }
+
+    // Close the process handle
+    CloseHandle(hProcess);
+}
+#endif
+
 
 void Encoder::add_metadata() // Add metedata
 {
