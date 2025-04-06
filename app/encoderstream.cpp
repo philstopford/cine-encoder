@@ -15,6 +15,7 @@
 #include "helper.h"
 #include <QDir>
 #include <QMap>
+#include <QOperatingSystemVersion>
 #include <iostream>
 #include <cmath>
 #include <ctime>
@@ -251,7 +252,19 @@ void EncoderStream::encode()   // Encode
               << m_preset << "-y" << Helper::makeFileStringFFMPEGReady(m_output_file);
     std::cout << arguments.join(" ").toStdString();
     //qDebug() << arguments;
-    m_pProcessEncoding->start("ffmpeg", arguments);
+    QStringList program;
+    QOperatingSystemVersion ostype = QOperatingSystemVersion::current();
+    if ((ostype.type() == QOperatingSystemVersion::Windows) || (ostype.type() == QOperatingSystemVersion::Windows))
+    {
+        program << "ffmpeg";
+    }
+    else
+    {
+        // Assume Linux - Qt doesn't report Linux directly.
+        // Low priority, to be kind.
+        program << "nice" << "-n" << "19" << "ffmpeg";
+    }
+    m_pProcessEncoding->start(program.join(" "), arguments);
     if (!m_pProcessEncoding->waitForStarted()) {
         Print("cmd command not found!!!");
         m_pProcessEncoding->disconnect();
