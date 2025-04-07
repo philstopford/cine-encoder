@@ -345,6 +345,50 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QComboBox" name="comboBox_changePrio">
+              <property name="minimumSize">
+               <size>
+                <width>126</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>126</width>
+                <height>126</height>
+               </size>
+              </property>
+              <property name="currentIndex">
+               <number>2</number>
+              </property>
+              <item>
+               <property name="text">
+                <string>Lowest</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Low</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Normal</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>High</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Highest</string>
+               </property>
+              </item>
+             </widget>
+            </item>
            </layout>
           </widget>
          </item>
@@ -1411,8 +1455,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>323</width>
-                        <height>108</height>
+                        <width>327</width>
+                        <height>113</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_11">
@@ -1551,8 +1595,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>317</width>
-                        <height>55</height>
+                        <width>327</width>
+                        <height>113</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_14">
@@ -3444,7 +3488,7 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>340</width>
+                    <width>347</width>
                     <height>371</height>
                    </rect>
                   </property>
@@ -4285,7 +4329,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>380</width>
-                    <height>305</height>
+                    <height>308</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_35">

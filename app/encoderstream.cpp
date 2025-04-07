@@ -257,7 +257,7 @@ void EncoderStream::encode()   // Encode
     //qDebug() << arguments;
     QString program;
     QOperatingSystemVersion ostype = QOperatingSystemVersion::current();
-    if ((ostype.type() == QOperatingSystemVersion::Windows) || (ostype.type() == QOperatingSystemVersion::Windows))
+    if (ostype.type() == QOperatingSystemVersion::Windows)
     {
         program = "ffmpeg";
     }
@@ -431,4 +431,12 @@ void EncoderStream::abort()
 {
     m_pProcessEncoding->disconnect();
     emit onEncodingAborted();
+}
+
+long long EncoderStream::getPid()
+{
+    if (m_pProcessEncoding->state() != QProcess::NotRunning) {
+        return -1;
+    }
+    return m_pProcessEncoding->processId();
 }

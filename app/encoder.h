@@ -67,6 +67,7 @@ public:
     void resumeEncoding();
     void stopEncoding();
     void killEncoding();
+    long long getPid();
 
     signals:
     void onEncodingMode(const QString &mode);
@@ -222,6 +223,7 @@ private slots:
                        int &CE_USE_PRESET_SUBTITLES, QString &CE_SUBTITLE_FONT, int &CE_SUBTITLE_FONT_SIZE,
                        QString &CE_SUBTITLE_FONT_COLOR, int &CE_SUBTITLE_BACKGROUND,
                        QString &CE_SUBTITLE_BACKGROUND_COLOR, int &CE_SUBTITLE_LOCATION);
+
 };
 
 #endif // ENCODER_H

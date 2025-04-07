@@ -51,7 +51,9 @@
         #define UNICODE
     #endif
     #include <MediaInfo/MediaInfo.h>
-    using namespace MediaInfoLib;
+#include <QOperatingSystemVersion>
+
+using namespace MediaInfoLib;
 #elif defined(Q_OS_WIN64)
     #ifdef __MINGW64__
         #ifdef _UNICODE
@@ -231,6 +233,7 @@ MainWindow::MainWindow(QWidget *parent):
     ui->labelPreview->installEventFilter(this);
     ui->frameMiddle->setFocusPolicy(Qt::StrongFocus);
     setAcceptDrops(true);
+    pidChange = new QProcess(this);
 }
 
 MainWindow::~MainWindow()
@@ -545,6 +548,9 @@ void MainWindow::createConnections()
     };
     for (int i = 0; i < BTN_COUNT; i++)
         connect(btns[i], &QPushButton::clicked, this, btn_methods[i]);
+
+    connect(ui->comboBox_changePrio, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            this, &MainWindow::changePriority);
 
     // Streams actions
     connect(ui->streamAudio, &QStreamView::onExtractTrack, this, &MainWindow::onExtract);
@@ -1056,6 +1062,8 @@ void MainWindow::setParameters()    // Set parameters
 
     ui->treeDirs->setRootIndex(m_pDirModel->setRootPath(m_openDir));
     ui->listFiles->setRootIndex(m_pFileModel->setRootPath(m_openDir));
+
+    ui->comboBox_changePrio->setCurrentIndex(m_ffmpeg_prio);
 }
 
 void MainWindow::readXMLSettingsFile(const QString& xmlFileName)
@@ -2004,12 +2012,14 @@ void MainWindow::onEncodingStarted()
     setStatus(tr("Encoding"));
     setWidgetsEnabled(false);
     setProgressEnabled(true);
+    encoding = true;
 }
 
 void MainWindow::onEncodingInitError(const QString &message)
 {
     setWidgetsEnabled(true);
     showInfoMessage(message);
+    encoding = false;
 }
 
 void MainWindow::onEncodingProgress(const int percent, const float rem_time)
@@ -2057,6 +2067,7 @@ void MainWindow::onEncodingCompleted()
     };
     foreach (auto &file, tempFiles)
         QDir().remove(QDir::homePath() + file);
+    encoding = false;
 }
 
 void MainWindow::onEncodingAborted()
@@ -2068,6 +2079,7 @@ void MainWindow::onEncodingAborted()
     setWidgetsEnabled(true);
     setProgressEnabled(false);
     showPopup(tr("The current encoding process has been canceled!\n"));
+    encoding = false;
 }
 
 void MainWindow::onEncodingError(const QString &error_message, bool popup)
@@ -2084,6 +2096,7 @@ void MainWindow::onEncodingError(const QString &error_message, bool popup)
     } else {
         showPopup(error_message);
     }
+    encoding = false;
 }
 
 void MainWindow::pause()    // Pause encoding
@@ -2232,6 +2245,95 @@ void MainWindow::onStop()    // Stop
             m_pEncoder->stopEncoding();
     }
 }
+
+void MainWindow::changePriority(int new_prio)
+{
+    // Do we have a process running....
+    long long pid = m_pEncoder->getPid();
+    if (pid != -1) {
+        QString program;
+        QStringList arguments;
+        QOperatingSystemVersion ostype = QOperatingSystemVersion::current();
+        if (ostype.type() == QOperatingSystemVersion::Windows) {
+#if defined(Q_OS_WIN64)
+            set_process_prio_win(pid, new_prio);
+#endif
+        }
+        else
+        {
+            // Linux...
+            QString nicelevel;
+            switch (new_prio)
+            {
+                case Constants::lowest:
+                    nicelevel = "19";
+                    break;
+                case Constants::low:
+                    nicelevel = "9";
+                    break;
+                case Constants::normal:
+                default:
+                    nicelevel = "0";
+                    break;
+                case Constants::high:
+                    nicelevel = "-9";
+                    break;
+                case Constants::highest:
+                    nicelevel = "-19";
+                    break;
+            }
+            program = "renice";
+            arguments << "-n" << nicelevel << "-p" << QString::number(pid);
+        }
+        pidChange->start(program, arguments);
+        if (!pidChange->waitForStarted()) {
+            // Couldn't renice!
+            Print("renice command not found!!!");
+        }
+    }
+}
+
+// Completely untested.
+#if defined(Q_OS_WIN64)
+void MainWindow::set_process_prio_win(long long pid, int _prio)
+{
+    // Get the process handle
+    HANDLE hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, pid);
+    if (hProcess == nullptr) {
+        qWarning("Failed to open process");
+        return;
+    }
+
+    auto nicelevel;
+    switch (_prio)
+    {
+        case Constants::lowest:
+            nicelevel = IDLE_PRIORITY_CLASS;
+            break;
+        case Constants::low:
+            nicelevel = BELOW_NORMAL_PRIORITY_CLASS;
+            break;
+        case Constants::normal:
+        default:
+            nicelevel = NORMAL_PRIORITY_CLASS;
+            break;
+        case Constants::high:
+            nicelevel = ABOVE_NORMAL_PRIORITY_CLASS;
+            break;
+        case Constants::highest:
+            nicelevel = HIGH_PRIORITY_CLASS;
+            break;
+    }
+
+    // Set the priority class
+    if (!SetPriorityClass(hProcess, priority)) {
+        qWarning("Failed to set process priority");
+    }
+
+    // Close the process handle
+    CloseHandle(hProcess);
+}
+#endif
 
 void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
 {

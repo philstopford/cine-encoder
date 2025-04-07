@@ -104,6 +104,7 @@ private:
     void readXMLSettingsFile(const QString& xmlFileName);
 
     // ====================================
+    QProcess *pidChange;
     Ui::Widget *ui;
     Encoder    *m_pEncoder;
     QVector<QString> m_newParams,
@@ -177,11 +178,13 @@ private:
     QVector<Data> m_data;
 
     // ============= Encoding =============
-    bool        m_batch_mode;
+    bool        m_batch_mode,
+                encoding;
 
     int         m_fr_count,
                 m_status_encode_btn,
-                m_row;
+                m_row,
+                encode_pid;
 
     time_t      m_strt_t;
 
@@ -286,6 +289,10 @@ private slots:
     void onEncodingError(const QString &error_message, bool popup = false);
     void pause();
     void resume();
+    void changePriority(int new_prio);
+#if defined(Q_OS_WIN64)
+    void set_process_prio_win(long long pid, int _prio)
+#endif
 
     // ============= Video Metadata ================
     void onClearMetadata();

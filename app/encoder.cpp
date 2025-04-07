@@ -425,6 +425,14 @@ Data &Encoder::video(QString &globalTitle, Data &data, QVector<QString> &videoMe
     return data;
 }
 
+long long Encoder::getPid()
+{
+    if (processEncoding->state() != QProcess::Running) {
+        return -1;
+    }
+    return processEncoding->processId();
+}
+
 void Encoder::getPresets(const QStringList &_splitStartParam, const QStringList &_splitParam, const QString &hwaccel,
                          const QStringList &level, const QStringList &mode, const QStringList &preset,
                          const QStringList &pass, const QStringList &pass1, const QStringList &audio_param,
@@ -1373,7 +1381,7 @@ void Encoder::encode()   // Encode
 
     QString program;
     QOperatingSystemVersion ostype = QOperatingSystemVersion::current();
-    if ((ostype.type() == QOperatingSystemVersion::Windows) || (ostype.type() == QOperatingSystemVersion::Windows))
+    if (ostype.type() == QOperatingSystemVersion::Windows)
     {
         program = "ffmpeg";
     }

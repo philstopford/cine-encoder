@@ -44,6 +44,7 @@ public:
     void resumeEncoding();
     void stopEncoding();
     void killEncoding();
+    long long getPid();
 
     signals:
     void onEncodingStarted();
