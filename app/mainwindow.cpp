@@ -2284,30 +2284,18 @@ void MainWindow::changePriority(int new_prio)
             // They don't show up in /proc, but show up under the parent pid task folder.
             auto dir = QDir("/proc/" + QString::number(pid) + "/task/");
             QStringList entries = dir.entryList();
-            auto count = entries.count();
-            std::vector<std::string> ec;
-            for (QString& entry : entries) {
-                bool ok = false;
-                int pid_ = entry.toInt(&ok);
-                if (ok) {
-                    ec.push_back(entry.toStdString());
-                }
-            }
 
             for (QString& entry : entries) {
-                std::string debug = entry.toStdString();
                 bool ok = false;
                 int pid_ = entry.toInt(&ok);
                 if (ok) {
                     auto arguments = QStringList{"-n", nicelevel, "-p", entry};
-                    QProcess::startDetached(program, arguments);
-                    /*
-                    if (!pidChange->waitForStarted()) {
-                        // Couldn't renice!
+                    try {
+                        QProcess::startDetached(program, arguments);
+                    }
+                    catch (...) {
                         Print("renice command not found!!!");
                     }
-                    delete pidChange;
-                     */
                 }
             }
         }
