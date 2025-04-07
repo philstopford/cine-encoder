@@ -233,7 +233,6 @@ MainWindow::MainWindow(QWidget *parent):
     ui->labelPreview->installEventFilter(this);
     ui->frameMiddle->setFocusPolicy(Qt::StrongFocus);
     setAcceptDrops(true);
-    pidChange = new QProcess(this);
 }
 
 MainWindow::~MainWindow()
@@ -2251,8 +2250,6 @@ void MainWindow::changePriority(int new_prio)
     // Do we have a process running....
     long long pid = m_pEncoder->getPid();
     if (pid != -1) {
-        QString program;
-        QStringList arguments;
         QOperatingSystemVersion ostype = QOperatingSystemVersion::current();
         if (ostype.type() == QOperatingSystemVersion::Windows) {
 #if defined(Q_OS_WIN64)
@@ -2282,13 +2279,37 @@ void MainWindow::changePriority(int new_prio)
                     nicelevel = "-19";
                     break;
             }
-            program = "renice";
-            arguments << "-n" << nicelevel << "-p" << QString::number(pid);
-        }
-        pidChange->start(program, arguments);
-        if (!pidChange->waitForStarted()) {
-            // Couldn't renice!
-            Print("renice command not found!!!");
+            auto program = "renice";
+            // ffmpeg threads are spun up and show up as separate process IDs.
+            // They don't show up in /proc, but show up under the parent pid task folder.
+            auto dir = QDir("/proc/" + QString::number(pid) + "/task/");
+            QStringList entries = dir.entryList();
+            auto count = entries.count();
+            std::vector<std::string> ec;
+            for (QString& entry : entries) {
+                bool ok = false;
+                int pid_ = entry.toInt(&ok);
+                if (ok) {
+                    ec.push_back(entry.toStdString());
+                }
+            }
+
+            for (QString& entry : entries) {
+                std::string debug = entry.toStdString();
+                bool ok = false;
+                int pid_ = entry.toInt(&ok);
+                if (ok) {
+                    auto arguments = QStringList{"-n", nicelevel, "-p", entry};
+                    QProcess::startDetached(program, arguments);
+                    /*
+                    if (!pidChange->waitForStarted()) {
+                        // Couldn't renice!
+                        Print("renice command not found!!!");
+                    }
+                    delete pidChange;
+                     */
+                }
+            }
         }
     }
 }

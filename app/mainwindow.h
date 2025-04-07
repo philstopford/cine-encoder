@@ -104,7 +104,6 @@ private:
     void readXMLSettingsFile(const QString& xmlFileName);
 
     // ====================================
-    QProcess *pidChange;
     Ui::Widget *ui;
     Encoder    *m_pEncoder;
     QVector<QString> m_newParams,
