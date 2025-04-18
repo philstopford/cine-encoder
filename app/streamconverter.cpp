@@ -33,7 +33,7 @@ using namespace Constants;
 StreamConverter::StreamConverter(QWidget *parent,
                                  Mode mode,
                                  StreamData *data,
-                                 int theme):
+                                 int theme, int prio):
     BaseWindow(parent, true),
     ui(new Ui::StreamConverter),
     m_status_pause_btn(EncodingStatus::PAUSE),
@@ -44,6 +44,7 @@ StreamConverter::StreamConverter(QWidget *parent,
     m_aParam({}),
     m_sParam({})
 {
+    _prio = prio;
     ui->setupUi(centralWidget());
     setTitleBar(ui->frame_top);
     ui->frame_main->setProperty("scale", int(Helper::scaling() * 100));
@@ -388,7 +389,7 @@ void StreamConverter::initEncoding()
     m_aParam.AUDIO_CONTAINER = ui->comboBox_audio_container->currentText();
     m_sParam.SUBT_CODEC = ui->comboBox_subt_codec->currentIndex();
     m_sParam.SUBT_CONTAINER = ui->comboBox_subt_container->currentText();
-    m_pEncoder->initEncoding(m_pData, &m_aParam, &m_sParam);
+    m_pEncoder->initEncoding(m_pData, &m_aParam, &m_sParam, _prio);
 }
 
 void StreamConverter::onEncodingStarted()

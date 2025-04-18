@@ -3433,7 +3433,8 @@ void MainWindow::onExtract(QStreamView::Content type, int num)
     StreamConverter ext(this,
                         StreamConverter::Mode::Extract,
                         &data,
-                        m_theme);
+                        m_theme,
+                        m_ffmpeg_prio);
     if (ext.exec() == QDialog::Accepted) {
         showPopup(tr("Task completed!\n"));
     }

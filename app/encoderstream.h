@@ -37,7 +37,8 @@ public:
 
     void initEncoding(StreamData *data,
                       EncoderAudioParam *aParam,
-                      EncoderSubtParam *sParam);
+                      EncoderSubtParam *sParam,
+                      int prio);
 
     QProcess::ProcessState getEncodingState();
     void pauseEncoding();
@@ -56,6 +57,7 @@ public:
     void onEncodingCompleted();
 
 private:
+    int _prio;
     time_t  m_loop_start;
     QStringList m_preset_0,
             m_preset;
@@ -65,7 +67,6 @@ private:
 
     StreamData *m_pData;
     QProcess   *m_pProcessEncoding;
-    int *m_prio;
 
 private slots:
     void encode();

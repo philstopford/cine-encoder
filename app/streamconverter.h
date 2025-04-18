@@ -43,7 +43,7 @@ public:
     explicit StreamConverter(QWidget *parent,
                              Mode mode,
                              StreamData *data,
-                             int theme);
+                             int theme, int prio);
     ~StreamConverter() override;
 
 private:
@@ -60,7 +60,8 @@ private:
 
     Ui::StreamConverter *ui;
     int m_status_pause_btn,
-        m_theme;
+        m_theme,
+        _prio;
     bool  m_windowActivated;
     Mode  m_mode;
     EncoderStream *m_pEncoder;

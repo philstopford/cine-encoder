@@ -46,7 +46,8 @@ EncoderStream::~EncoderStream()
 
 void EncoderStream::initEncoding(StreamData *data,
                                  EncoderAudioParam *aParam,
-                                 EncoderSubtParam *sParam) {
+                                 EncoderSubtParam *sParam,
+                                 int prio) {
     Print("Make preset...");
     Tables t;
     m_pData = data;
@@ -57,6 +58,7 @@ void EncoderStream::initEncoding(StreamData *data,
     QString ACONTAINER = aParam->AUDIO_CONTAINER;
     int SCODEC = sParam->SUBT_CODEC;
     QString SCONTAINER = sParam->SUBT_CONTAINER;
+    _prio = prio;
 
     m_preset_0 = QStringList();
     m_preset = QStringList();
@@ -265,7 +267,7 @@ void EncoderStream::encode()   // Encode
     {
         // Assume Linux - Qt doesn't report Linux directly.
         QString nicelevel;
-        switch (*m_prio)
+        switch (_prio)
         {
             case Constants::lowest:
                 nicelevel = "19";
