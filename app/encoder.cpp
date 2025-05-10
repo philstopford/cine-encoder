@@ -480,7 +480,8 @@ QStringList Encoder::getCodec(const Tables &t, int CE_CODEC, const QString &resi
     }
     codec.append(_audioMapParam);
     codec.append(_subtitleMapParam);
-    codec.append({"-map_metadata", "-1", "-map_chapters", "-1"});
+    codec.append({"-map_metadata", "0"});
+    codec.append({"-map_chapters", "0"});
     codec.append(_videoMetadataParam);
     codec.append(_audioMetadataParam);
     codec.append(_subtitleMetadataParam);
