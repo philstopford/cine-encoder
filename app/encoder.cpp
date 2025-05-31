@@ -23,6 +23,7 @@
 #include <QColor>
 #if defined(Q_OS_WIN64)
 #include <windows.h>
+#include <tlhelp32.h>
 #endif
 
 
@@ -73,7 +74,7 @@ void Encoder::initEncoding(const QString  &temp_file,
     _prio = prio;
     Tables t;
     int CE_CODEC;
-    int CE_MODE;
+    int _CE_MODE;
     QString CE_BQR;
     QString CE_MINRATE;
     QString CE_MAXRATE;
@@ -110,7 +111,7 @@ void Encoder::initEncoding(const QString  &temp_file,
     int CE_SUBTITLE_BACKGROUND;
     QString CE_SUBTITLE_BACKGROUND_COLOR;
     int CE_SUBTITLE_LOCATION;
-    initVariables(temp_file, input_file, output_file, _cur_param, _fr_count, t, CE_CODEC, CE_MODE, CE_BQR, CE_MINRATE, CE_MAXRATE,
+    initVariables(temp_file, input_file, output_file, _cur_param, _fr_count, t, CE_CODEC, _CE_MODE, CE_BQR, CE_MINRATE, CE_MAXRATE,
                   CE_BUFSIZE,
                   CE_LEVEL, CE_FRAME_RATE, CE_BLENDING, CE_WIDTH, CE_HEIGHT, CE_PASS, CE_PRESET, CE_COLOR_RANGE, CE_MATRIX, CE_PRIMARY,
                   CE_TRC, CE_MIN_LUM,
@@ -192,7 +193,7 @@ void Encoder::initEncoding(const QString  &temp_file,
     QStringList level = levelModule(t, CE_CODEC, CE_LEVEL);
 
     /************************************* Mode module ***************************************/
-    QStringList mode = modeModule(t, CE_CODEC, CE_MODE, CE_BQR, CE_MINRATE, CE_MAXRATE, CE_BUFSIZE);
+    QStringList mode = modeModule(t, CE_CODEC, _CE_MODE, CE_BQR, CE_MINRATE, CE_MAXRATE, CE_BUFSIZE);
 
     /************************************* Preset module ***************************************/
     QStringList preset = presetModule(t, CE_CODEC, CE_PRESET);
@@ -269,7 +270,7 @@ void Encoder::initEncoding(const QString  &temp_file,
 }
 
 void Encoder::initVariables(const QString &temp_file, const QString &input_file, const QString &output_file,
-                            QVector<QString> &_cur_param, int *_fr_count, Tables &t, int &CE_CODEC, int &CE_MODE,
+                            QVector<QString> &_cur_param, int *_fr_count, Tables &t, int &CE_CODEC, int &_CE_MODE,
                             QString &CE_BQR, QString &CE_MINRATE, QString &CE_MAXRATE, QString &CE_BUFSIZE, int &CE_LEVEL,
                             int &CE_FRAME_RATE, int &CE_BLENDING, int &CE_WIDTH, int &CE_HEIGHT, int &CE_PASS, int &CE_PRESET,
                             int &CE_COLOR_RANGE, int &CE_MATRIX, int &CE_PRIMARY, int &CE_TRC, QString &CE_MIN_LUM,
@@ -282,7 +283,7 @@ void Encoder::initVariables(const QString &temp_file, const QString &input_file,
                             QString &CE_SUBTITLE_BACKGROUND_COLOR,
                             int &CE_SUBTITLE_LOCATION) {
     CE_CODEC= _cur_param[CODEC].toInt();
-    CE_MODE= _cur_param[MODE].toInt();
+    _CE_MODE= _cur_param[MODE].toInt();
     CE_BQR= _cur_param[BQR];
     CE_MINRATE= _cur_param[MINRATE];
     CE_MAXRATE= _cur_param[MAXRATE];
@@ -826,14 +827,14 @@ QStringList Encoder::subModule(const QString &container) {
     return sub_param;
 }
 
-QStringList Encoder::modeModule(const Tables &t, int CE_CODEC, int CE_MODE, const QString &CE_BQR, const QString &CE_MINRATE,
+QStringList Encoder::modeModule(const Tables &t, int CE_CODEC, int _CE_MODE, const QString &CE_BQR, const QString &CE_MINRATE,
                                 const QString &CE_MAXRATE, const QString &CE_BUFSIZE) {
     QStringList mode;
     const QString bitrate = QString::number(1000000.0 * CE_BQR.toDouble(), 'f', 0);
     const QString minrate = QString::number(1000000.0 * CE_MINRATE.toDouble(), 'f', 0);
     const QString maxrate = QString::number(1000000.0 * CE_MAXRATE.toDouble(), 'f', 0);
     const QString bufsize = QString::number(1000000.0 * CE_BUFSIZE.toDouble(), 'f', 0);
-    const QString selected_mode = t.arr_mode[CE_CODEC][CE_MODE];
+    const QString selected_mode = t.arr_mode[CE_CODEC][_CE_MODE];
 
     if (selected_mode == "CBR") {
         mode.append({"-b:v", bitrate, "-minrate", bitrate, "-maxrate", bitrate, "-bufsize", bufsize });
@@ -1433,13 +1434,13 @@ void Encoder::encode()   // Encode
 void Encoder::set_process_prio_win()
 {
     // Get the process handle
-    HANDLE hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, processEncoding.processId());
+    HANDLE hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, processEncoding->processId());
     if (hProcess == nullptr) {
         qWarning("Failed to open process");
         return;
     }
 
-    auto nicelevel;
+    auto nicelevel = NORMAL_PRIORITY_CLASS;
     switch (_prio)
     {
         case Constants::lowest:
@@ -1461,7 +1462,7 @@ void Encoder::set_process_prio_win()
     }
 
     // Set the priority class
-    if (!SetPriorityClass(hProcess, priority)) {
+    if (!SetPriorityClass(hProcess, nicelevel)) {
         qWarning("Failed to set process priority");
     }
 
@@ -1573,8 +1574,37 @@ QProcess::ProcessState Encoder::getEncodingState()
 void Encoder::pauseEncoding()
 {
 #ifdef Q_OS_WIN
-    _PROCESS_INFORMATION *pi = processEncoding->pid();
-    SuspendThread(pi->hThread);  // pause for Windows
+    auto processID = processEncoding->processId();
+    HANDLE hProcess = OpenProcess(PROCESS_SUSPEND_RESUME, FALSE, processID);
+    if (hProcess == NULL) {
+        qDebug() << "Failed to open process for suspension";
+        return;
+    }
+
+    // Iterate through the threads of the process
+    HANDLE hThreadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+    if (hThreadSnap == INVALID_HANDLE_VALUE) {
+        CloseHandle(hProcess);
+        return;
+    }
+
+    THREADENTRY32 te;
+    te.dwSize = sizeof(THREADENTRY32);
+
+    if (Thread32First(hThreadSnap, &te)) {
+        do {
+            if (te.th32OwnerProcessID == processID) {
+                HANDLE hThread = OpenThread(THREAD_SUSPEND_RESUME, FALSE, te.th32ThreadID);
+                if (hThread) {
+                    SuspendThread(hThread);
+                    CloseHandle(hThread);
+                }
+            }
+        } while (Thread32Next(hThreadSnap, &te));
+    }
+
+    CloseHandle(hThreadSnap);
+    CloseHandle(hProcess);
 #else
     kill(pid_t(processEncoding->processId()), SIGSTOP);  // pause for Unix
 #endif
@@ -1583,8 +1613,37 @@ void Encoder::pauseEncoding()
 void Encoder::resumeEncoding()
 {
 #ifdef Q_OS_WIN
-    _PROCESS_INFORMATION *pi = processEncoding->pid();
-    ResumeThread(pi->hThread);  // resume for Windows
+    auto processID = processEncoding->processId();
+    HANDLE hProcess = OpenProcess(PROCESS_SUSPEND_RESUME, FALSE, processID);
+    if (hProcess == NULL) {
+        qDebug() << "Failed to open process for resumption";
+        return;
+    }
+
+    // Iterate through the threads of the process
+    HANDLE hThreadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+    if (hThreadSnap == INVALID_HANDLE_VALUE) {
+        CloseHandle(hProcess);
+        return;
+    }
+
+    THREADENTRY32 te;
+    te.dwSize = sizeof(THREADENTRY32);
+
+    if (Thread32First(hThreadSnap, &te)) {
+        do {
+            if (te.th32OwnerProcessID == processID) {
+                HANDLE hThread = OpenThread(THREAD_SUSPEND_RESUME, FALSE, te.th32ThreadID);
+                if (hThread) {
+                    ResumeThread(hThread);
+                    CloseHandle(hThread);
+                }
+            }
+        } while (Thread32Next(hThreadSnap, &te));
+    }
+
+    CloseHandle(hThreadSnap);
+    CloseHandle(hProcess);
 #else
     kill(pid_t(processEncoding->processId()), SIGCONT); // resume for Unix
 #endif

@@ -290,7 +290,7 @@ private slots:
     void resume();
     void changePriority(int new_prio);
 #if defined(Q_OS_WIN64)
-    void set_process_prio_win(long long pid, int _prio)
+    void set_process_prio_win(long long pid, int _prio);
 #endif
 
     // ============= Video Metadata ================

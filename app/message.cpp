@@ -102,7 +102,11 @@ void Message::setMessage()
     } else
     if (m_mess_type == MessType::INFO && !m_timer_flag) {
 #if defined (Q_OS_WIN64)
-        QSound::play("./cine-encoder.wav");
+    {
+        QSoundEffect effect;
+        effect.setSource(QUrl::fromLocalFile("./cine-encoder.wav"));
+        effect.play();
+    }
 #elif defined (Q_OS_UNIX)
         QSoundEffect se;
         se.setSource(QUrl::fromLocalFile("/usr/share/sounds/cine-encoder.wav"));

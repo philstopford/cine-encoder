@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 project(cine_encoder VERSION 3.5.5 LANGUAGES C CXX)
 
+if(WIN32)
+    set(CMAKE_PREFIX_PATH  "C:/Qt/6.9.0/mingw_64/lib/cmake/")
+endif()
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # Set up AUTOMOC and some sensible defaults for runtime execution
@@ -68,7 +72,7 @@ endif()
 
 if(WIN32 AND NOT DEFINES___contains___WM_CUSTOM)
     target_sources(cine_encoder PUBLIC
-        platform_win/basewindow.cpp platform_win/basewindow.h
+        app/platform_win/basewindow.cpp app/platform_win/basewindow.h
     )
 endif()
 

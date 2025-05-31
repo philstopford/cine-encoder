@@ -41,6 +41,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
+#include <QOperatingSystemVersion>
 #include <sstream>
 #include <QXmlStreamWriter>
 #include <QString>
@@ -2313,7 +2314,7 @@ void MainWindow::set_process_prio_win(long long pid, int _prio)
         return;
     }
 
-    auto nicelevel;
+    auto nicelevel = NORMAL_PRIORITY_CLASS;
     switch (_prio)
     {
         case Constants::lowest:
@@ -2335,7 +2336,7 @@ void MainWindow::set_process_prio_win(long long pid, int _prio)
     }
 
     // Set the priority class
-    if (!SetPriorityClass(hProcess, priority)) {
+    if (!SetPriorityClass(hProcess, nicelevel)) {
         qWarning("Failed to set process priority");
     }
 

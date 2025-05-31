@@ -22,6 +22,7 @@
 #include <algorithm>
 #if defined(Q_OS_WIN64)
 #include <windows.h>
+#include <tlhelp32.h>
 #endif
 
 #define rnd(num) static_cast<int>(round(num))
@@ -310,14 +311,14 @@ void EncoderStream::encode()   // Encode
 void EncoderStream::set_process_prio_win()
 {
     // Get the process handle
-    HANDLE hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, m_pProcessEncoding.processId());
+    HANDLE hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, m_pProcessEncoding->processId());
     if (hProcess == nullptr) {
         qWarning("Failed to open process");
         return;
     }
 
-    auto nicelevel;
-    switch (*m_prio)
+    auto nicelevel = NORMAL_PRIORITY_CLASS;
+    switch (_prio)
     {
         case Constants::lowest:
             nicelevel = IDLE_PRIORITY_CLASS;
@@ -338,7 +339,7 @@ void EncoderStream::set_process_prio_win()
     }
 
     // Set the priority class
-    if (!SetPriorityClass(hProcess, priority)) {
+    if (!SetPriorityClass(hProcess, nicelevel)) {
         qWarning("Failed to set process priority");
     }
 
@@ -389,8 +390,38 @@ QProcess::ProcessState EncoderStream::getEncodingState()
 void EncoderStream::pauseEncoding()
 {
 #ifdef Q_OS_WIN
-    _PROCESS_INFORMATION *pi = m_pProcessEncoding->pid();
-    SuspendThread(pi->hThread);  // pause for Windows
+    auto processID = m_pProcessEncoding->processId();
+    HANDLE hProcess = OpenProcess(PROCESS_SUSPEND_RESUME, FALSE, processID);
+
+    if (hProcess == NULL) {
+        qDebug() << "Failed to open process for suspension";
+        return;
+    }
+
+    // Iterate through the threads of the process
+    HANDLE hThreadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+    if (hThreadSnap == INVALID_HANDLE_VALUE) {
+        CloseHandle(hProcess);
+        return;
+    }
+
+    THREADENTRY32 te;
+    te.dwSize = sizeof(THREADENTRY32);
+
+    if (Thread32First(hThreadSnap, &te)) {
+        do {
+            if (te.th32OwnerProcessID == processID) {
+                HANDLE hThread = OpenThread(THREAD_SUSPEND_RESUME, FALSE, te.th32ThreadID);
+                if (hThread) {
+                    SuspendThread(hThread);
+                    CloseHandle(hThread);
+                }
+            }
+        } while (Thread32Next(hThreadSnap, &te));
+    }
+
+    CloseHandle(hThreadSnap);
+    CloseHandle(hProcess);
 #else
     kill(pid_t(m_pProcessEncoding->processId()), SIGSTOP);  // pause for Unix
 #endif
@@ -399,8 +430,37 @@ void EncoderStream::pauseEncoding()
 void EncoderStream::resumeEncoding()
 {
 #ifdef Q_OS_WIN
-    _PROCESS_INFORMATION *pi = m_pProcessEncoding->pid();
-    ResumeThread(pi->hThread);  // resume for Windows
+    auto processID = m_pProcessEncoding->processId();
+    HANDLE hProcess = OpenProcess(PROCESS_SUSPEND_RESUME, FALSE, processID);
+    if (hProcess == NULL) {
+        qDebug() << "Failed to open process for resumption";
+        return;
+    }
+
+    // Iterate through the threads of the process
+    HANDLE hThreadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+    if (hThreadSnap == INVALID_HANDLE_VALUE) {
+        CloseHandle(hProcess);
+        return;
+    }
+
+    THREADENTRY32 te;
+    te.dwSize = sizeof(THREADENTRY32);
+
+    if (Thread32First(hThreadSnap, &te)) {
+        do {
+            if (te.th32OwnerProcessID == processID) {
+                HANDLE hThread = OpenThread(THREAD_SUSPEND_RESUME, FALSE, te.th32ThreadID);
+                if (hThread) {
+                    ResumeThread(hThread);
+                    CloseHandle(hThread);
+                }
+            }
+        } while (Thread32Next(hThreadSnap, &te));
+    }
+
+    CloseHandle(hThreadSnap);
+    CloseHandle(hProcess);
 #else
     kill(pid_t(m_pProcessEncoding->processId()), SIGCONT); // resume for Unix
 #endif

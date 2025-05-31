@@ -108,7 +108,7 @@ void BaseWindow::changeEvent(QEvent *event)
     }
 }
 
-bool BaseWindow::nativeEvent(const QByteArray &eventType, void *message, long *result)
+bool BaseWindow::nativeEvent(const QByteArray& eventType, void* message, qintptr* result)
 {
 #if (QT_VERSION == QT_VERSION_CHECK(5, 11, 1))
     MSG* msg = *reinterpret_cast<MSG**>(message);

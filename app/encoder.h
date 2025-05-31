@@ -119,7 +119,7 @@ private slots:
     void completed(int exit_code);
     void abort();
 #if defined(Q_OS_WIN64)
-    static void set_process_prio_win();
+    void set_process_prio_win();
 #endif
 
     static void
@@ -159,7 +159,7 @@ private slots:
                const QString &CE_WHITE_COORD,
                QStringList &chroma_coord, QStringList &white_coord);
 
-    static QStringList modeModule(const Tables &t, int CE_CODEC, int CE_MODE, const QString &CE_BQR, const QString &CE_MINRATE,
+    static QStringList modeModule(const Tables &t, int CE_CODEC, int _CE_MODE, const QString &CE_BQR, const QString &CE_MINRATE,
                            const QString &CE_MAXRATE, const QString &CE_BUFSIZE) ;
 
     QStringList subModule(const QString &container);
@@ -213,7 +213,7 @@ private slots:
                 QStringList &_videoMetadataParam) ;
 
     void initVariables(const QString &temp_file, const QString &input_file, const QString &output_file,
-                       QVector<QString> &_cur_param, int *_fr_count, Tables &t, int &CE_CODEC, int &CE_MODE,
+                       QVector<QString> &_cur_param, int *_fr_count, Tables &t, int &CE_CODEC, int &_CE_MODE,
                        QString &CE_BQR, QString &CE_MINRATE, QString &CE_MAXRATE, QString &CE_BUFSIZE, int &CE_LEVEL,
                        int &CE_FRAME_RATE, int &CE_BLENDING, int &CE_WIDTH, int &CE_HEIGHT, int &CE_PASS, int &CE_PRESET,
                        int &CE_COLOR_RANGE, int &CE_MATRIX, int &CE_PRIMARY, int &CE_TRC, QString &CE_MIN_LUM, QString &CE_MAX_LUM,

@@ -40,7 +40,7 @@ protected:
     virtual void changeEvent(QEvent*) override;
 
 private:
-    virtual bool nativeEvent(const QByteArray&, void*, long*) final;
+    virtual bool nativeEvent(const QByteArray&, void*, qintptr*) final;
 
     QWidget* m_titlebar;
     QList<QWidget*>  m_whiteList;
