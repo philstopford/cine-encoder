@@ -48,40 +48,39 @@ int main(int argc, char *argv[])
         sysFamily = QFontDatabase::applicationFontFamilies(id).at(0);*/
 
     /******************* Read Settings ****************************/
-    QString val = readXMLSettingFromFile(QString("allow_duplicates"));
-    if (val == QString(""))
-    {
-        val = QString("0");
+    QString settingValue = readXMLSettingFromFile("allow_duplicates");
+    if (settingValue.isEmpty()) {
+        settingValue = "0";
     }
-    const bool allowDuplicates = val.toInt();
+    const bool allowDuplicates = settingValue.toInt();
 
-    val = readXMLSettingFromFile("font_size");
-    if (val == QString(""))
-    {
-        val = QString(numToStr(FONTSIZE));
+    settingValue = readXMLSettingFromFile("font_size");
+    if (settingValue.isEmpty()) {
+        settingValue = QString(numToStr(FONTSIZE));
     }
-    const int fntSize = val.toInt();
+    const int fntSize = settingValue.toInt();
 
-    val = readXMLSettingFromFile("font");
-    const QString fntFamily = val;
-
-    val = readXMLSettingFromFile("language");
-    const QString currLang = val;
+    const QString fntFamily = readXMLSettingFromFile("font");
+    const QString currLang = readXMLSettingFromFile("language");
 
     /**************** Check for duplicates ************************/
-    if (!allowDuplicates)
-        if (checkForDuplicates() == 1)
+    if (!allowDuplicates) {
+        if (checkForDuplicates() == 1) {
             return 1;
+        }
+    }
 
     /******************* Set Translate ****************************/
     QTranslator trns;
-    if (currLang != "en" && trns.load(QString(":/resources/translation/translation_%1.qm").arg(currLang)))
+    if (currLang != "en" && trns.load(QString(":/resources/translation/translation_%1.qm").arg(currLang))) {
         QApplication::installTranslator(&trns);
+    }
 
     /********************* Set Font ******************************/
     QFont fnt = QApplication::font();
-    if (fntFamily != "")
+    if (!fntFamily.isEmpty()) {
         fnt.setFamily(fntFamily);
+    }
     fnt.setPointSize(fntSize);
     fnt.setWeight(QFont::Medium);
     QApplication::setFont(fnt);
@@ -110,11 +109,11 @@ int main(int argc, char *argv[])
 }
 
 QString readXMLSettingFromFile(const QString& tagToFind) {
-    QString val = QString("");
+    QString value;
     QFile xmlFile(XMLSETTINGSFILE);
     bool settingsXMLFileValid = true;
     int settingsVer = 0;
-    if (!xmlFile.open(QFile::ReadOnly | QFile::Text)) { // Open file in write only mode
+    if (!xmlFile.open(QFile::ReadOnly | QFile::Text)) { // Open file in read only mode
         settingsXMLFileValid = false;
     }
 
@@ -122,12 +121,12 @@ QString readXMLSettingFromFile(const QString& tagToFind) {
         settingsXMLFileValid = false;
         QXmlStreamReader stream(&xmlFile);
         stream.readNextStartElement();
-        if (stream.name() == QString("cineencoder")) {
+        if (stream.name() == "cineencoder") {
             stream.readNextStartElement();
-            if (stream.name() == QString("version")) {
+            if (stream.name() == "version") {
                 settingsVer = stream.readElementText().toInt();
                 stream.readNextStartElement();
-                if (stream.name() == QString("settings")) {
+                if (stream.name() == "settings") {
                     settingsXMLFileValid = true;
                 }
             }
@@ -135,21 +134,23 @@ QString readXMLSettingFromFile(const QString& tagToFind) {
         if (settingsXMLFileValid) {
             while (!stream.atEnd()) {
                 stream.readNextStartElement();
-                QString nnn = stream.name().toString();
-                if (nnn == tagToFind) {
-                    val = stream.readElementText();
+                const QString tagName = stream.name().toString();
+                if (tagName == tagToFind) {
+                    value = stream.readElementText();
                     xmlFile.close();
-                    return val;
+                    return value;
                 }
             }
         }
     }
     xmlFile.close();
-    return val;
+    return value;
 }
 
 int checkForDuplicates()
 {
+    const int PROCESS_TIMEOUT_MS = 1000;
+    
     QProcess process;
     process.setProcessChannelMode(QProcess::MergedChannels);
     QString cmd;
@@ -162,7 +163,7 @@ int checkForDuplicates()
     arguments << "-A";
 #endif
     process.start(cmd,  arguments);
-    if (process.waitForFinished(1000)) {
+    if (process.waitForFinished(PROCESS_TIMEOUT_MS)) {
         const QString list = QString(process.readAllStandardOutput());
         const int lindex = list.indexOf("cine_encoder");
         const int rindex = list.lastIndexOf("cine_encoder");
