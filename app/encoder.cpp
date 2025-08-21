@@ -453,14 +453,6 @@ void Encoder::getPresets(const QStringList &_splitStartParam, const QStringList 
                     + colorprim + colormatrix + transfer + QStringList {"-an","-sn","-f","null", "/dev/null"};
     _preset = _splitParam + codec + level + preset + mode + pass + color_range
               + colorprim + colormatrix + transfer + audio_param;
-    // DEBUG
-/*
-std::string _presetarray[_preset.length()];
-for (int i = 0; i < _preset.length(); i++)
-{
-    _presetarray[i] = _preset[i].toStdString();
-}
-*/
 
     _preset_mkvmerge = max_cll.join(" ") + max_fall.join(" ") + max_lum.join(" ") + min_lum.join(" ") + chroma_coord.join(" ") + white_coord.join(" ");
 }
@@ -1184,9 +1176,6 @@ void Encoder::subtVF(const QString &input_file, const QString &subtitle_font, in
                      QStringList &burn_subt_vf, const QString& width, const QString& height) {
     // Keep with a QString here as there are no spaces in the parameters.
     QString  burn_string;
-    // DEBUG
-    std::string fontcol = subtitle_font_color.toStdString();
-    std::string bgcol = subtitle_background_color.toStdString();
     // Hard-coding UTF-8. Not very elegant....
     burn_string = "charenc=utf-8:force_style=\"'FontName='" + subtitle_font +
                           "',Fontsize=" + numToStr(subtitle_font_size) +

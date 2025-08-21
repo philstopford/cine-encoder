@@ -86,6 +86,7 @@ int main(int argc, char *argv[])
     QApplication::setFont(fnt);
 
     /******************* Set Splash *******************************/
+    const int SPLASH_DISPLAY_MS = 1000;
     const QPixmap pixmap(":/resources/images/splash.png");
     const QPixmap scaled = pixmap.scaled(pixmap.size() * Helper::scaling(),
                                          Qt::KeepAspectRatio, Qt::FastTransformation);
@@ -95,7 +96,7 @@ int main(int argc, char *argv[])
 
     QElapsedTimer time;
     time.start();
-    while (time.elapsed() < 1000) {
+    while (time.elapsed() < SPLASH_DISPLAY_MS) {
         QApplication::processEvents();
     }
 

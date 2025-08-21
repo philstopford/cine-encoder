@@ -1082,12 +1082,12 @@ void MainWindow::readXMLSettingsFile(const QString& xmlFileName)
         settingsXMLFileValid = false;
         QXmlStreamReader stream(&xmlFile);
         stream.readNextStartElement();
-        if (stream.name() == QString("cineencoder")) {
+        if (stream.name() == "cineencoder") {
             stream.readNextStartElement();
-            if (stream.name() == QString("version")) {
+            if (stream.name() == "version") {
                 settingsVer = stream.readElementText().toInt();
                 stream.readNextStartElement();
-                if (stream.name() == QString("settings")) {
+                if (stream.name() == "settings") {
                     settingsXMLFileValid = true;
                 }
             }
