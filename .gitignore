@@ -6,9 +6,32 @@ cmake-build-release/
 cmake-build-relwithdebinfo/
 .idea/
 
+# Deployment and packaging
+/deploy/
+/artifacts/
+*.AppImage
+*.dmg
+*.exe
+
 # Ignored files:
 *.pro.user
 *.user
 *.user.*
 *.stash
 Makefile
+
+# MediaInfo library (downloaded during CI)
+MediaInfo/
+MediaInfo_DLL.zip
+MediaInfo.dll
+
+# Temporary build files
+*.o
+*.obj
+*.lib
+*.a
+*.so
+*.dylib
+moc_*
+qrc_*
+ui_*

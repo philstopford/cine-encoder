@@ -1,0 +1,265 @@
+name: Build and Package
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Qt6
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.7.3'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2022_64'
+        modules: 'qtsvg qtmultimedia'
+        cache: true
+        
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+        
+    - name: Install MediaInfo library
+      shell: powershell
+      run: |
+        # Download and install MediaInfo development library
+        Invoke-WebRequest -Uri "https://mediaarea.net/download/binary/libmediainfo0/23.09/MediaInfo_DLL_23.09_Windows_x64.zip" -OutFile "MediaInfo_DLL.zip"
+        Expand-Archive -Path "MediaInfo_DLL.zip" -DestinationPath "MediaInfo"
+        Copy-Item "MediaInfo/Developers/Source/MediaInfoDLL/MediaInfoDLL.h" -Destination "app/MediaInfoDLL/"
+        Copy-Item "MediaInfo/Developers/Source/MediaInfoDLL/MediaInfoDLL.lib" -Destination "app/MediaInfoDLL/"
+        Copy-Item "MediaInfo/MediaInfo.dll" -Destination "."
+        
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+        
+    - name: Build
+      run: |
+        cmake --build build --config Release
+        
+    - name: Deploy Qt
+      shell: powershell
+      run: |
+        # Create deployment directory
+        New-Item -ItemType Directory -Force -Path "deploy"
+        Copy-Item "build/Release/cine_encoder.exe" -Destination "deploy/"
+        Copy-Item "MediaInfo.dll" -Destination "deploy/"
+        
+        # Deploy Qt dependencies including SVG support
+        windeployqt.exe --dir deploy --release --qmldir . --svg deploy/cine_encoder.exe
+        
+        # Verify SVG plugin was deployed
+        if (Test-Path "deploy/imageformats/qsvg.dll") {
+          Write-Host "✓ SVG plugin deployed successfully"
+        } else {
+          Write-Warning "⚠ SVG plugin not found - SVG icons may not work"
+        }
+        
+    - name: Package with Inno Setup
+      shell: powershell
+      run: |
+        # Install Inno Setup
+        choco install innosetup
+        
+        # Create updated Inno Setup script for Qt6
+        $issContent = @"
+        #define MyAppName "Cine Encoder 2023"
+        #define MyAppVersion "3.5.5"
+        #define MyAppPublisher "Oleg Kozhukharenko"
+        #define MyAppURL "https://github.com/philstopford/cine-encoder"
+        #define MyAppExeName "cine_encoder.exe"
+        
+        [Setup]
+        AppId={{F261F997-18A7-4DEE-B351-F942FB21DFF3}
+        AppName={#MyAppName}
+        AppVersion={#MyAppVersion}
+        AppPublisher={#MyAppPublisher}
+        AppPublisherURL={#MyAppURL}
+        AppSupportURL={#MyAppURL}
+        AppUpdatesURL={#MyAppURL}
+        DefaultDirName={autopf}\{#MyAppName}
+        DisableWelcomePage=no
+        DisableProgramGroupPage=yes
+        OutputDir=.
+        OutputBaseFilename=cine-encoder-{#MyAppVersion}-windows-x64
+        SetupIconFile=app\cine-encoder.ico
+        Compression=lzma
+        SolidCompression=yes
+        WizardStyle=modern
+        
+        [Languages]
+        Name: "english"; MessagesFile: "compiler:Default.isl"
+        
+        [Tasks]
+        Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+        
+        [Files]
+        Source: "deploy\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+        Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion
+        
+        [Icons]
+        Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+        Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+        
+        [Run]
+        Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+        "@
+        
+        $issContent | Out-File -FilePath "cine-encoder-qt6.iss" -Encoding UTF8
+        
+        # Compile installer
+        & "C:\Program Files (x86)\Inno Setup 6\iscc.exe" "cine-encoder-qt6.iss"
+        
+    - name: Upload Windows artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cine-encoder-windows
+        path: |
+          cine-encoder-*-windows-x64.exe
+          deploy/
+          
+  build-macos:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Qt6
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.7.3'
+        host: 'mac'
+        target: 'desktop'
+        modules: 'qtsvg qtmultimedia'
+        cache: true
+        
+    - name: Install dependencies
+      run: |
+        # Install MediaInfo library
+        brew install mediainfo
+        
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15
+        
+    - name: Build
+      run: |
+        cmake --build build --config Release
+        
+    - name: Deploy Qt
+      run: |
+        # Create app bundle directory
+        mkdir -p deploy
+        cp -R build/cine_encoder.app deploy/
+        
+        # Deploy Qt dependencies including SVG support
+        macdeployqt deploy/cine_encoder.app -always-overwrite -svg
+        
+        # Verify SVG plugin was deployed
+        if [ -f "deploy/cine_encoder.app/Contents/PlugIns/imageformats/libqsvg.dylib" ]; then
+          echo "✓ SVG plugin deployed successfully"
+        else
+          echo "⚠ SVG plugin not found - SVG icons may not work"
+        fi
+        
+    - name: Create DMG
+      run: |
+        # Install create-dmg for DMG creation
+        brew install create-dmg
+        
+        # Create DMG
+        create-dmg \
+          --volname "Cine Encoder" \
+          --volicon "app/cine-encoder.ico" \
+          --window-pos 200 120 \
+          --window-size 800 400 \
+          --icon-size 100 \
+          --icon "cine_encoder.app" 200 190 \
+          --hide-extension "cine_encoder.app" \
+          --app-drop-link 600 185 \
+          "cine-encoder-3.5.5-macos.dmg" \
+          "deploy/"
+          
+    - name: Upload macOS artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cine-encoder-macos
+        path: |
+          cine-encoder-*-macos.dmg
+          deploy/cine_encoder.app
+
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Qt6 and dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          qt6-base-dev \
+          qt6-svg-dev \
+          qt6-multimedia-dev \
+          libmediainfo-dev \
+          cmake \
+          build-essential
+          
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+        
+    - name: Build
+      run: |
+        cmake --build build --config Release
+        
+    - name: Package AppImage
+      run: |
+        # Install linuxdeploy and Qt plugin
+        wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+        chmod +x linuxdeploy*.AppImage
+        
+        # Create AppDir structure
+        mkdir -p AppDir/usr/bin
+        cp build/cine_encoder AppDir/usr/bin/
+        
+        # Create desktop file
+        cat > AppDir/cine_encoder.desktop << EOF
+        [Desktop Entry]
+        Type=Application
+        Name=Cine Encoder
+        Exec=cine_encoder
+        Icon=cine-encoder
+        Categories=AudioVideo;Video;
+        Comment=Video encoding application
+        EOF
+        
+        # Copy icon
+        mkdir -p AppDir/usr/share/icons/hicolor/64x64/apps
+        cp app/resources/icons/64x64/cine-encoder.png AppDir/usr/share/icons/hicolor/64x64/apps/cine-encoder.png
+        
+        # Deploy Qt and create AppImage
+        export QML_SOURCES_PATHS=.
+        ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage --desktop-file=AppDir/cine_encoder.desktop
+        
+    - name: Upload Linux artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cine-encoder-linux
+        path: |
+          Cine_Encoder-*-x86_64.AppImage

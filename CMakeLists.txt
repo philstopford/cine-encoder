@@ -3,6 +3,10 @@ project(cine_encoder VERSION 3.5.5 LANGUAGES C CXX)
 
 if(WIN32)
     set(CMAKE_PREFIX_PATH  "C:/Qt/6.9.0/mingw_64/lib/cmake/")
+    # Support for GitHub Actions Qt installation path
+    if(DEFINED ENV{Qt6_DIR})
+        set(CMAKE_PREFIX_PATH "$ENV{Qt6_DIR}")
+    endif()
 endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -87,6 +91,20 @@ if(WIN32)
         dwmapi
         user32
     )
+    
+    # Try to find MediaInfo library in the MediaInfoDLL directory
+    find_library(MEDIAINFO_LIB 
+        NAMES MediaInfoDLL mediainfo
+        PATHS ${CMAKE_CURRENT_SOURCE_DIR}/app/MediaInfoDLL
+        NO_DEFAULT_PATH
+    )
+    
+    if(MEDIAINFO_LIB)
+        target_link_libraries(cine_encoder PRIVATE ${MEDIAINFO_LIB})
+        target_include_directories(cine_encoder PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/app/MediaInfoDLL)
+    else()
+        message(WARNING "MediaInfo library not found. Some features may not work.")
+    endif()
 endif()
 
 if(UNIX AND NOT MACOS)
