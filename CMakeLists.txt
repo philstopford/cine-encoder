@@ -21,6 +21,7 @@ find_package(Qt${QT_VERSION_MAJOR} OPTIONAL_COMPONENTS Widgets) # X11Extras)
 
 add_executable(cine_encoder WIN32 MACOSX_BUNDLE
     app/basedialog.cpp app/basedialog.h
+    app/basewindow.cpp app/basewindow.h
     app/constants.h
     app/encoder.cpp app/encoder.h
     app/encoderstream.cpp app/encoderstream.h
@@ -61,19 +62,24 @@ if(DEFINES___contains___WM_CUSTOM)
     target_sources(cine_encoder PUBLIC
         app/basewindow_cwm.cpp app/basewindow_cwm.h
     )
+    target_compile_definitions(cine_encoder PRIVATE WM_CUSTOM)
 endif()
 
-if(UNIX AND NOT DEFINES___contains___WM_CUSTOM AND NOT MACOS)
-    target_sources(cine_encoder PUBLIC
-        app/platform_unix/basewindow.cpp app/platform_unix/basewindow.h
-        app/platform_unix/xutil.cpp app/platform_unix/xutil.h
-    )
-endif()
+# Platform-specific sources are no longer needed as we use unified implementation
+# Legacy platform-specific implementations are kept for reference but not built
+if(FALSE) # Disabled - using unified implementation
+    if(UNIX AND NOT DEFINES___contains___WM_CUSTOM AND NOT MACOS)
+        target_sources(cine_encoder PUBLIC
+            app/platform_unix/basewindow.cpp app/platform_unix/basewindow.h
+            app/platform_unix/xutil.cpp app/platform_unix/xutil.h
+        )
+    endif()
 
-if(WIN32 AND NOT DEFINES___contains___WM_CUSTOM)
-    target_sources(cine_encoder PUBLIC
-        app/platform_win/basewindow.cpp app/platform_win/basewindow.h
-    )
+    if(WIN32 AND NOT DEFINES___contains___WM_CUSTOM)
+        target_sources(cine_encoder PUBLIC
+            app/platform_win/basewindow.cpp app/platform_win/basewindow.h
+        )
+    endif()
 endif()
 
 if(WIN32)
@@ -85,10 +91,10 @@ endif()
 
 if(UNIX AND NOT MACOS)
     target_link_libraries(cine_encoder PRIVATE
-        # Qt::X11Extras
-	Qt::GuiPrivate
-        X11
-        Xext
+        # Removed X11 dependencies - now using public Qt6 APIs only
+        # X11
+        # Xext
+        # Qt::GuiPrivate
         mediainfo
     )
 endif()

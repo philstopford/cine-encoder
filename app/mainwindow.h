@@ -33,11 +33,7 @@
 #ifdef WM_CUSTOM
     #include "basewindow_cwm.h"
 #else
-    #ifdef Q_OS_WIN
-        #include "platform_win/basewindow.h"
-    #else
-        #include "platform_unix/basewindow.h"
-    #endif
+    #include "basewindow.h"
 #endif
 
 
