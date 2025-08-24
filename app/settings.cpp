@@ -73,29 +73,12 @@ Settings::Settings(QWidget *parent):
         &Settings::onComboBoxFont_indexChanged, &Settings::onComboBoxSubtitlesFont_indexChanged,
         &Settings::onComboBoxFfmpegPriority_indexChanged
     };
-    // Release build, this crashes out and i gets to 12.... No idea.
-    /*
-    for (int i = 0; i < 5; i++) {
+    // Use constexpr to avoid potential runtime issues that caused the original loop to crash
+    constexpr int numComboBoxes = 5;
+    for (int i = 0; i < numComboBoxes; i++) {
         connect(boxes[i], static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
                 this, boxes_methods[i]);
     }
-     */
-    // Do it manually to prevent the failure.
-    int j = 0;
-    connect(boxes[j], static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-            this, boxes_methods[j]);
-    j++;
-    connect(boxes[j], static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-            this, boxes_methods[j]);
-    j++;
-    connect(boxes[j], static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-            this, boxes_methods[j]);
-    j++;
-    connect(boxes[j], static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-            this, boxes_methods[j]);
-    j++;
-    connect(boxes[j], static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-            this, boxes_methods[j]);
 
 
     // On close
@@ -258,14 +241,10 @@ void Settings::setParameters(QString    *pOutputFolder,
     }
     ui->comboBox_subtitles_font->blockSignals(false);
 
-    // DEBUG
-    std::string temp = m_pSubtitlesBackgroundColor->name().toStdString();
     QString sb("background: " + m_pSubtitlesBackgroundColor->name() + ";");
     ui->subtitles_background_color->setStyleSheet(sb);
     ui->subtitles_background_color->update();
 
-    // DEBUG
-    temp = m_pSubtitlesColor->name().toStdString();
     QString s("background: " + m_pSubtitlesColor->name() + ";");
     ui->subtitles_color->setStyleSheet(s);
     ui->subtitles_color->update();

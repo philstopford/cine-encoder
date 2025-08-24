@@ -1082,12 +1082,12 @@ void MainWindow::readXMLSettingsFile(const QString& xmlFileName)
         settingsXMLFileValid = false;
         QXmlStreamReader stream(&xmlFile);
         stream.readNextStartElement();
-        if (stream.name() == QString("cineencoder")) {
+        if (stream.name() == "cineencoder") {
             stream.readNextStartElement();
-            if (stream.name() == QString("version")) {
+            if (stream.name() == "version") {
                 settingsVer = stream.readElementText().toInt();
                 stream.readNextStartElement();
-                if (stream.name() == QString("settings")) {
+                if (stream.name() == "settings") {
                     settingsXMLFileValid = true;
                 }
             }
@@ -1095,121 +1095,104 @@ void MainWindow::readXMLSettingsFile(const QString& xmlFileName)
         if (settingsXMLFileValid) {
             while (!stream.atEnd()) {
                 stream.readNextStartElement();
-                QString nnn = stream.name().toString();
-                std::string sss = nnn.toStdString();
-                if (nnn == QString("prefix_type")) {
-                    QString val = stream.readElementText();
-                    m_prefxType = val.toInt();
+                const QString tagName = stream.name().toString();
+                if (tagName == "prefix_type") {
+                    const QString value = stream.readElementText();
+                    m_prefxType = value.toInt();
                 }
-                if (nnn == QString("suffix_type")) {
-                    QString val = stream.readElementText();
-                    m_suffixType = val.toInt();
+                if (tagName == "suffix_type") {
+                    const QString value = stream.readElementText();
+                    m_suffixType = value.toInt();
                 }
-                if (nnn == QString("prefix_name")) {
-                    QString val = stream.readElementText();
-                    m_prefixName = val;
+                if (tagName == "prefix_name") {
+                    m_prefixName = stream.readElementText();
                 }
-                if (nnn == QString("suffix_name")) {
-                    QString val = stream.readElementText();
-                    m_suffixName = val;
+                if (tagName == "suffix_name") {
+                    m_suffixName = stream.readElementText();
                 }
-                if (nnn == QString("timer_interval")) {
-                    QString val = stream.readElementText();
-                    m_timerInterval = val.toInt();
+                if (tagName == "timer_interval") {
+                    const QString value = stream.readElementText();
+                    m_timerInterval = value.toInt();
                 }
-                if (nnn == QString("theme")) {
-                    QString val = stream.readElementText();
-                    m_theme = val.toInt();
+                if (tagName == "theme") {
+                    const QString value = stream.readElementText();
+                    m_theme = value.toInt();
                 }
-                if (nnn == QString("protection")) {
-                    QString val = stream.readElementText();
-                    m_protectFlag = val.toInt();
+                if (tagName == "protection") {
+                    const QString value = stream.readElementText();
+                    m_protectFlag = value.toInt();
                 }
-                if (nnn == QString("allow_duplicates")) {
-                    QString val = stream.readElementText();
-                    m_multiInstances = val.toInt();
+                if (tagName == "allow_duplicates") {
+                    const QString value = stream.readElementText();
+                    m_multiInstances = value.toInt();
                 }
-                if (nnn == QString("show_hdr_mode")) {
-                    QString val = stream.readElementText();
-                    m_showHdrFlag = val.toInt();
+                if (tagName == "show_hdr_mode") {
+                    const QString value = stream.readElementText();
+                    m_showHdrFlag = value.toInt();
                 }
-                if (nnn == QString("temp_folder")) {
-                    QString val = stream.readElementText();
-                    m_temp_folder = val;
+                if (tagName == "temp_folder") {
+                    m_temp_folder = stream.readElementText();
                 }
-                if (nnn == QString("output_folder")) {
-                    QString val = stream.readElementText();
-                    m_output_folder = val;
+                if (tagName == "output_folder") {
+                    m_output_folder = stream.readElementText();
                 }
-                if (nnn == QString("output_folder")) {
-                    QString val = stream.readElementText();
-                    m_output_folder = val;
+                if (tagName == "open_dir") {
+                    m_openDir = stream.readElementText();
                 }
-                if (nnn == QString("open_dir")) {
-                    QString val = stream.readElementText();
-                    m_openDir = val;
+                if (tagName == "batch_mode") {
+                    const QString value = stream.readElementText();
+                    m_batch_mode = value.toInt();
                 }
-                if (nnn == QString("batch_mode")) {
-                    QString val = stream.readElementText();
-                    m_batch_mode = val.toInt();
+                if (tagName == "tray") {
+                    const QString value = stream.readElementText();
+                    m_hideInTrayFlag = value.toInt();
                 }
-                if (nnn == QString("tray")) {
-                    QString val = stream.readElementText();
-                    m_hideInTrayFlag = val.toInt();
+                if (tagName == "language") {
+                    m_language = stream.readElementText();
                 }
-                if (nnn == QString("language")) {
-                    QString val = stream.readElementText();
-                    m_language = val;
+                if (tagName == "font") {
+                    m_font = stream.readElementText();
                 }
-                if (nnn == QString("font")) {
-                    QString val = stream.readElementText();
-                    m_font = val;
+                if (tagName == "font_size") {
+                    const QString value = stream.readElementText();
+                    m_fontSize = value.toInt();
                 }
-                if (nnn == QString("font_size")) {
-                    QString val = stream.readElementText();
-                    m_fontSize = val.toInt();
+                if (tagName == "subtitles_font") {
+                    m_subtitles_font = stream.readElementText();
                 }
-                if (nnn == QString("subtitles_font")) {
-                    QString val = stream.readElementText();
-                    m_subtitles_font = val;
+                if (tagName == "subtitles_font_size") {
+                    const QString value = stream.readElementText();
+                    m_subtitles_fontSize = value.toInt();
                 }
-                if (nnn == QString("subtitles_font_size")) {
-                    QString val = stream.readElementText();
-                    m_subtitles_fontSize = val.toInt();
+                if (tagName == "subtitles_deselectall") {
+                    const QString value = stream.readElementText();
+                    m_subtitles_deselectall = value.toInt();
                 }
-                if (nnn == QString("subtitles_deselectall")) {
-                    QString val = stream.readElementText();
-                    m_subtitles_deselectall = val.toInt();
+                if (tagName == "subtitles_background") {
+                    const QString value = stream.readElementText();
+                    m_subtitles_background = value.toInt();
                 }
-                if (nnn == QString("subtitles_background")) {
-                    QString val = stream.readElementText();
-                    m_subtitles_background = val.toInt();
+                if (tagName == "subtitles_color") {
+                    m_subtitles_color = stream.readElementText();
                 }
-                if (nnn == QString("subtitles_color")) {
-                    QString val = stream.readElementText();
-                    std::string test = val.toStdString();
-                    m_subtitles_color = val;
+                if (tagName == "subtitles_background_color") {
+                    m_subtitles_background_color = stream.readElementText();
                 }
-                if (nnn == QString("subtitles_background_color")) {
-                    QString val = stream.readElementText();
-                    std::string test2 = val.toStdString();
-                    m_subtitles_background_color = val;
+                if (tagName == "subtitles_background_alpha") {
+                    const QString value = stream.readElementText();
+                    m_subtitles_background_alpha = value.toInt();
                 }
-                if (nnn == QString("subtitles_background_alpha")) {
-                    QString val = stream.readElementText();
-                    m_subtitles_background_alpha = val.toInt();
+                if (tagName == "subtitles_location") {
+                    const QString value = stream.readElementText();
+                    m_subtitles_location = value.toInt();
                 }
-                if (nnn == QString("subtitles_location")) {
-                    QString val = stream.readElementText();
-                    m_subtitles_location = val.toInt();
+                if (tagName == "threads") {
+                    const QString value = stream.readElementText();
+                    m_threads = value.toInt();
                 }
-                if (nnn == QString("threads")) {
-                    QString val = stream.readElementText();
-                    m_threads = val.toInt();
-                }
-                if (nnn == QString("ffmpeg_prio")) {
-                    QString val = stream.readElementText();
-                    int tmp = val.toInt();
+                if (tagName == "ffmpeg_prio") {
+                    const QString value = stream.readElementText();
+                    int tmp = value.toInt();
                     if (tmp > Constants::highest)
                     {
                         tmp = Constants::highest;
@@ -1220,17 +1203,17 @@ void MainWindow::readXMLSettingsFile(const QString& xmlFileName)
                     }
                     m_ffmpeg_prio = tmp;
                 }
-                if (nnn == QString("row_size")) {
-                    QString val = stream.readElementText();
-                    m_rowHeight = val.toInt();
+                if (tagName == "row_size") {
+                    const QString value = stream.readElementText();
+                    m_rowHeight = value.toInt();
                 }
-                if (nnn == QString("switch_view_mode")) {
-                    QString val = stream.readElementText();
-                    switchViewMode = val.toInt();
+                if (tagName == "switch_view_mode") {
+                    const QString value = stream.readElementText();
+                    switchViewMode = value.toInt();
                 }
-                if (nnn == QString("switch_cut_mode")) {
-                    QString val = stream.readElementText();
-                    switchCutMode = val.toInt();
+                if (tagName == "switch_cut_mode") {
+                    const QString value = stream.readElementText();
+                    switchCutMode = value.toInt();
                 }
             }
             xmlFile.close();
