@@ -1082,12 +1082,12 @@ void MainWindow::readXMLSettingsFile(const QString& xmlFileName)
         settingsXMLFileValid = false;
         QXmlStreamReader stream(&xmlFile);
         stream.readNextStartElement();
-        if (stream.name() == "cineencoder") {
+        if (stream.name().toString() == "cineencoder") {
             stream.readNextStartElement();
-            if (stream.name() == "version") {
+            if (stream.name().toString() == "version") {
                 settingsVer = stream.readElementText().toInt();
                 stream.readNextStartElement();
-                if (stream.name() == "settings") {
+                if (stream.name().toString() == "settings") {
                     settingsXMLFileValid = true;
                 }
             }
@@ -1273,10 +1273,10 @@ bool MainWindow::readXMLPresetFile(const QString& file)
     QXmlStreamReader stream(&xmlFile);
     stream.readNextStartElement();
     // Check we have a cineencoder XML file.
-    if (stream.name() == QString("cineencoder")) {
+    if (stream.name().toString() == QString("cineencoder")) {
         // Check our version.
         stream.readNextStartElement();
-        if (stream.name() != QString("version")) {
+        if (stream.name().toString() != QString("version")) {
             return validXmlFile;
         }
         validXmlFile = true;
