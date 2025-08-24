@@ -19,12 +19,19 @@ jobs:
     - name: Install Qt6
       uses: jurplel/install-qt-action@v4
       with:
-        version: '6.5.3'
+        version: '6.8.0'
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2022_64'
-        modules: 'qtsvg qtmultimedia'
+        modules: 'qtmultimedia qtsvg'
         cache: true
+        
+    - name: Verify Qt installation
+      shell: powershell
+      run: |
+        echo "Qt installation path: $env:Qt6_DIR"
+        echo "Checking Qt components..."
+        Get-ChildItem "$env:Qt6_DIR" -Recurse -Include "*.dll" | Where-Object { $_.Name -match "(svg|multimedia)" } | Select-Object FullName
         
     - name: Setup MSVC
       uses: ilammy/msvc-dev-cmd@v1
@@ -43,6 +50,7 @@ jobs:
         
     - name: Configure CMake
       run: |
+        echo "Qt6_DIR: $env:Qt6_DIR"
         cmake -B build -S . -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
         
     - name: Build
@@ -140,11 +148,17 @@ jobs:
     - name: Install Qt6
       uses: jurplel/install-qt-action@v4
       with:
-        version: '6.5.3'
+        version: '6.8.0'
         host: 'mac'
         target: 'desktop'
-        modules: 'qtsvg qtmultimedia'
+        modules: 'qtmultimedia qtsvg'
         cache: true
+        
+    - name: Verify Qt installation
+      run: |
+        echo "Qt installation path: $Qt6_DIR"
+        echo "Checking Qt components..."
+        find "$Qt6_DIR" -name "*svg*" -o -name "*multimedia*" | head -10
         
     - name: Install dependencies
       run: |
@@ -153,6 +167,7 @@ jobs:
         
     - name: Configure CMake
       run: |
+        echo "Qt6_DIR: $Qt6_DIR"
         cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15
         
     - name: Build
