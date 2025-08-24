@@ -38,3 +38,4 @@ MediaInfo.dll
 moc_*
 qrc_*
 ui_*
+*.log
