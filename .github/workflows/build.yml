@@ -23,7 +23,6 @@ jobs:
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2022_64'
-        modules: 'qtmultimedia qtsvg'
         cache: true
         
     - name: Verify Qt installation
@@ -31,7 +30,10 @@ jobs:
       run: |
         echo "Qt installation path: $env:Qt6_DIR"
         echo "Checking Qt components..."
-        Get-ChildItem "$env:Qt6_DIR" -Recurse -Include "*.dll" | Where-Object { $_.Name -match "(svg|multimedia)" } | Select-Object FullName
+        $qtFiles = Get-ChildItem "$env:Qt6_DIR" -Recurse -Include "*.dll" | Where-Object { $_.Name -match "(Qt6|svg|multimedia)" } | Select-Object FullName | Select-Object -First 10
+        if ($qtFiles) { $qtFiles } else { Write-Host "No Qt6 DLLs found with expected names" }
+        echo "Checking for qmake..."
+        if (Test-Path "$env:Qt6_DIR\bin\qmake.exe") { Write-Host "✓ qmake found" } else { Write-Host "⚠ qmake not found" }
         
     - name: Setup MSVC
       uses: ilammy/msvc-dev-cmd@v1
@@ -51,7 +53,7 @@ jobs:
     - name: Configure CMake
       run: |
         echo "Qt6_DIR: $env:Qt6_DIR"
-        cmake -B build -S . -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+        cmake -B build -S . -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:Qt6_DIR"
         
     - name: Build
       run: |
@@ -66,7 +68,7 @@ jobs:
         Copy-Item "MediaInfo.dll" -Destination "deploy/"
         
         # Deploy Qt dependencies including SVG support
-        windeployqt.exe --dir deploy --release --qmldir . --svg deploy/cine_encoder.exe
+        & "$env:Qt6_DIR/bin/windeployqt.exe" --dir deploy --release --qmldir . --svg deploy/cine_encoder.exe
         
         # Verify SVG plugin was deployed
         if (Test-Path "deploy/imageformats/qsvg.dll") {
@@ -151,14 +153,16 @@ jobs:
         version: '6.5.3'
         host: 'mac'
         target: 'desktop'
-        modules: 'qtmultimedia qtsvg'
         cache: true
         
     - name: Verify Qt installation
       run: |
         echo "Qt installation path: $Qt6_DIR"
         echo "Checking Qt components..."
-        find "$Qt6_DIR" -name "*svg*" -o -name "*multimedia*" | head -10
+        qtFiles=$(find "$Qt6_DIR" -name "*.dylib" | grep -E "(Qt6|svg|multimedia)" | head -10)
+        if [ -n "$qtFiles" ]; then echo "$qtFiles"; else echo "No Qt6 dylibs found with expected names"; fi
+        echo "Checking for qmake..."
+        if [ -f "$Qt6_DIR/bin/qmake" ]; then echo "✓ qmake found"; else echo "⚠ qmake not found"; fi
         
     - name: Install dependencies
       run: |
@@ -168,7 +172,7 @@ jobs:
     - name: Configure CMake
       run: |
         echo "Qt6_DIR: $Qt6_DIR"
-        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15
+        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_PREFIX_PATH="$Qt6_DIR"
         
     - name: Build
       run: |
@@ -198,7 +202,6 @@ jobs:
         # Create DMG
         create-dmg \
           --volname "Cine Encoder" \
-          --volicon "app/cine-encoder.ico" \
           --window-pos 200 120 \
           --window-size 800 400 \
           --icon-size 100 \

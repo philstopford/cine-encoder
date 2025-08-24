@@ -1,11 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 project(cine_encoder VERSION 3.5.5 LANGUAGES C CXX)
 
-if(WIN32)
-    # Support for GitHub Actions Qt installation path
-    if(DEFINED ENV{Qt6_DIR})
-        set(CMAKE_PREFIX_PATH "$ENV{Qt6_DIR}")
-    endif()
+# Support for GitHub Actions Qt installation path
+if(DEFINED ENV{Qt6_DIR})
+    list(APPEND CMAKE_PREFIX_PATH "$ENV{Qt6_DIR}")
+    message(STATUS "Using Qt6_DIR from environment: $ENV{Qt6_DIR}")
 endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -21,6 +20,10 @@ set(CMAKE_AUTOUIC ON)
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Multimedia Svg)
 find_package(Qt${QT_VERSION_MAJOR} OPTIONAL_COMPONENTS Widgets) # X11Extras)
+
+# Print Qt6 information for debugging
+message(STATUS "Qt6 version: ${Qt6_VERSION}")
+message(STATUS "Qt6 components found: Core=${Qt6Core_FOUND}, Gui=${Qt6Gui_FOUND}, Multimedia=${Qt6Multimedia_FOUND}, Svg=${Qt6Svg_FOUND}, Widgets=${Qt6Widgets_FOUND}")
 
 add_executable(cine_encoder WIN32 MACOSX_BUNDLE
     app/basedialog.cpp app/basedialog.h
