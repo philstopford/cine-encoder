@@ -1,6 +1,7 @@
 # Ignored folders:
 /build/
 /builddir
+/test-build/
 cmake-build-debug/
 cmake-build-release/
 cmake-build-relwithdebinfo/
@@ -12,6 +13,8 @@ cmake-build-relwithdebinfo/
 *.AppImage
 *.dmg
 *.exe
+*.deb
+*.pkg.tar.zst
 
 # Ignored files:
 *.pro.user
