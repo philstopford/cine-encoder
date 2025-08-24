@@ -19,10 +19,11 @@ jobs:
     - name: Install Qt6
       uses: jurplel/install-qt-action@v4
       with:
-        version: '6.5.3'
+        version: '6.7.0'
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2022_64'
+        modules: 'multimedia svg'
         cache: true
         
     - name: Verify Qt installation
@@ -30,10 +31,23 @@ jobs:
       run: |
         echo "Qt installation path: $env:Qt6_DIR"
         echo "Checking Qt components..."
-        $qtFiles = Get-ChildItem "$env:Qt6_DIR" -Recurse -Include "*.dll" | Where-Object { $_.Name -match "(Qt6|svg|multimedia)" } | Select-Object FullName | Select-Object -First 10
-        if ($qtFiles) { $qtFiles } else { Write-Host "No Qt6 DLLs found with expected names" }
+        $qtSvgFiles = Get-ChildItem "$env:Qt6_DIR" -Recurse -Include "*svg*" | Select-Object FullName | Select-Object -First 5
+        $qtMultimediaFiles = Get-ChildItem "$env:Qt6_DIR" -Recurse -Include "*multimedia*" | Select-Object FullName | Select-Object -First 5
+        if ($qtSvgFiles) { 
+          Write-Host "✓ SVG components found:" 
+          $qtSvgFiles | ForEach-Object { Write-Host "  $($_.FullName)" }
+        } else { 
+          Write-Host "⚠ No SVG components found" 
+        }
+        if ($qtMultimediaFiles) { 
+          Write-Host "✓ Multimedia components found:" 
+          $qtMultimediaFiles | ForEach-Object { Write-Host "  $($_.FullName)" }
+        } else { 
+          Write-Host "⚠ No Multimedia components found" 
+        }
         echo "Checking for qmake..."
         if (Test-Path "$env:Qt6_DIR\bin\qmake.exe") { Write-Host "✓ qmake found" } else { Write-Host "⚠ qmake not found" }
+        echo "Qt6_DIR is set to: $env:Qt6_DIR"
         
     - name: Setup MSVC
       uses: ilammy/msvc-dev-cmd@v1
@@ -44,16 +58,35 @@ jobs:
       shell: powershell
       run: |
         # Download and install MediaInfo development library
-        Invoke-WebRequest -Uri "https://mediaarea.net/download/binary/libmediainfo0/23.09/MediaInfo_DLL_23.09_Windows_x64.zip" -OutFile "MediaInfo_DLL.zip"
-        Expand-Archive -Path "MediaInfo_DLL.zip" -DestinationPath "MediaInfo"
-        Copy-Item "MediaInfo/Developers/Source/MediaInfoDLL/MediaInfoDLL.h" -Destination "app/MediaInfoDLL/"
-        Copy-Item "MediaInfo/Developers/Source/MediaInfoDLL/MediaInfoDLL.lib" -Destination "app/MediaInfoDLL/"
-        Copy-Item "MediaInfo/MediaInfo.dll" -Destination "."
+        try {
+          Write-Host "Downloading MediaInfo DLL..."
+          Invoke-WebRequest -Uri "https://mediaarea.net/download/binary/libmediainfo0/23.09/MediaInfo_DLL_23.09_Windows_x64.zip" -OutFile "MediaInfo_DLL.zip"
+          Write-Host "Extracting MediaInfo DLL..."
+          Expand-Archive -Path "MediaInfo_DLL.zip" -DestinationPath "MediaInfo" -Force
+          
+          # Ensure MediaInfoDLL directory exists
+          if (!(Test-Path "app/MediaInfoDLL")) {
+            New-Item -ItemType Directory -Path "app/MediaInfoDLL" -Force
+          }
+          
+          # Copy header and library files
+          Copy-Item "MediaInfo/Developers/Source/MediaInfoDLL/MediaInfoDLL.h" -Destination "app/MediaInfoDLL/" -Force
+          Copy-Item "MediaInfo/Developers/Source/MediaInfoDLL/MediaInfoDLL.lib" -Destination "app/MediaInfoDLL/" -Force
+          Copy-Item "MediaInfo/MediaInfo.dll" -Destination "." -Force
+          
+          Write-Host "✓ MediaInfo library installed successfully"
+          Write-Host "Files copied:"
+          Get-ChildItem "app/MediaInfoDLL/" | ForEach-Object { Write-Host "  $($_.Name)" }
+        } catch {
+          Write-Error "Failed to install MediaInfo library: $_"
+          exit 1
+        }
         
     - name: Configure CMake
       run: |
         echo "Qt6_DIR: $env:Qt6_DIR"
-        cmake -B build -S . -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:Qt6_DIR"
+        echo "Setting CMAKE_PREFIX_PATH to Qt6_DIR"
+        cmake -B build -S . -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" -DQt6_DIR="$env:Qt6_DIR"
         
     - name: Build
       run: |
@@ -150,29 +183,54 @@ jobs:
     - name: Install Qt6
       uses: jurplel/install-qt-action@v4
       with:
-        version: '6.5.3'
+        version: '6.7.0'
         host: 'mac'
         target: 'desktop'
+        modules: 'multimedia svg'
         cache: true
         
     - name: Verify Qt installation
       run: |
         echo "Qt installation path: $Qt6_DIR"
         echo "Checking Qt components..."
-        qtFiles=$(find "$Qt6_DIR" -name "*.dylib" | grep -E "(Qt6|svg|multimedia)" | head -10)
-        if [ -n "$qtFiles" ]; then echo "$qtFiles"; else echo "No Qt6 dylibs found with expected names"; fi
+        qtSvgFiles=$(find "$Qt6_DIR" -name "*svg*" 2>/dev/null | head -5)
+        qtMultimediaFiles=$(find "$Qt6_DIR" -name "*multimedia*" 2>/dev/null | head -5)
+        if [ -n "$qtSvgFiles" ]; then 
+          echo "✓ SVG components found:"
+          echo "$qtSvgFiles"
+        else 
+          echo "⚠ No SVG components found"
+        fi
+        if [ -n "$qtMultimediaFiles" ]; then 
+          echo "✓ Multimedia components found:"
+          echo "$qtMultimediaFiles"
+        else 
+          echo "⚠ No Multimedia components found"
+        fi
         echo "Checking for qmake..."
         if [ -f "$Qt6_DIR/bin/qmake" ]; then echo "✓ qmake found"; else echo "⚠ qmake not found"; fi
+        echo "Qt6_DIR is set to: $Qt6_DIR"
         
     - name: Install dependencies
       run: |
         # Install MediaInfo library
+        echo "Installing MediaInfo..."
         brew install mediainfo
+        
+        # Verify MediaInfo installation
+        if command -v mediainfo &> /dev/null; then
+          echo "✓ MediaInfo installed successfully"
+          mediainfo --version
+        else
+          echo "⚠ MediaInfo installation failed"
+          exit 1
+        fi
         
     - name: Configure CMake
       run: |
         echo "Qt6_DIR: $Qt6_DIR"
-        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_PREFIX_PATH="$Qt6_DIR"
+        echo "Setting CMAKE_PREFIX_PATH to Qt6_DIR"
+        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_PREFIX_PATH="$Qt6_DIR" -DQt6_DIR="$Qt6_DIR"
         
     - name: Build
       run: |
