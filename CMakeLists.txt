@@ -72,7 +72,7 @@ endif()
 # Platform-specific sources are no longer needed as we use unified implementation
 # Legacy platform-specific implementations are kept for reference but not built
 if(FALSE) # Disabled - using unified implementation
-    if(UNIX AND NOT DEFINES___contains___WM_CUSTOM AND NOT MACOS)
+    if(UNIX AND NOT DEFINES___contains___WM_CUSTOM AND NOT APPLE)
         target_sources(cine_encoder PUBLIC
             app/platform_unix/basewindow.cpp app/platform_unix/basewindow.h
             app/platform_unix/xutil.cpp app/platform_unix/xutil.h
@@ -107,7 +107,7 @@ if(WIN32)
     endif()
 endif()
 
-if(UNIX AND NOT MACOS)
+if(UNIX AND NOT APPLE)
     target_link_libraries(cine_encoder PRIVATE
         # Removed X11 dependencies - now using public Qt6 APIs only
         # X11
