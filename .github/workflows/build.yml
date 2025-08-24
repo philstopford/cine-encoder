@@ -19,11 +19,11 @@ jobs:
     - name: Install Qt6
       uses: jurplel/install-qt-action@v4
       with:
-        version: '6.7.3'
+        version: '6.5.3'
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2022_64'
-        modules: 'qt6svg qt6multimedia'
+        modules: 'qtsvg qtmultimedia'
         cache: true
         
     - name: Setup MSVC
@@ -140,10 +140,10 @@ jobs:
     - name: Install Qt6
       uses: jurplel/install-qt-action@v4
       with:
-        version: '6.7.3'
+        version: '6.5.3'
         host: 'mac'
         target: 'desktop'
-        modules: 'qt6svg qt6multimedia'
+        modules: 'qtsvg qtmultimedia'
         cache: true
         
     - name: Install dependencies
