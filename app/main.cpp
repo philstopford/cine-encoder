@@ -122,12 +122,12 @@ QString readXMLSettingFromFile(const QString& tagToFind) {
         settingsXMLFileValid = false;
         QXmlStreamReader stream(&xmlFile);
         stream.readNextStartElement();
-        if (stream.name() == "cineencoder") {
+        if (stream.name().toString() == "cineencoder") {
             stream.readNextStartElement();
-            if (stream.name() == "version") {
+            if (stream.name().toString() == "version") {
                 settingsVer = stream.readElementText().toInt();
                 stream.readNextStartElement();
-                if (stream.name() == "settings") {
+                if (stream.name().toString() == "settings") {
                     settingsXMLFileValid = true;
                 }
             }

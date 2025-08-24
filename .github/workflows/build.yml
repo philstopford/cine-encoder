@@ -23,7 +23,7 @@ jobs:
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2022_64'
-        modules: 'qtsvg qtmultimedia'
+        modules: 'qt6svg qt6multimedia'
         cache: true
         
     - name: Setup MSVC
@@ -143,7 +143,7 @@ jobs:
         version: '6.7.3'
         host: 'mac'
         target: 'desktop'
-        modules: 'qtsvg qtmultimedia'
+        modules: 'qt6svg qt6multimedia'
         cache: true
         
     - name: Install dependencies
@@ -428,8 +428,8 @@ jobs:
         # Build package as non-root user
         sudo -u builder makepkg --noconfirm
         
-        # Rename package for clarity
-        mv *.pkg.tar.zst cine-encoder-3.5.5-arch-x86_64.pkg.tar.zst
+        # Rename main package for clarity (ignore debug package)
+        mv cine-encoder-3.5.5-1-x86_64.pkg.tar.zst cine-encoder-3.5.5-arch-x86_64.pkg.tar.zst
         
     - name: Upload Arch artifacts
       uses: actions/upload-artifact@v4
