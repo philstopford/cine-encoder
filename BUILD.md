@@ -7,6 +7,8 @@ This document describes the build and deployment infrastructure for Cine Encoder
 - **Windows** (x64): Automated builds with Inno Setup installer
 - **macOS** (Intel/Apple Silicon): Automated builds with DMG packaging  
 - **Linux** (x64): Automated builds with AppImage packaging
+- **Ubuntu** (x64): Native .deb packages with proper dependencies
+- **Arch Linux** (x64): Native .pkg.tar.zst packages for Arch/Manjaro
 
 ## GitHub Actions CI/CD
 
@@ -14,9 +16,12 @@ The repository includes automated build workflows:
 
 ### Build Workflow (`.github/workflows/build.yml`)
 - Triggers on pushes to main/master branches and pull requests
-- Builds for all three platforms
-- Deploys Qt dependencies including **SVG support**
-- Creates platform-specific packages
+- Builds for all platforms:
+  - **Windows**: Inno Setup installer with Qt6 + SVG deployment
+  - **macOS**: DMG with universal binary and Qt6 + SVG deployment
+  - **Linux**: AppImage with all dependencies bundled
+  - **Ubuntu**: Native .deb packages with apt-compatible dependencies
+  - **Arch Linux**: Native .pkg.tar.zst packages with pacman dependencies
 - Uploads artifacts for testing
 
 ### Release Workflow (`.github/workflows/release.yml`)
@@ -54,6 +59,12 @@ Requirements:
 # Install dependencies (Ubuntu/Debian)
 sudo apt-get install qt6-base-dev qt6-svg-dev qt6-multimedia-dev libmediainfo-dev cmake build-essential
 
+# Install dependencies (Arch Linux)  
+sudo pacman -S qt6-base qt6-svg qt6-multimedia libmediainfo cmake base-devel
+
+# Install dependencies (Fedora/RHEL)
+sudo dnf install qt6-qtbase-devel qt6-qtsvg-devel qt6-qtmultimedia-devel libmediainfo-devel cmake gcc-c++
+
 # Build
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
@@ -89,6 +100,18 @@ The application uses SVG icons from `app/resources/icons/svg/` which are embedde
 - Includes all dependencies (Qt6, MediaInfo)
 - Runs on most Linux distributions without installation
 - Self-contained with desktop integration
+
+### Ubuntu
+- `cine-encoder-{version}-ubuntu-amd64.deb` - Native Debian package
+- Proper apt dependency management (Qt6, MediaInfo)
+- Installs system-wide with desktop integration
+- Compatible with Ubuntu 20.04+ and derivatives
+
+### Arch Linux  
+- `cine-encoder-{version}-arch-x86_64.pkg.tar.zst` - Native Arch package
+- Proper pacman dependency management
+- Installs system-wide with desktop integration
+- Compatible with Arch Linux, Manjaro, and derivatives
 
 ## Deployment Notes
 

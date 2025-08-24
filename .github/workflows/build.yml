@@ -263,3 +263,177 @@ jobs:
         name: cine-encoder-linux
         path: |
           Cine_Encoder-*-x86_64.AppImage
+
+  build-ubuntu:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Qt6 and dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          qt6-base-dev \
+          qt6-svg-dev \
+          qt6-multimedia-dev \
+          libmediainfo-dev \
+          cmake \
+          build-essential \
+          debhelper \
+          dh-make \
+          fakeroot
+          
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+        
+    - name: Build
+      run: |
+        cmake --build build --config Release
+        
+    - name: Install to staging directory
+      run: |
+        DESTDIR=$PWD/debian-staging cmake --install build
+        
+    - name: Create .deb package
+      run: |
+        # Create package directory structure
+        mkdir -p cine-encoder-deb/DEBIAN
+        mkdir -p cine-encoder-deb/usr
+        
+        # Copy installed files
+        cp -r debian-staging/usr/* cine-encoder-deb/usr/
+        
+        # Create control file
+        cat > cine-encoder-deb/DEBIAN/control << EOF
+        Package: cine-encoder
+        Version: 3.5.5-1
+        Section: video
+        Priority: optional
+        Architecture: amd64
+        Depends: libqt6core6, libqt6gui6, libqt6widgets6, libqt6svg6, libqt6multimedia6, libmediainfo0v5
+        Maintainer: Oleg Kozhukharenko <cine-encoder@example.com>
+        Description: Video encoding application
+         Cine Encoder is a video encoding application built with Qt6.
+         It supports various video formats and encoding options.
+        Homepage: https://github.com/philstopford/cine-encoder
+        EOF
+        
+        # Create desktop file
+        mkdir -p cine-encoder-deb/usr/share/applications
+        cat > cine-encoder-deb/usr/share/applications/cine-encoder.desktop << EOF
+        [Desktop Entry]
+        Type=Application
+        Name=Cine Encoder
+        Exec=cine_encoder
+        Icon=cine-encoder
+        Categories=AudioVideo;Video;
+        Comment=Video encoding application
+        EOF
+        
+        # Copy icon
+        mkdir -p cine-encoder-deb/usr/share/icons/hicolor/64x64/apps
+        cp app/resources/icons/64x64/cine-encoder.png cine-encoder-deb/usr/share/icons/hicolor/64x64/apps/cine-encoder.png
+        
+        # Build package
+        dpkg-deb --build cine-encoder-deb cine-encoder-3.5.5-ubuntu-amd64.deb
+        
+    - name: Upload Ubuntu artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cine-encoder-ubuntu
+        path: |
+          cine-encoder-*-ubuntu-amd64.deb
+
+  build-arch:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    
+    steps:
+    - name: Install base dependencies
+      run: |
+        pacman -Syu --noconfirm
+        pacman -S --noconfirm \
+          base-devel \
+          git \
+          cmake \
+          qt6-base \
+          qt6-svg \
+          qt6-multimedia \
+          libmediainfo \
+          fakeroot
+          
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+        
+    - name: Build
+      run: |
+        cmake --build build --config Release
+        
+    - name: Create PKGBUILD
+      run: |
+        cat > PKGBUILD << 'EOF'
+        # Maintainer: Oleg Kozhukharenko <cine-encoder@example.com>
+        pkgname=cine-encoder
+        pkgver=3.5.5
+        pkgrel=1
+        pkgdesc="Video encoding application built with Qt6"
+        arch=('x86_64')
+        url="https://github.com/philstopford/cine-encoder"
+        license=('custom')
+        depends=('qt6-base' 'qt6-svg' 'qt6-multimedia' 'libmediainfo')
+        makedepends=('cmake' 'qt6-base')
+        source=()
+        sha256sums=()
+
+        build() {
+          return 0
+        }
+
+        package() {
+          # Copy pre-built binary and resources
+          install -Dm755 "../build/cine_encoder" "$pkgdir/usr/bin/cine_encoder"
+          
+          # Install desktop file
+          install -Dm644 "../app/resources/icons/64x64/cine-encoder.png" "$pkgdir/usr/share/icons/hicolor/64x64/apps/cine-encoder.png"
+          
+          cat > cine-encoder.desktop << EOD
+        [Desktop Entry]
+        Type=Application
+        Name=Cine Encoder
+        Exec=cine_encoder
+        Icon=cine-encoder
+        Categories=AudioVideo;Video;
+        Comment=Video encoding application
+        EOD
+          install -Dm644 "cine-encoder.desktop" "$pkgdir/usr/share/applications/cine-encoder.desktop"
+          
+          # Install license
+          install -Dm644 "../LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+        }
+        EOF
+        
+    - name: Build Arch package
+      run: |
+        # Create a non-root user for makepkg
+        useradd -m builder
+        chown -R builder:builder .
+        
+        # Build package as non-root user
+        sudo -u builder makepkg --noconfirm
+        
+        # Rename package for clarity
+        mv *.pkg.tar.zst cine-encoder-3.5.5-arch-x86_64.pkg.tar.zst
+        
+    - name: Upload Arch artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cine-encoder-arch
+        path: |
+          cine-encoder-*-arch-x86_64.pkg.tar.zst
