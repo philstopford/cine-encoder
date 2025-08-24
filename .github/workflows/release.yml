@@ -49,8 +49,8 @@ jobs:
         version: '6.6.3'
         host: 'windows'
         target: 'desktop'
-        arch: 'win64_msvc2022_64'
-        modules: 'qtmultimedia qtsvg'
+        arch: 'win64_msvc2019_64'
+        modules: 'multimedia svg'
         cache: true
         
     - name: Setup MSVC
@@ -170,9 +170,9 @@ jobs:
       uses: jurplel/install-qt-action@v4
       with:
         version: '6.6.3'
-        host: 'mac'
+        host: 'macos'
         target: 'desktop'
-        modules: 'qtmultimedia qtsvg'
+        modules: 'multimedia svg'
         cache: true
         
     - name: Install dependencies
