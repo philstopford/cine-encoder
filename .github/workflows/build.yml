@@ -30,7 +30,8 @@ jobs:
       run: |
         echo "Qt installation path: $env:Qt6_DIR"
         echo "Checking Qt components..."
-        Get-ChildItem "$env:Qt6_DIR" -Recurse -Include "*.dll" | Where-Object { $_.Name -match "(Qt6|svg|multimedia)" } | Select-Object FullName | Select-Object -First 10
+        $qtFiles = Get-ChildItem "$env:Qt6_DIR" -Recurse -Include "*.dll" | Where-Object { $_.Name -match "(Qt6|svg|multimedia)" } | Select-Object FullName | Select-Object -First 10
+        if ($qtFiles) { $qtFiles } else { Write-Host "No Qt6 DLLs found with expected names" }
         echo "Checking for qmake..."
         if (Test-Path "$env:Qt6_DIR\bin\qmake.exe") { Write-Host "✓ qmake found" } else { Write-Host "⚠ qmake not found" }
         
@@ -158,7 +159,8 @@ jobs:
       run: |
         echo "Qt installation path: $Qt6_DIR"
         echo "Checking Qt components..."
-        find "$Qt6_DIR" -name "*.dylib" | grep -E "(Qt6|svg|multimedia)" | head -10
+        qtFiles=$(find "$Qt6_DIR" -name "*.dylib" | grep -E "(Qt6|svg|multimedia)" | head -10)
+        if [ -n "$qtFiles" ]; then echo "$qtFiles"; else echo "No Qt6 dylibs found with expected names"; fi
         echo "Checking for qmake..."
         if [ -f "$Qt6_DIR/bin/qmake" ]; then echo "✓ qmake found"; else echo "⚠ qmake not found"; fi
         
