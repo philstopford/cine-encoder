@@ -19,11 +19,11 @@ jobs:
     - name: Install Qt6
       uses: jurplel/install-qt-action@v4
       with:
-        version: '6.7.0'
+        version: '6.5.3'
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2022_64'
-        modules: 'multimedia svg'
+        modules: 'qtmultimedia qtsvg'
         cache: true
         
     - name: Verify Qt installation
@@ -148,10 +148,10 @@ jobs:
     - name: Install Qt6
       uses: jurplel/install-qt-action@v4
       with:
-        version: '6.7.0'
+        version: '6.5.3'
         host: 'mac'
         target: 'desktop'
-        modules: 'multimedia svg'
+        modules: 'qtmultimedia qtsvg'
         cache: true
         
     - name: Verify Qt installation

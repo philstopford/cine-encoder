@@ -1,0 +1,14 @@
+2025-08-24 02:34:34,132 - aqt.metadata - DEBUG - metadata 140383656366208 Connection to 'https://download.qt.io' failed. Retrying with fallback 'https://ftp1.nluug.nl/languages/qt/'.
+2025-08-24 02:34:37,147 - aqt.main - ERROR - installer 140383656366208 Failure to connect to https://ftp1.nluug.nl/languages/qt/online/qtsdkrepository/windows_x86/desktop/: ConnectionError
+2025-08-24 02:34:45,128 - aqt.helper - DEBUG - helper 140461617864832 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_670/Updates.xml.sha256
+2025-08-24 02:34:48,142 - aqt.helper - DEBUG - helper 140461617864832 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_670/Updates.xml.sha256
+2025-08-24 02:34:51,159 - aqt.helper - DEBUG - helper 140461617864832 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_670/Updates.xml.sha256
+2025-08-24 02:34:54,172 - aqt.helper - DEBUG - helper 140461617864832 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_670/Updates.xml.sha256
+2025-08-24 02:34:57,191 - aqt.helper - DEBUG - helper 140461617864832 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_670/Updates.xml.sha256
+2025-08-24 02:35:00,205 - aqt.main - ERROR - installer 140461617864832 Failed to download checksum for the file 'Updates.xml' from mirrors '['https://download.qt.io']
+==============================Suggested follow-up:==============================
+* Check your internet connection
+* Consider modifying `requests.max_retries_to_retrieve_hash` in settings.ini
+* Consider modifying `mirrors.trusted_mirrors` in settings.ini (see https://aqtinstall.readthedocs.io/en/stable/configuration.html#configuration)
+* Please use 'aqt list-qt windows desktop' to show versions of Qt available.
+* Please use 'aqt list-qt windows desktop --arch <QT_VERSION>' to list valid architectures.
