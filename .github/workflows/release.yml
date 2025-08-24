@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v*'
+      - 'alpha*'
+      - 'beta*'
 
 jobs:
   release:
@@ -86,7 +88,7 @@ jobs:
       run: |
         choco install innosetup
         
-        $version = if ($env:GITHUB_REF -match 'refs/tags/v(.+)') { $matches[1] } else { "3.5.5" }
+        $version = if ($env:GITHUB_REF -match 'refs/tags/v(.+)') { $matches[1] } elseif ($env:GITHUB_REF -match 'refs/tags/(.+)') { $matches[1] } else { "3.5.5" }
         
         $issContent = @"
         #define MyAppName "Cine Encoder 2023"
@@ -176,7 +178,7 @@ jobs:
         
     - name: Create DMG
       run: |
-        version=$(echo $GITHUB_REF | sed 's/refs\/tags\/v//')
+        version=$(echo $GITHUB_REF | sed 's/refs\/tags\///' | sed 's/^v//')
         create-dmg \
           --volname "Cine Encoder" \
           --window-pos 200 120 \
@@ -286,7 +288,7 @@ jobs:
         
     - name: Create .deb package
       run: |
-        version=$(echo $GITHUB_REF | sed 's/refs\/tags\/v//')
+        version=$(echo $GITHUB_REF | sed 's/refs\/tags\///' | sed 's/^v//')
         
         # Create package directory structure
         mkdir -p cine-encoder-deb/DEBIAN
@@ -366,7 +368,7 @@ jobs:
         
     - name: Create PKGBUILD
       run: |
-        version=$(echo $GITHUB_REF | sed 's/refs\/tags\/v//')
+        version=$(echo $GITHUB_REF | sed 's/refs\/tags\///' | sed 's/^v//')
         
         cat > PKGBUILD << EOF
         # Maintainer: Oleg Kozhukharenko <cine-encoder@example.com>
@@ -411,7 +413,7 @@ jobs:
         
     - name: Build Arch package
       run: |
-        version=$(echo $GITHUB_REF | sed 's/refs\/tags\/v//')
+        version=$(echo $GITHUB_REF | sed 's/refs\/tags\///' | sed 's/^v//')
         
         # Create a non-root user for makepkg
         useradd -m builder
