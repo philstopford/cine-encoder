@@ -61,15 +61,32 @@ jobs:
     - name: Install MediaInfo library
       shell: powershell
       run: |
-        Invoke-WebRequest -Uri "https://mediaarea.net/download/binary/libmediainfo0/23.09/MediaInfo_DLL_23.09_Windows_x64.zip" -OutFile "MediaInfo_DLL.zip"
-        Expand-Archive -Path "MediaInfo_DLL.zip" -DestinationPath "MediaInfo"
-        Copy-Item "MediaInfo/Developers/Source/MediaInfoDLL/MediaInfoDLL.h" -Destination "app/MediaInfoDLL/"
-        Copy-Item "MediaInfo/Developers/Source/MediaInfoDLL/MediaInfoDLL.lib" -Destination "app/MediaInfoDLL/"
-        Copy-Item "MediaInfo/MediaInfo.dll" -Destination "."
+        # Download and install MediaInfo development library
+        try {
+          Write-Host "Downloading MediaInfo DLL..."
+          Invoke-WebRequest -Uri "https://mediaarea.net/download/binary/libmediainfo0/23.09/MediaInfo_DLL_23.09_Windows_x64.zip" -OutFile "MediaInfo_DLL.zip"
+          Write-Host "Extracting MediaInfo DLL..."
+          Expand-Archive -Path "MediaInfo_DLL.zip" -DestinationPath "MediaInfo" -Force
+          
+          # Ensure MediaInfoDLL directory exists
+          if (!(Test-Path "app/MediaInfoDLL")) {
+            New-Item -ItemType Directory -Path "app/MediaInfoDLL" -Force
+          }
+          
+          # Copy header and library files
+          Copy-Item "MediaInfo/Developers/Source/MediaInfoDLL/MediaInfoDLL.h" -Destination "app/MediaInfoDLL/" -Force
+          Copy-Item "MediaInfo/Developers/Source/MediaInfoDLL/MediaInfoDLL.lib" -Destination "app/MediaInfoDLL/" -Force
+          Copy-Item "MediaInfo/MediaInfo.dll" -Destination "." -Force
+          
+          Write-Host "✓ MediaInfo library installed successfully"
+        } catch {
+          Write-Error "Failed to install MediaInfo library: $_"
+          exit 1
+        }
         
     - name: Configure CMake
       run: |
-        cmake -B build -S . -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+        cmake -B build -S . -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" -DQt6_DIR="$env:Qt6_DIR"
         
     - name: Build
       run: |
@@ -164,7 +181,7 @@ jobs:
         
     - name: Configure CMake
       run: |
-        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15
+        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_PREFIX_PATH="$Qt6_DIR" -DQt6_DIR="$Qt6_DIR"
         
     - name: Build
       run: |

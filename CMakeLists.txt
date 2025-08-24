@@ -7,6 +7,15 @@ if(DEFINED ENV{Qt6_DIR})
     message(STATUS "Using Qt6_DIR from environment: $ENV{Qt6_DIR}")
 endif()
 
+# Also support Qt6_DIR as a CMake variable
+if(DEFINED Qt6_DIR)
+    list(APPEND CMAKE_PREFIX_PATH "${Qt6_DIR}")
+    message(STATUS "Using Qt6_DIR from CMake variable: ${Qt6_DIR}")
+endif()
+
+# Debug CMAKE_PREFIX_PATH
+message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # Set up AUTOMOC and some sensible defaults for runtime execution

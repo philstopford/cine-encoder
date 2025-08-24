@@ -6,17 +6,107 @@ set -e
 
 echo "Building Cine Encoder for macOS..."
 
+# Function to check if a command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
 # Check if Qt6 is installed
-if ! command -v qmake6 &> /dev/null && ! command -v qmake &> /dev/null; then
+echo "Checking for Qt6 installation..."
+QT6_FOUND=false
+
+# Check for qmake6 first (preferred)
+if command_exists qmake6; then
+    QT6_PATH=$(dirname $(which qmake6))
+    QT6_DIR=$(dirname "$QT6_PATH")
+    QT6_FOUND=true
+    echo "✓ Found Qt6 via qmake6 at: $QT6_DIR"
+elif command_exists qmake; then
+    # Check if this qmake is Qt6
+    QT_VERSION=$(qmake -query QT_VERSION 2>/dev/null || echo "")
+    if [[ "$QT_VERSION" =~ ^6\. ]]; then
+        QT6_PATH=$(dirname $(which qmake))
+        QT6_DIR=$(dirname "$QT6_PATH")
+        QT6_FOUND=true
+        echo "✓ Found Qt6 via qmake at: $QT6_DIR (version: $QT_VERSION)"
+    fi
+fi
+
+# Try common Homebrew locations if not found
+if [ "$QT6_FOUND" = false ]; then
+    for qt_path in /opt/homebrew/opt/qt@6 /usr/local/opt/qt@6 /opt/homebrew/opt/qt6 /usr/local/opt/qt6; do
+        if [ -d "$qt_path" ] && [ -f "$qt_path/bin/qmake" ]; then
+            QT6_DIR="$qt_path"
+            QT6_FOUND=true
+            echo "✓ Found Qt6 at: $QT6_DIR"
+            break
+        fi
+    done
+fi
+
+# Try environment variable
+if [ "$QT6_FOUND" = false ] && [ -n "$Qt6_DIR" ] && [ -f "$Qt6_DIR/bin/qmake" ]; then
+    QT6_DIR="$Qt6_DIR"
+    QT6_FOUND=true
+    echo "✓ Found Qt6 via Qt6_DIR at: $QT6_DIR"
+fi
+
+if [ "$QT6_FOUND" = false ]; then
     echo "Error: Qt6 not found. Please install Qt6 first."
     echo "You can install it via brew: brew install qt@6"
+    echo "Or set Qt6_DIR environment variable to Qt6 installation directory"
     exit 1
 fi
 
+# Verify Qt6 modules
+echo "Verifying Qt6 modules..."
+SVG_FOUND=false
+MULTIMEDIA_FOUND=false
+
+# Check for SVG module
+if [ -f "$QT6_DIR/lib/QtSvg.framework/QtSvg" ] || [ -f "$QT6_DIR/lib/libQt6Svg.dylib" ]; then
+    SVG_FOUND=true
+    echo "✓ Qt6 SVG module found"
+else
+    echo "⚠ Qt6 SVG module not found"
+fi
+
+# Check for Multimedia module  
+if [ -f "$QT6_DIR/lib/QtMultimedia.framework/QtMultimedia" ] || [ -f "$QT6_DIR/lib/libQt6Multimedia.dylib" ]; then
+    MULTIMEDIA_FOUND=true
+    echo "✓ Qt6 Multimedia module found"
+else
+    echo "⚠ Qt6 Multimedia module not found"
+fi
+
+if [ "$SVG_FOUND" = false ] || [ "$MULTIMEDIA_FOUND" = false ]; then
+    echo "Error: Required Qt6 modules missing"
+    echo "Please install Qt6 with SVG and Multimedia modules"
+    echo "Homebrew: brew install qt@6"
+    exit 1
+fi
+
+# Add Qt6 to PATH
+export PATH="$QT6_DIR/bin:$PATH"
+export Qt6_DIR="$QT6_DIR"
+
 # Check if MediaInfo is installed
 if ! command -v mediainfo &> /dev/null; then
-    echo "Installing MediaInfo..."
-    brew install mediainfo
+    echo "MediaInfo not found. Installing MediaInfo..."
+    if command -v brew &> /dev/null; then
+        brew install mediainfo
+    else
+        echo "Error: Homebrew not found. Please install MediaInfo manually or install Homebrew"
+        exit 1
+    fi
+fi
+
+# Verify MediaInfo installation
+if command -v mediainfo &> /dev/null; then
+    echo "✓ MediaInfo found: $(mediainfo --version | head -1)"
+else
+    echo "Error: MediaInfo installation failed"
+    exit 1
 fi
 
 # Set up build directory
@@ -27,7 +117,7 @@ cd build
 
 # Configure with CMake
 echo "Configuring with CMake..."
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 ..
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_PREFIX_PATH="$QT6_DIR" -DQt6_DIR="$QT6_DIR" ..
 
 # Build the application
 echo "Building application..."
