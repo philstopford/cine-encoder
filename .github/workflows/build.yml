@@ -23,7 +23,7 @@ jobs:
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2019_64'
-        modules: 'multimedia svg'
+        modules: 'qtmultimedia qtsvg'
         cache: true
         
     - name: Verify Qt installation
@@ -184,9 +184,9 @@ jobs:
       uses: jurplel/install-qt-action@v4
       with:
         version: '6.6.3'
-        host: 'macos'
+        host: 'mac'
         target: 'desktop'
-        modules: 'multimedia svg'
+        modules: 'qtmultimedia qtsvg'
         cache: true
         
     - name: Verify Qt installation
