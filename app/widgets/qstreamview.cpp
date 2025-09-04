@@ -683,7 +683,9 @@ QWidget *QStreamView::createCell(bool &state,
     // Apply visual styling for incompatible streams
     if (isIncompatible) {
         // Set yellow background color for incompatible streams
-        cell->setStyleSheet("QWidget#Cell { background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 3px; }");
+        cell->setStyleSheet("QWidget#Cell[incompatible=\"true\"] { background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 3px; }"
+                           "QWidget#Cell[incompatible=\"true\"][hover=\"true\"] { background-color: #ffe69c; border: 1px solid #ffcc02; }");
+        cell->setProperty("incompatible", "true");
         
         // Add warning icon to the format checkbox
         chkBox->setStyleSheet("QCheckBox { color: #856404; }");
