@@ -1656,14 +1656,18 @@ void MainWindow::get_current_data() // Get current data
     if (!m_data[m_row].fields[Data::audioFormats].empty() ||
             !m_data[m_row].fields[Data::externAudioFormats].empty()) {
         m_pAudioLabel->setVisible(false);
-        ui->streamAudio->setList(extension, m_data[m_row]);
+        int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+        bool usePresetSubtitleSettings = m_curParams[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
+        ui->streamAudio->setList(extension, m_data[m_row], audioCodecIndex, usePresetSubtitleSettings);
     }
 
     //********* Set subtitle widgets ***************//
     if (!m_data[m_row].fields[Data::subtFormats].empty() ||
             !m_data[m_row].fields[Data::externSubtFormats].empty()) {
         m_pSubtitleLabel->setVisible(false);
-        ui->streamSubtitle->setList(extension, m_data[m_row]);
+        int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+        bool usePresetSubtitleSettings = m_curParams[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
+        ui->streamSubtitle->setList(extension, m_data[m_row], audioCodecIndex, usePresetSubtitleSettings);
     }
 }
 
@@ -2905,11 +2909,15 @@ void MainWindow::onAddExtStream()
             }
             if (!m_data[m_row].fields[Data::externAudioFormats].empty()) {
                 m_pAudioLabel->setVisible(false);
-                ui->streamAudio->setList(extension, m_data[m_row]);
+                int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+                bool usePresetSubtitleSettings = m_curParams[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
+                ui->streamAudio->setList(extension, m_data[m_row], audioCodecIndex, usePresetSubtitleSettings);
             }
             if (!m_data[m_row].fields[Data::externSubtFormats].empty()) {
                 m_pSubtitleLabel->setVisible(false);
-                ui->streamSubtitle->setList(extension, m_data[m_row]);
+                int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+                bool usePresetSubtitleSettings = m_curParams[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
+                ui->streamSubtitle->setList(extension, m_data[m_row], audioCodecIndex, usePresetSubtitleSettings);
             }
         }
     }
@@ -3458,9 +3466,11 @@ void MainWindow::updateFileIncompatibilityStatus(int fileRow)
     if (fileRow < 0 || fileRow >= ui->tableWidget->rowCount() || fileRow >= m_data.size())
         return;
 
-    // Get current container extension
+    // Get current container extension and preset parameters
     Tables t;
     QString extension = t.arr_container[m_curParams[CurParamIndex::CODEC].toInt()][CurParamIndex::CONTAINER].toLower();
+    int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+    bool usePresetSubtitleSettings = m_curParams[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
     
     bool hasIncompatibleStreams = false;
     bool hasSelectedIncompatibleStreams = false;
@@ -3468,7 +3478,7 @@ void MainWindow::updateFileIncompatibilityStatus(int fileRow)
     // Check audio streams
     for (int i = 0; i < m_data[fileRow].fields[Data::audioFormats].size(); i++) {
         const QString& audioFormat = m_data[fileRow].fields[Data::audioFormats][i];
-        if (!Helper::isAudioSupported(extension, audioFormat)) {
+        if (Helper::isAudioIncompatible(extension, audioFormat, audioCodecIndex)) {
             hasIncompatibleStreams = true;
             if (i < m_data[fileRow].checks[Data::audioChecks].size() && 
                 m_data[fileRow].checks[Data::audioChecks][i]) {
@@ -3482,7 +3492,7 @@ void MainWindow::updateFileIncompatibilityStatus(int fileRow)
     if (!hasSelectedIncompatibleStreams) {
         for (int i = 0; i < m_data[fileRow].fields[Data::subtFormats].size(); i++) {
             const QString& subtitleFormat = m_data[fileRow].fields[Data::subtFormats][i];
-            if (!Helper::isSubtitleSupported(extension, subtitleFormat)) {
+            if (Helper::isSubtitleIncompatible(extension, subtitleFormat, usePresetSubtitleSettings)) {
                 hasIncompatibleStreams = true;
                 if (i < m_data[fileRow].checks[Data::subtChecks].size() && 
                     m_data[fileRow].checks[Data::subtChecks][i]) {

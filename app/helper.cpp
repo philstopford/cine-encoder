@@ -421,6 +421,28 @@ bool Helper::isSubtitleSupported(const QString& extension, const QString &format
     return subtitleSupport[extension].contains(codecName, Qt::CaseInsensitive);
 }
 
+bool Helper::isAudioIncompatible(const QString& extension, const QString &format, int audioCodecIndex)
+{
+    // If preset will transcode (not use "Source"), then stream is compatible
+    if (audioCodecIndex != 0) {
+        return false; // Will be transcoded, so not incompatible
+    }
+    
+    // If preset uses "Source" (copy), check if the format is supported by container
+    return !isAudioSupported(extension, format);
+}
+
+bool Helper::isSubtitleIncompatible(const QString& extension, const QString &format, bool usePresetSubtitleSettings)
+{
+    // If preset will burn-in subtitles, then stream is compatible
+    if (usePresetSubtitleSettings) {
+        return false; // Will be burned in, so not incompatible
+    }
+    
+    // If preset won't burn-in (will copy), check if the format is supported by container
+    return !isSubtitleSupported(extension, format);
+}
+
 void Helper::nonBlockDelay(int msec)
 {
     QEventLoop loop;

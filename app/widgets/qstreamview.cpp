@@ -81,7 +81,9 @@ namespace QStreamViewPrivate {
 
 QStreamView::QStreamView(QWidget *parent) :
     QWidget(parent),
-    m_pData(nullptr)
+    m_pData(nullptr),
+    m_audioCodecIndex(0),
+    m_usePresetSubtitleSettings(false)
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     m_pLayout = new QVBoxLayout(this);
@@ -111,10 +113,12 @@ void QStreamView::clearList()
     }
 }
 
-void QStreamView::setList(QString extension, Data &data)
+void QStreamView::setList(QString extension, Data &data, int audioCodecIndex, bool usePresetSubtitleSettings)
 {
     clearList();
     m_pData = &data;
+    m_audioCodecIndex = audioCodecIndex;
+    m_usePresetSubtitleSettings = usePresetSubtitleSettings;
     const QString columns[] = {
         tr("Format"), tr("Title"), tr("Language")
     };
@@ -518,7 +522,7 @@ QWidget *QStreamView::createCell(bool &state,
     
     // Label channels
     if (m_type == Content::Audio) {
-        if (!Helper::isAudioSupported(extension, format)) {
+        if (Helper::isAudioIncompatible(extension, format, m_audioCodecIndex)) {
             tit->setText(tit->text() + tr("unsupported"));
             isIncompatible = true;
         }
@@ -540,7 +544,7 @@ QWidget *QStreamView::createCell(bool &state,
         infoLut->addWidget(labCh, 0, 1);
     } else
     if (m_type == Content::Subtitle) {
-        if (!Helper::isSubtitleSupported(extension, format)) {
+        if (Helper::isSubtitleIncompatible(extension, format, m_usePresetSubtitleSettings)) {
             tit->setText(tit->text() + tr("Hard-burn only"));
             burn_only = true;
             state = false;
