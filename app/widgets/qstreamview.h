@@ -23,7 +23,7 @@ public:
     ~QStreamView() override;
     void setContentType(Content type);
     void clearList();
-    void setList(QString container, Data &data, int audioCodecIndex = 0, bool usePresetSubtitleSettings = false);
+    void setList(QString container, Data &data, const QString& targetAudioCodec = QString(), bool usePresetSubtitleSettings = false);
     void deselectTitles();
     void clearTitles();
     void undoTitles();
@@ -53,7 +53,7 @@ private:
     QVBoxLayout *m_pLayout;
     Content m_type;
     Data *m_pData;
-    int m_audioCodecIndex;
+    QString m_targetAudioCodec;
     bool m_usePresetSubtitleSettings;
 };
 

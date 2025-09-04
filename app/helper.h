@@ -41,7 +41,7 @@ public:
     static bool isAudioSupported(const QString& extension, const QString &format);
     static bool isVideoSupported(const QString& extension, const QString &format);
     static bool isSubtitleSupported(const QString& extension, const QString &format);
-    static bool isAudioIncompatible(const QString& extension, const QString &format, int audioCodecIndex);
+    static bool isAudioIncompatible(const QString& extension, const QString &format, const QString& targetAudioCodec);
     static bool isSubtitleIncompatible(const QString& extension, const QString &format, bool usePresetSubtitleSettings);
     template<class T>
     static void eraseRow(QVector<T> &v, int row);

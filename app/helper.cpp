@@ -421,10 +421,10 @@ bool Helper::isSubtitleSupported(const QString& extension, const QString &format
     return subtitleSupport[extension].contains(codecName, Qt::CaseInsensitive);
 }
 
-bool Helper::isAudioIncompatible(const QString& extension, const QString &format, int audioCodecIndex)
+bool Helper::isAudioIncompatible(const QString& extension, const QString &format, const QString& targetAudioCodec)
 {
     // If preset will transcode (not use "Source"), then stream is compatible
-    if (audioCodecIndex != 0) {
+    if (targetAudioCodec != "Source" && !targetAudioCodec.isEmpty()) {
         return false; // Will be transcoded, so not incompatible
     }
     
@@ -434,12 +434,9 @@ bool Helper::isAudioIncompatible(const QString& extension, const QString &format
 
 bool Helper::isSubtitleIncompatible(const QString& extension, const QString &format, bool usePresetSubtitleSettings)
 {
-    // If preset will burn-in subtitles, then stream is compatible
-    if (usePresetSubtitleSettings) {
-        return false; // Will be burned in, so not incompatible
-    }
-    
-    // If preset won't burn-in (will copy), check if the format is supported by container
+    // For subtitles, incompatibility is based on container support
+    // since burn-in is always available as a fallback option
+    // The usePresetSubtitleSettings parameter only controls styling, not burn-in behavior
     return !isSubtitleSupported(extension, format);
 }
 
