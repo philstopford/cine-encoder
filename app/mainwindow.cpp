@@ -2931,7 +2931,6 @@ void MainWindow::onAddExtStream()
                 bool usePresetSubtitleSettings = m_curParams[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
                 ui->streamSubtitle->setList(extension, m_data[m_row], targetAudioCodec, usePresetSubtitleSettings);
             }
-            }
         }
     }
 }
