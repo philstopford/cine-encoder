@@ -2388,6 +2388,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                 const QString currentContainer = m_curParams[CurParamIndex::CONTAINER];
                 if (!Helper::isVideoSupported(currentContainer, fmt_qstr)) {
                     const QString warningMsg = tr("Warning: Video codec '%1' may not be compatible with container '%2'.\n"
+                                                 "Consider using MKV for maximum codec compatibility, or MP4 for H.264/H.265.\n"
                                                  "This may cause encoding errors.")
                                                .arg(fmt_qstr, currentContainer);
                     showInfoMessage(warningMsg);

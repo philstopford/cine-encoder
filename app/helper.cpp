@@ -320,29 +320,35 @@ static QString normalizeCodecName(const QString &format) {
     QString normalized = format.trimmed();
     
     // Handle common codec name variations
-    if (normalized.contains("H264") || normalized.contains("H.264") || normalized == "AVC") {
+    if (normalized.contains("H264", Qt::CaseInsensitive) || normalized.contains("H.264") || normalized == "AVC") {
         return "H.264";
     }
-    if (normalized.contains("H265") || normalized.contains("H.265") || normalized == "HEVC") {
+    if (normalized.contains("H265", Qt::CaseInsensitive) || normalized.contains("H.265") || normalized == "HEVC") {
         return "H.265";
     }
-    if (normalized.contains("AAC")) {
+    if (normalized.contains("AAC", Qt::CaseInsensitive)) {
         return "AAC";
     }
-    if (normalized.contains("AC-3") || normalized.contains("AC3")) {
+    if (normalized.contains("AC-3", Qt::CaseInsensitive) || normalized.contains("AC3", Qt::CaseInsensitive)) {
         return "AC-3";
     }
-    if (normalized.contains("E-AC-3") || normalized.contains("EAC3")) {
+    if (normalized.contains("E-AC-3", Qt::CaseInsensitive) || normalized.contains("EAC3", Qt::CaseInsensitive)) {
         return "E-AC-3";
     }
-    if (normalized.contains("ProRes")) {
+    if (normalized.contains("ProRes", Qt::CaseInsensitive)) {
         return "ProRes";
     }
-    if (normalized.contains("DTS") && !normalized.contains("DTS-HD")) {
+    if (normalized.contains("DTS", Qt::CaseInsensitive) && !normalized.contains("DTS-HD", Qt::CaseInsensitive)) {
         return "DTS";
     }
-    if (normalized.contains("DTS-HD")) {
+    if (normalized.contains("DTS-HD", Qt::CaseInsensitive)) {
         return "DTS-HD";
+    }
+    if (normalized.contains("MPEG-4", Qt::CaseInsensitive) || normalized.contains("MP4V", Qt::CaseInsensitive)) {
+        return "MPEG-4";
+    }
+    if (normalized.contains("MPEG-2", Qt::CaseInsensitive)) {
+        return "MPEG-2";
     }
     
     return normalized;

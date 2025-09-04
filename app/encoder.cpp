@@ -164,8 +164,11 @@ void Encoder::initEncoding(const QString  &temp_file,
     // (user might want to transcode the streams)
     if (!validationErrors.isEmpty()) {
         QString warningMessage = tr("Stream Compatibility Warnings:\n\n%1\n\n"
-                                   "These streams may be transcoded automatically or cause encoding errors.\n"
-                                   "Consider changing the container format or codec settings.")
+                                   "Recommended actions:\n"
+                                   "• Use MKV container for maximum codec compatibility\n"
+                                   "• Or select 'Copy' mode to avoid transcoding\n"
+                                   "• Or choose compatible codecs for your target container\n\n"
+                                   "Encoding will proceed but may fail if codecs are truly incompatible.")
                                 .arg(validationErrors.join("\n"));
         emit onEncodingError(warningMessage, true);
     }
