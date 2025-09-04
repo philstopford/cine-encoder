@@ -639,7 +639,7 @@ QWidget *QStreamView::createCell(bool &state,
     }
     // Burn is whether the user selected to burn; burn_only is when only burning is an option.
     // Default marks the default stream, which triggers burn. A stream cannot be burnt if it is not default.
-    connect(chkBox, &QCheckBox::clicked, this, [this, cell, chkBox, &burn, &burn_only, &state, &deflt](){
+    connect(chkBox, &QCheckBox::clicked, this, [this, cell, chkBox, &burn, &burn_only, &state, &deflt, isIncompatible](){
         state = (chkBox->checkState() == 2);
         // Burn-only prohibits the copy of subtitle streams (target format cannot support the stream).
         if (burn_only)
@@ -665,6 +665,12 @@ QWidget *QStreamView::createCell(bool &state,
                 }
             }
         }
+        
+        // Update incompatible stream styling based on new selection state
+        updateIncompatibleStreamStyling(cell, chkBox, isIncompatible, state);
+        
+        // Emit signal to notify about stream selection change
+        emit streamSelectionChanged();
     });
     lut->addWidget(chkBox, 1, 1);
 
@@ -680,36 +686,53 @@ QWidget *QStreamView::createCell(bool &state,
     connectAction(line, true);
     lut->addWidget(line, 1, 3);
 
-    // Apply visual styling for incompatible streams
-    if (isIncompatible) {
-        // Set yellow background color for incompatible streams
+    // Initialize incompatible stream styling
+    updateIncompatibleStreamStyling(cell, chkBox, isIncompatible, state);
+
+    return cell;
+}
+
+void QStreamView::updateIncompatibleStreamStyling(QWidget* cell, QCheckBox* chkBox, bool isIncompatible, bool isSelected)
+{
+    if (!isIncompatible) {
+        // Reset styling for compatible streams
+        cell->setStyleSheet("");
+        cell->setProperty("incompatible", "false");
+        chkBox->setStyleSheet("");
+        chkBox->setIcon(QIcon());
+        return;
+    }
+
+    // Common incompatibility setup
+    QString incompatibilityReason = (m_type == Content::Audio) ? 
+        tr("Audio codec not supported in target container") :
+        tr("Subtitle codec not supported in target container - burn-in required");
+    
+    if (isSelected) {
+        // Yellow background for selected incompatible streams
         cell->setStyleSheet("QWidget#Cell[incompatible=\"true\"] { background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 3px; }"
                            "QWidget#Cell[incompatible=\"true\"][hover=\"true\"] { background-color: #ffe69c; border: 1px solid #ffcc02; }");
         cell->setProperty("incompatible", "true");
-        
-        // Add warning icon to the format checkbox
         chkBox->setStyleSheet("QCheckBox { color: #856404; }");
-        QIcon warningIcon;
-        
-        // Try to load warning icon from resources, fall back to system icon if not available
-        if (QFile::exists(":/resources/icons/svg/warning.svg")) {
-            warningIcon = QIcon(":/resources/icons/svg/warning.svg");
-        } else {
-            warningIcon = style()->standardIcon(QStyle::SP_MessageBoxWarning);
-        }
-        
-        if (!warningIcon.isNull()) {
-            // Add warning icon to the checkbox text
-            chkBox->setIcon(warningIcon);
-            chkBox->setIconSize(QSize(12, 12) * Helper::scaling());
-        }
-        
-        // Update tooltip to indicate incompatibility
-        QString incompatibilityReason = (m_type == Content::Audio) ? 
-            tr("Audio codec not supported in target container") :
-            tr("Subtitle codec not supported in target container - burn-in required");
+        chkBox->setToolTip(tr("WARNING: %1 - This will cause encoding issues!").arg(incompatibilityReason));
+    } else {
+        // Only warning icon for unselected incompatible streams
+        cell->setStyleSheet("");
+        cell->setProperty("incompatible", "false");
+        chkBox->setStyleSheet("QCheckBox { color: #856404; }");
         chkBox->setToolTip(incompatibilityReason);
     }
 
-    return cell;
+    // Add warning icon for all incompatible streams
+    QIcon warningIcon;
+    if (QFile::exists(":/resources/icons/svg/warning.svg")) {
+        warningIcon = QIcon(":/resources/icons/svg/warning.svg");
+    } else {
+        warningIcon = style()->standardIcon(QStyle::SP_MessageBoxWarning);
+    }
+    
+    if (!warningIcon.isNull()) {
+        chkBox->setIcon(warningIcon);
+        chkBox->setIconSize(QSize(12, 12) * Helper::scaling());
+    }
 }

@@ -28,12 +28,14 @@ public:
 
 signals:
     void onExtractTrack(QStreamView::Content type, int track);
+    void streamSelectionChanged();
 
 private:
     bool eventFilter(QObject*, QEvent*) final;
     void resetCheckFlags(int ind);
     void resetDefFlags(int ind);
     void resetBurnFlags(int ind);
+    void updateIncompatibleStreamStyling(QWidget* cell, QCheckBox* chkBox, bool isIncompatible, bool isSelected);
     QWidget *createCell(bool &state,
                         QString &extension,
                         const QString &format,

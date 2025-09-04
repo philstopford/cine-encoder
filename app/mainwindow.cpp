@@ -555,6 +555,14 @@ void MainWindow::createConnections()
     // Streams actions
     connect(ui->streamAudio, &QStreamView::onExtractTrack, this, &MainWindow::onExtract);
     connect(ui->streamSubtitle, &QStreamView::onExtractTrack, this, &MainWindow::onExtract);
+    
+    // Stream selection change notifications for incompatibility highlighting
+    connect(ui->streamAudio, &QStreamView::streamSelectionChanged, this, [this]() {
+        updateFileIncompatibilityStatus(ui->tableWidget->currentRow());
+    });
+    connect(ui->streamSubtitle, &QStreamView::streamSelectionChanged, this, [this]() {
+        updateFileIncompatibilityStatus(ui->tableWidget->currentRow());
+    });
 
     // Table
     connect(ui->tableWidget, &QTableWidget::itemSelectionChanged,
@@ -2494,6 +2502,10 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             MI.Close();
             prg.setPercent(50);
             ui->tableWidget->selectRow(ui->tableWidget->rowCount() - 1);
+            
+            // Update file-level incompatibility status
+            updateFileIncompatibilityStatus(numRows);
+            
             Helper::nonBlockDelay(50);
             prg.setPercent(100);
         } else {
@@ -3038,6 +3050,11 @@ void MainWindow::onApplyPreset()  // Apply preset
     int selected_row = ui->tableWidget->currentRow();
     ui->tableWidget->clearSelection();
     ui->tableWidget->selectRow(selected_row);
+    
+    // Update incompatibility status for all files since container format may have changed
+    for (int i = 0; i < ui->tableWidget->rowCount(); i++) {
+        updateFileIncompatibilityStatus(i);
+    }
 }
 
 void MainWindow::onRemovePreset()  // Remove preset
@@ -3433,5 +3450,67 @@ void MainWindow::onExtract(QStreamView::Content type, int num)
                         m_ffmpeg_prio);
     if (ext.exec() == QDialog::Accepted) {
         showPopup(tr("Task completed!\n"));
+    }
+}
+
+void MainWindow::updateFileIncompatibilityStatus(int fileRow)
+{
+    if (fileRow < 0 || fileRow >= ui->tableWidget->rowCount() || fileRow >= m_data.size())
+        return;
+
+    // Get current container extension
+    Tables t;
+    QString extension = t.arr_container[m_curParams[CurParamIndex::CODEC].toInt()][CurParamIndex::CONTAINER].toLower();
+    
+    bool hasIncompatibleStreams = false;
+    bool hasSelectedIncompatibleStreams = false;
+    
+    // Check audio streams
+    for (int i = 0; i < m_data[fileRow].fields[Data::audioFormats].size(); i++) {
+        const QString& audioFormat = m_data[fileRow].fields[Data::audioFormats][i];
+        if (!Helper::isAudioSupported(extension, audioFormat)) {
+            hasIncompatibleStreams = true;
+            if (i < m_data[fileRow].checks[Data::audioChecks].size() && 
+                m_data[fileRow].checks[Data::audioChecks][i]) {
+                hasSelectedIncompatibleStreams = true;
+                break;
+            }
+        }
+    }
+    
+    // Check subtitle streams if no selected incompatible audio streams yet
+    if (!hasSelectedIncompatibleStreams) {
+        for (int i = 0; i < m_data[fileRow].fields[Data::subtFormats].size(); i++) {
+            const QString& subtitleFormat = m_data[fileRow].fields[Data::subtFormats][i];
+            if (!Helper::isSubtitleSupported(extension, subtitleFormat)) {
+                hasIncompatibleStreams = true;
+                if (i < m_data[fileRow].checks[Data::subtChecks].size() && 
+                    m_data[fileRow].checks[Data::subtChecks][i]) {
+                    hasSelectedIncompatibleStreams = true;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Apply styling to the filename cell
+    QTableWidgetItem* filenameItem = ui->tableWidget->item(fileRow, ColumnIndex::FILENAME);
+    if (filenameItem) {
+        if (hasSelectedIncompatibleStreams) {
+            // Yellow background for files with selected incompatible streams
+            filenameItem->setBackground(QColor("#fff3cd"));
+            filenameItem->setIcon(style()->standardIcon(QStyle::SP_MessageBoxWarning));
+            filenameItem->setToolTip(tr("WARNING: This file has incompatible streams selected for output. This will cause encoding issues!"));
+        } else if (hasIncompatibleStreams) {
+            // Only warning icon for files with unselected incompatible streams
+            filenameItem->setBackground(QColor());
+            filenameItem->setIcon(style()->standardIcon(QStyle::SP_MessageBoxWarning));
+            filenameItem->setToolTip(tr("This file contains streams that are incompatible with the current preset container format."));
+        } else {
+            // Reset styling for compatible files
+            filenameItem->setBackground(QColor());
+            filenameItem->setIcon(QIcon());
+            filenameItem->setToolTip("");
+        }
     }
 }
