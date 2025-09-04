@@ -88,8 +88,8 @@ PopupMessage::PopupMessage(QWidget *parent, Icon icon, const QString &text) :
                                     Qt::TextWordWrap, text);
     
     int optimalWidth = qMax(minWidth, qMin(maxWidth, textRect.width() + iconSpace + margins));
-    int optimalHeight = qMax(115 * Helper::scaling(), 
-                            textRect.height() + 80 * Helper::scaling()); // 80 for icon area + margins
+    int optimalHeight = qMax(static_cast<int>(115 * Helper::scaling()), 
+                            textRect.height() + static_cast<int>(80 * Helper::scaling())); // 80 for icon area + margins
     
     // Set the calculated size
     ui_widget->setMinimumSize(optimalWidth, optimalHeight);

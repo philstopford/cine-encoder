@@ -92,7 +92,7 @@ void Message::showEvent(QShowEvent *event)
                                         Qt::TextWordWrap, m_message);
         
         int optimalWidth = qMax(minWidth, qMin(maxWidth, textRect.width() + margins));
-        int optimalHeight = qMax(165 * Helper::scaling(), 
+        int optimalHeight = qMax(static_cast<int>(165 * Helper::scaling()), 
                                 textRect.height() + buttonHeight);
         
         resize(optimalWidth, optimalHeight);
