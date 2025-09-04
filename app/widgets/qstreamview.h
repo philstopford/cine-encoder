@@ -5,6 +5,8 @@
 #include <QVBoxLayout>
 #include "constants.h"
 
+class QCheckBox;
+
 using namespace Constants;
 
 class QStreamView : public QWidget
