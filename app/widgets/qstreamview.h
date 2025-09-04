@@ -5,6 +5,8 @@
 #include <QVBoxLayout>
 #include "constants.h"
 
+class QCheckBox;
+
 using namespace Constants;
 
 class QStreamView : public QWidget
@@ -21,19 +23,21 @@ public:
     ~QStreamView() override;
     void setContentType(Content type);
     void clearList();
-    void setList(QString container, Data &data);
+    void setList(QString container, Data &data, const QString& targetAudioCodec = QString(), bool usePresetSubtitleSettings = false);
     void deselectTitles();
     void clearTitles();
     void undoTitles();
 
 signals:
     void onExtractTrack(QStreamView::Content type, int track);
+    void streamSelectionChanged();
 
 private:
     bool eventFilter(QObject*, QEvent*) final;
     void resetCheckFlags(int ind);
     void resetDefFlags(int ind);
     void resetBurnFlags(int ind);
+    void updateIncompatibleStreamStyling(QWidget* cell, QCheckBox* chkBox, bool isIncompatible, bool isSelected);
     QWidget *createCell(bool &state,
                         QString &extension,
                         const QString &format,
@@ -49,6 +53,8 @@ private:
     QVBoxLayout *m_pLayout;
     Content m_type;
     Data *m_pData;
+    QString m_targetAudioCodec;
+    bool m_usePresetSubtitleSettings;
 };
 
 #endif // QSTREAMVIEW_H

@@ -78,13 +78,33 @@ void Message::showEvent(QShowEvent *event)
     BaseWindow::showEvent(event);
     if (!m_windowActivated) {
         m_windowActivated = true;
-        //resize(QSize(330, 175) * Helper::scaling());
+        setMessage();
+        
+        // Calculate optimal size based on text content
+        QFontMetrics fm(ui->textBrowser->font());
+        const int maxWidth = 600 * Helper::scaling();
+        const int minWidth = 300 * Helper::scaling();
+        const int margins = 60 * Helper::scaling(); // Total margins including title bar
+        const int buttonHeight = 80 * Helper::scaling(); // Space for buttons and spacing
+        
+        // Calculate text dimensions with better text measurement
+        const int availableWidth = maxWidth - margins;
+        QRect textRect = fm.boundingRect(QRect(0, 0, availableWidth, 0), 
+                                        Qt::TextWordWrap | Qt::AlignCenter, m_message);
+        
+        // Add some padding to ensure text fits properly
+        const int textPadding = 20 * Helper::scaling();
+        int optimalWidth = qMax(minWidth, qMin(maxWidth, textRect.width() + margins + textPadding));
+        int optimalHeight = qMax(static_cast<int>(165 * Helper::scaling()), 
+                                textRect.height() + buttonHeight + textPadding);
+        
+        resize(optimalWidth, optimalHeight);
+        
+        // Center the dialog
         QSizeF size(this->size());
         QPoint center = QPointF(size.width()/2, size.height()/2).toPoint();
         move(parentWidget()->geometry().center() - center);
-        setMessage();
     }
-    this->adjustSize();
 }
 
 void Message::setMessage()
@@ -122,7 +142,14 @@ void Message::show_message()
 {
     ui->textBrowser->clear();
     ui->textBrowser->setAlignment(Qt::AlignCenter);
-    ui->textBrowser->append(m_message);
+    
+    // Ensure proper word wrapping is enabled
+    ui->textBrowser->setWordWrapMode(QTextOption::WordWrap);
+    ui->textBrowser->setLineWrapMode(QTextEdit::WidgetWidth);
+    
+    // Use setPlainText instead of append for better text handling
+    ui->textBrowser->setPlainText(m_message);
+    
     QTextCursor textCursor = ui->textBrowser->textCursor();
     textCursor.movePosition(QTextCursor::Start);
     ui->textBrowser->setTextCursor(textCursor);

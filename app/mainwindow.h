@@ -335,6 +335,7 @@ private slots:
     void provideListContextMenu(const QPoint&);
     void onAddToTask();
     void onExtract(QStreamView::Content type, int num);
+    void updateFileIncompatibilityStatus(int fileRow);
 };
 
 #endif // WIDGET_H

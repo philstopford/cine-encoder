@@ -555,6 +555,14 @@ void MainWindow::createConnections()
     // Streams actions
     connect(ui->streamAudio, &QStreamView::onExtractTrack, this, &MainWindow::onExtract);
     connect(ui->streamSubtitle, &QStreamView::onExtractTrack, this, &MainWindow::onExtract);
+    
+    // Stream selection change notifications for incompatibility highlighting
+    connect(ui->streamAudio, &QStreamView::streamSelectionChanged, this, [this]() {
+        updateFileIncompatibilityStatus(ui->tableWidget->currentRow());
+    });
+    connect(ui->streamSubtitle, &QStreamView::streamSelectionChanged, this, [this]() {
+        updateFileIncompatibilityStatus(ui->tableWidget->currentRow());
+    });
 
     // Table
     connect(ui->tableWidget, &QTableWidget::itemSelectionChanged,
@@ -1648,14 +1656,24 @@ void MainWindow::get_current_data() // Get current data
     if (!m_data[m_row].fields[Data::audioFormats].empty() ||
             !m_data[m_row].fields[Data::externAudioFormats].empty()) {
         m_pAudioLabel->setVisible(false);
-        ui->streamAudio->setList(extension, m_data[m_row]);
+        Tables t;
+        int codecIndex = m_curParams[CurParamIndex::CODEC].toInt();
+        int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+        QString targetAudioCodec = t.arr_acodec[codecIndex][audioCodecIndex];
+        bool usePresetSubtitleSettings = m_curParams[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
+        ui->streamAudio->setList(extension, m_data[m_row], targetAudioCodec, usePresetSubtitleSettings);
     }
 
     //********* Set subtitle widgets ***************//
     if (!m_data[m_row].fields[Data::subtFormats].empty() ||
             !m_data[m_row].fields[Data::externSubtFormats].empty()) {
         m_pSubtitleLabel->setVisible(false);
-        ui->streamSubtitle->setList(extension, m_data[m_row]);
+        Tables t;
+        int codecIndex = m_curParams[CurParamIndex::CODEC].toInt();
+        int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+        QString targetAudioCodec = t.arr_acodec[codecIndex][audioCodecIndex];
+        bool usePresetSubtitleSettings = m_curParams[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
+        ui->streamSubtitle->setList(extension, m_data[m_row], targetAudioCodec, usePresetSubtitleSettings);
     }
 }
 
@@ -2383,6 +2401,18 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             if (durationTime == "00:00:00")
                 durationTime = "Undef";
 
+            // Check video codec compatibility with current container selection
+            if (!fmt_qstr.isEmpty() && fmt_qstr != "Undef") {
+                const QString currentContainer = m_curParams[CurParamIndex::CONTAINER];
+                if (!Helper::isVideoSupported(currentContainer, fmt_qstr)) {
+                    const QString warningMsg = tr("Warning: Video codec '%1' may not be compatible with container '%2'.\n"
+                                                 "Consider using MKV for maximum codec compatibility, or MP4 for H.264/H.265.\n"
+                                                 "This may cause encoding errors.")
+                                               .arg(fmt_qstr, currentContainer);
+                    showInfoMessage(warningMsg);
+                }
+            }
+
             const QString arr_items[] = {
                 inputFile,
                 fmt_qstr,
@@ -2482,6 +2512,10 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             MI.Close();
             prg.setPercent(50);
             ui->tableWidget->selectRow(ui->tableWidget->rowCount() - 1);
+            
+            // Update file-level incompatibility status
+            updateFileIncompatibilityStatus(numRows);
+            
             Helper::nonBlockDelay(50);
             prg.setPercent(100);
         } else {
@@ -2861,7 +2895,7 @@ void MainWindow::onAddExtStream()
                         if (vcnt == 0 && scnt == 1) {
                             const QString subtitleFormat = SINFO(0, "Format");
                             if (!subtitleFormat.isEmpty()) {
-                                m_data[m_row].checks[Data::externSubtChecks].push_back(false);// Helper::isSubtitleSupported(m_curParams[CurParamIndex::CONTAINER], subtitleFormat));
+                                m_data[m_row].checks[Data::externSubtChecks].push_back(Helper::isSubtitleSupported(m_curParams[CurParamIndex::CONTAINER], subtitleFormat));
                                 m_data[m_row].fields[Data::externSubtFormats].push_back(subtitleFormat);
                                 m_data[m_row].fields[Data::externSubtDuration].push_back(SINFO(0, "Duration"));
                                 m_data[m_row].fields[Data::externSubtLangs].push_back(SINFO(0, "Language"));
@@ -2881,11 +2915,21 @@ void MainWindow::onAddExtStream()
             }
             if (!m_data[m_row].fields[Data::externAudioFormats].empty()) {
                 m_pAudioLabel->setVisible(false);
-                ui->streamAudio->setList(extension, m_data[m_row]);
+                Tables t;
+                int codecIndex = m_curParams[CurParamIndex::CODEC].toInt();
+                int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+                QString targetAudioCodec = t.arr_acodec[codecIndex][audioCodecIndex];
+                bool usePresetSubtitleSettings = m_curParams[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
+                ui->streamAudio->setList(extension, m_data[m_row], targetAudioCodec, usePresetSubtitleSettings);
             }
             if (!m_data[m_row].fields[Data::externSubtFormats].empty()) {
                 m_pSubtitleLabel->setVisible(false);
-                ui->streamSubtitle->setList(extension, m_data[m_row]);
+                Tables t;
+                int codecIndex = m_curParams[CurParamIndex::CODEC].toInt();
+                int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+                QString targetAudioCodec = t.arr_acodec[codecIndex][audioCodecIndex];
+                bool usePresetSubtitleSettings = m_curParams[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
+                ui->streamSubtitle->setList(extension, m_data[m_row], targetAudioCodec, usePresetSubtitleSettings);
             }
         }
     }
@@ -3026,6 +3070,11 @@ void MainWindow::onApplyPreset()  // Apply preset
     int selected_row = ui->tableWidget->currentRow();
     ui->tableWidget->clearSelection();
     ui->tableWidget->selectRow(selected_row);
+    
+    // Update incompatibility status for all files since container format may have changed
+    for (int i = 0; i < ui->tableWidget->rowCount(); i++) {
+        updateFileIncompatibilityStatus(i);
+    }
 }
 
 void MainWindow::onRemovePreset()  // Remove preset
@@ -3421,5 +3470,71 @@ void MainWindow::onExtract(QStreamView::Content type, int num)
                         m_ffmpeg_prio);
     if (ext.exec() == QDialog::Accepted) {
         showPopup(tr("Task completed!\n"));
+    }
+}
+
+void MainWindow::updateFileIncompatibilityStatus(int fileRow)
+{
+    if (fileRow < 0 || fileRow >= ui->tableWidget->rowCount() || fileRow >= m_data.size())
+        return;
+
+    // Get current container extension and preset parameters
+    Tables t;
+    QString extension = t.arr_container[m_curParams[CurParamIndex::CODEC].toInt()][CurParamIndex::CONTAINER].toLower();
+    int codecIndex = m_curParams[CurParamIndex::CODEC].toInt();
+    int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+    QString targetAudioCodec = t.arr_acodec[codecIndex][audioCodecIndex];
+    bool usePresetSubtitleSettings = m_curParams[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
+    
+    bool hasIncompatibleStreams = false;
+    bool hasSelectedIncompatibleStreams = false;
+    
+    // Check audio streams
+    for (int i = 0; i < m_data[fileRow].fields[Data::audioFormats].size(); i++) {
+        const QString& audioFormat = m_data[fileRow].fields[Data::audioFormats][i];
+        if (Helper::isAudioIncompatible(extension, audioFormat, targetAudioCodec)) {
+            hasIncompatibleStreams = true;
+            if (i < m_data[fileRow].checks[Data::audioChecks].size() && 
+                m_data[fileRow].checks[Data::audioChecks][i]) {
+                hasSelectedIncompatibleStreams = true;
+                break;
+            }
+        }
+    }
+    
+    // Check subtitle streams if no selected incompatible audio streams yet
+    if (!hasSelectedIncompatibleStreams) {
+        for (int i = 0; i < m_data[fileRow].fields[Data::subtFormats].size(); i++) {
+            const QString& subtitleFormat = m_data[fileRow].fields[Data::subtFormats][i];
+            if (Helper::isSubtitleIncompatible(extension, subtitleFormat, usePresetSubtitleSettings)) {
+                hasIncompatibleStreams = true;
+                if (i < m_data[fileRow].checks[Data::subtChecks].size() && 
+                    m_data[fileRow].checks[Data::subtChecks][i]) {
+                    hasSelectedIncompatibleStreams = true;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Apply styling to the filename cell
+    QTableWidgetItem* filenameItem = ui->tableWidget->item(fileRow, ColumnIndex::FILENAME);
+    if (filenameItem) {
+        if (hasSelectedIncompatibleStreams) {
+            // Yellow background for files with selected incompatible streams
+            filenameItem->setBackground(QColor("#fff3cd"));
+            filenameItem->setIcon(style()->standardIcon(QStyle::SP_MessageBoxWarning));
+            filenameItem->setToolTip(tr("WARNING: This file has incompatible streams selected for output. This will cause encoding issues!"));
+        } else if (hasIncompatibleStreams) {
+            // Only warning icon for files with unselected incompatible streams
+            filenameItem->setBackground(QColor());
+            filenameItem->setIcon(style()->standardIcon(QStyle::SP_MessageBoxWarning));
+            filenameItem->setToolTip(tr("This file contains streams that are incompatible with the current preset container format."));
+        } else {
+            // Reset styling for compatible files
+            filenameItem->setBackground(QColor());
+            filenameItem->setIcon(QIcon());
+            filenameItem->setToolTip("");
+        }
     }
 }

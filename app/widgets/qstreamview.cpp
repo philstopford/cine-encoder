@@ -14,6 +14,8 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QRadioButton>
+#include <QIcon>
+#include <QFile>
 #include <iostream>
 
 #define ROW_HEIGHT 22
@@ -79,7 +81,9 @@ namespace QStreamViewPrivate {
 
 QStreamView::QStreamView(QWidget *parent) :
     QWidget(parent),
-    m_pData(nullptr)
+    m_pData(nullptr),
+    m_targetAudioCodec(QString()),
+    m_usePresetSubtitleSettings(false)
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     m_pLayout = new QVBoxLayout(this);
@@ -109,10 +113,12 @@ void QStreamView::clearList()
     }
 }
 
-void QStreamView::setList(QString extension, Data &data)
+void QStreamView::setList(QString extension, Data &data, const QString& targetAudioCodec, bool usePresetSubtitleSettings)
 {
     clearList();
     m_pData = &data;
+    m_targetAudioCodec = targetAudioCodec;
+    m_usePresetSubtitleSettings = usePresetSubtitleSettings;
     const QString columns[] = {
         tr("Format"), tr("Title"), tr("Language")
     };
@@ -512,10 +518,14 @@ QWidget *QStreamView::createCell(bool &state,
     infoLut->addWidget(labDuration, 0, 0);
 
     bool burn_only = false;
+    bool isIncompatible = false; // Track incompatibility for visual styling
+    
     // Label channels
     if (m_type == Content::Audio) {
-        if (!Helper::isAudioSupported(extension, format))
+        if (Helper::isAudioIncompatible(extension, format, m_targetAudioCodec)) {
             tit->setText(tit->text() + tr("unsupported"));
+            isIncompatible = true;
+        }
         if (chLayouts.isEmpty())
             chLayouts = tr("No layouts");
 
@@ -534,10 +544,11 @@ QWidget *QStreamView::createCell(bool &state,
         infoLut->addWidget(labCh, 0, 1);
     } else
     if (m_type == Content::Subtitle) {
-        if (!Helper::isSubtitleSupported(extension, format)) {
+        if (Helper::isSubtitleIncompatible(extension, format, m_usePresetSubtitleSettings)) {
             tit->setText(tit->text() + tr("Hard-burn only"));
             burn_only = true;
             state = false;
+            isIncompatible = true;
         }
         QRadioButton *brn_rbtn = QStreamViewPrivate::createRadio(info, "burnInto", tr("Burn into video"), burn);
         brn_rbtn->setFixedHeight(12 * Helper::scaling());
@@ -632,7 +643,7 @@ QWidget *QStreamView::createCell(bool &state,
     }
     // Burn is whether the user selected to burn; burn_only is when only burning is an option.
     // Default marks the default stream, which triggers burn. A stream cannot be burnt if it is not default.
-    connect(chkBox, &QCheckBox::clicked, this, [this, cell, chkBox, &burn, &burn_only, &state, &deflt](){
+    connect(chkBox, &QCheckBox::clicked, this, [this, cell, chkBox, &burn, &burn_only, &state, &deflt, isIncompatible](){
         state = (chkBox->checkState() == 2);
         // Burn-only prohibits the copy of subtitle streams (target format cannot support the stream).
         if (burn_only)
@@ -658,6 +669,12 @@ QWidget *QStreamView::createCell(bool &state,
                 }
             }
         }
+        
+        // Update incompatible stream styling based on new selection state
+        updateIncompatibleStreamStyling(cell, chkBox, isIncompatible, state);
+        
+        // Emit signal to notify about stream selection change
+        emit streamSelectionChanged();
     });
     lut->addWidget(chkBox, 1, 1);
 
@@ -673,5 +690,53 @@ QWidget *QStreamView::createCell(bool &state,
     connectAction(line, true);
     lut->addWidget(line, 1, 3);
 
+    // Initialize incompatible stream styling
+    updateIncompatibleStreamStyling(cell, chkBox, isIncompatible, state);
+
     return cell;
+}
+
+void QStreamView::updateIncompatibleStreamStyling(QWidget* cell, QCheckBox* chkBox, bool isIncompatible, bool isSelected)
+{
+    if (!isIncompatible) {
+        // Reset styling for compatible streams
+        cell->setStyleSheet("");
+        cell->setProperty("incompatible", "false");
+        chkBox->setStyleSheet("");
+        chkBox->setIcon(QIcon());
+        return;
+    }
+
+    // Common incompatibility setup
+    QString incompatibilityReason = (m_type == Content::Audio) ? 
+        tr("Audio codec not supported in target container") :
+        tr("Subtitle codec not supported in target container - burn-in required");
+    
+    if (isSelected) {
+        // Yellow background for selected incompatible streams
+        cell->setStyleSheet("QWidget#Cell[incompatible=\"true\"] { background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 3px; }"
+                           "QWidget#Cell[incompatible=\"true\"][hover=\"true\"] { background-color: #ffe69c; border: 1px solid #ffcc02; }");
+        cell->setProperty("incompatible", "true");
+        chkBox->setStyleSheet("QCheckBox { color: #856404; }");
+        chkBox->setToolTip(tr("WARNING: %1 - This will cause encoding issues!").arg(incompatibilityReason));
+    } else {
+        // Only warning icon for unselected incompatible streams
+        cell->setStyleSheet("");
+        cell->setProperty("incompatible", "false");
+        chkBox->setStyleSheet("QCheckBox { color: #856404; }");
+        chkBox->setToolTip(incompatibilityReason);
+    }
+
+    // Add warning icon for all incompatible streams
+    QIcon warningIcon;
+    if (QFile::exists(":/resources/icons/svg/warning.svg")) {
+        warningIcon = QIcon(":/resources/icons/svg/warning.svg");
+    } else {
+        warningIcon = style()->standardIcon(QStyle::SP_MessageBoxWarning);
+    }
+    
+    if (!warningIcon.isNull()) {
+        chkBox->setIcon(warningIcon);
+        chkBox->setIconSize(QSize(12, 12) * Helper::scaling());
+    }
 }
