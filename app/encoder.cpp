@@ -121,6 +121,55 @@ void Encoder::initEncoding(const QString  &temp_file,
                   CE_USE_PRESET_SUBTITLES, CE_SUBTITLE_FONT, CE_SUBTITLE_FONT_SIZE, CE_SUBTITLE_FONT_COLOR, CE_SUBTITLE_BACKGROUND,
                   CE_SUBTITLE_BACKGROUND_COLOR, CE_SUBTITLE_LOCATION);
 
+    // Comprehensive pre-flight validation of stream compatibility
+    QStringList validationErrors;
+    
+    // Validate audio streams
+    for (int i = 0; i < data.fields[Data::audioFormats].size(); i++) {
+        const QString& audioFormat = data.fields[Data::audioFormats][i];
+        if (!Helper::isAudioSupported(container, audioFormat)) {
+            validationErrors.append(tr("Audio stream %1 (%2) is not compatible with container '%3'")
+                                  .arg(i + 1).arg(audioFormat).arg(container));
+        }
+    }
+    
+    // Validate external audio streams
+    for (int i = 0; i < data.fields[Data::externAudioFormats].size(); i++) {
+        const QString& audioFormat = data.fields[Data::externAudioFormats][i];
+        if (!Helper::isAudioSupported(container, audioFormat)) {
+            validationErrors.append(tr("External audio stream %1 (%2) is not compatible with container '%3'")
+                                  .arg(i + 1).arg(audioFormat).arg(container));
+        }
+    }
+    
+    // Validate subtitle streams
+    for (int i = 0; i < data.fields[Data::subtFormats].size(); i++) {
+        const QString& subtFormat = data.fields[Data::subtFormats][i];
+        if (!Helper::isSubtitleSupported(container, subtFormat)) {
+            validationErrors.append(tr("Subtitle stream %1 (%2) is not compatible with container '%3'")
+                                  .arg(i + 1).arg(subtFormat).arg(container));
+        }
+    }
+    
+    // Validate external subtitle streams
+    for (int i = 0; i < data.fields[Data::externSubtFormats].size(); i++) {
+        const QString& subtFormat = data.fields[Data::externSubtFormats][i];
+        if (!Helper::isSubtitleSupported(container, subtFormat)) {
+            validationErrors.append(tr("External subtitle stream %1 (%2) is not compatible with container '%3'")
+                                  .arg(i + 1).arg(subtFormat).arg(container));
+        }
+    }
+    
+    // If there are validation errors, emit warning but allow encoding to proceed
+    // (user might want to transcode the streams)
+    if (!validationErrors.isEmpty()) {
+        QString warningMessage = tr("Stream Compatibility Warnings:\n\n%1\n\n"
+                                   "These streams may be transcoded automatically or cause encoding errors.\n"
+                                   "Consider changing the container format or codec settings.")
+                                .arg(validationErrors.join("\n"));
+        emit onEncodingError(warningMessage, true);
+    }
+
     /****************************************** Resize ****************************************/
     QString resize_vf;
     resizeVF(_width, _height, CE_CODEC, CE_WIDTH, CE_HEIGHT, t, resize_vf);
@@ -1488,6 +1537,33 @@ void Encoder::progress_1()   // Progress
     const QString line_mod = line.replace("   ", " ").replace("  ", " ").replace("  ", " ").replace("= ", "=");
     emit onEncodingLog(line_mod);
     _error_message = line_mod;
+    
+    // Check for common codec/container compatibility errors and provide helpful feedback
+    if (line_mod.contains("Could not write header for output file", Qt::CaseInsensitive) ||
+        line_mod.contains("not supported in this container", Qt::CaseInsensitive) ||
+        line_mod.contains("Codec not currently supported in container", Qt::CaseInsensitive)) {
+        QString enhancedError = tr("Codec/Container Compatibility Error: The selected codec is not supported in this container format.\n"
+                                  "Try using a different container or codec combination.\n"
+                                  "Original error: %1").arg(line_mod);
+        emit onEncodingError(enhancedError, true);
+        return;
+    }
+    
+    if (line_mod.contains("Invalid data found when processing input", Qt::CaseInsensitive)) {
+        QString enhancedError = tr("Input Stream Error: The input stream format may be corrupted or unsupported.\n"
+                                  "Original error: %1").arg(line_mod);
+        emit onEncodingError(enhancedError, true);
+        return;
+    }
+    
+    if (line_mod.contains("Subtitle encoding currently only possible from text to text", Qt::CaseInsensitive)) {
+        QString enhancedError = tr("Subtitle Compatibility Error: The subtitle format cannot be converted to the target container.\n"
+                                  "Consider burning subtitles into the video or using a different container.\n"
+                                  "Original error: %1").arg(line_mod);
+        emit onEncodingError(enhancedError, true);
+        return;
+    }
+    
     const int pos_st = line_mod.indexOf("frame=");
     if (pos_st == 0) {
         QStringList data = line_mod.split(" ");

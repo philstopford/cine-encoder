@@ -279,30 +279,140 @@ QString Helper::getCss(int theme_index)
 }
 
 
-// FIXME : Helpers may need to consider container for this to be really useful.....
-// Currently configuring to test with an MP4 target which is more constrained than MKV.
+// Comprehensive codec/container compatibility checking based on MediaInfo format strings
+static QMap<QString, QStringList> getAudioCodecSupport() {
+    static QMap<QString, QStringList> audioSupport = {
+        {"mp4", {"AAC", "MP3", "AC-3", "E-AC-3", "DTS", "ALAC", "FLAC"}},
+        {"mov", {"AAC", "MP3", "AC-3", "E-AC-3", "DTS", "ALAC", "FLAC", "PCM"}},
+        {"mkv", {"AAC", "MP3", "AC-3", "E-AC-3", "DTS", "DTS-HD", "TrueHD", "FLAC", "Vorbis", "Opus", "PCM", "WavPack"}},
+        {"webm", {"Vorbis", "Opus"}},
+        {"avi", {"MP3", "AC-3", "PCM", "AAC"}},
+        {"m4v", {"AAC", "MP3", "AC-3", "E-AC-3", "DTS", "ALAC"}}
+    };
+    return audioSupport;
+}
+
+static QMap<QString, QStringList> getVideoCodecSupport() {
+    static QMap<QString, QStringList> videoSupport = {
+        {"mp4", {"AVC", "H.264", "HEVC", "H.265", "AV1", "VP9"}},
+        {"mov", {"AVC", "H.264", "HEVC", "H.265", "ProRes", "Apple ProRes", "MJPEG", "DV"}},
+        {"mkv", {"AVC", "H.264", "HEVC", "H.265", "VP8", "VP9", "AV1", "MPEG-4", "MPEG-2", "Theora", "FFV1"}},
+        {"webm", {"VP8", "VP9", "AV1"}},
+        {"avi", {"MPEG-4", "H.264", "AVC", "MJPEG", "DV", "Xvid"}},
+        {"m4v", {"AVC", "H.264", "HEVC", "H.265"}}
+    };
+    return videoSupport;
+}
+
+static QMap<QString, QStringList> getSubtitleCodecSupport() {
+    static QMap<QString, QStringList> subtitleSupport = {
+        {"mp4", {"mov_text", "Timed Text", "tx3g"}},
+        {"mov", {"mov_text", "Timed Text", "tx3g", "DVD Subtitle"}},
+        {"mkv", {"ASS", "SSA", "SRT", "UTF-8", "VobSub", "PGS", "DVD Subtitle", "WEBVTT"}},
+        {"webm", {"WEBVTT"}},
+        {"avi", {"SRT", "UTF-8"}},
+        {"m4v", {"mov_text", "Timed Text"}}
+    };
+    return subtitleSupport;
+}
+
+static QString normalizeCodecName(const QString &format) {
+    QString normalized = format.trimmed();
+    
+    // Handle common codec name variations
+    if (normalized.contains("H264") || normalized.contains("H.264") || normalized == "AVC") {
+        return "H.264";
+    }
+    if (normalized.contains("H265") || normalized.contains("H.265") || normalized == "HEVC") {
+        return "H.265";
+    }
+    if (normalized.contains("AAC")) {
+        return "AAC";
+    }
+    if (normalized.contains("AC-3") || normalized.contains("AC3")) {
+        return "AC-3";
+    }
+    if (normalized.contains("E-AC-3") || normalized.contains("EAC3")) {
+        return "E-AC-3";
+    }
+    if (normalized.contains("ProRes")) {
+        return "ProRes";
+    }
+    if (normalized.contains("DTS") && !normalized.contains("DTS-HD")) {
+        return "DTS";
+    }
+    if (normalized.contains("DTS-HD")) {
+        return "DTS-HD";
+    }
+    
+    return normalized;
+}
+
 bool Helper::isAudioSupported(const QString& extension, const QString &format)
 {
-    const QVector<QString> unspFormats = {
-        ""
-    };
-    return unspFormats.indexOf(format) == -1;
+    if (format.isEmpty()) {
+        return false;
+    }
+    
+    // Extract just the codec name from format string that may include sample rate
+    QString codecName = format.split("  ").first().trimmed();
+    codecName = normalizeCodecName(codecName);
+    
+    QMap<QString, QStringList> audioSupport = getAudioCodecSupport();
+    
+    if (!audioSupport.contains(extension)) {
+        // Unknown container, assume supported for backward compatibility
+        return true;
+    }
+    
+    return audioSupport[extension].contains(codecName, Qt::CaseInsensitive);
+}
+
+bool Helper::isVideoSupported(const QString& extension, const QString &format)
+{
+    if (format.isEmpty()) {
+        return false;
+    }
+    
+    QString codecName = normalizeCodecName(format.trimmed());
+    
+    QMap<QString, QStringList> videoSupport = getVideoCodecSupport();
+    
+    if (!videoSupport.contains(extension)) {
+        // Unknown container, assume supported for backward compatibility
+        return true;
+    }
+    
+    return videoSupport[extension].contains(codecName, Qt::CaseInsensitive);
 }
 
 bool Helper::isSubtitleSupported(const QString& extension, const QString &format)
 {
-    if (extension == "mp4") {
-        const QVector<QString> unspFormats = {
-                "PGS",
-                "VobSub",
-                "D_WEBVTT/SUBTITLES",
-                // "Timed Text"
-        };
-        return unspFormats.indexOf(format) == -1;
+    if (format.isEmpty()) {
+        return false;
     }
-
-    // Assume supported.
-    return true;
+    
+    QString codecName = format.trimmed();
+    
+    QMap<QString, QStringList> subtitleSupport = getSubtitleCodecSupport();
+    
+    if (!subtitleSupport.contains(extension)) {
+        // Unknown container, assume supported for backward compatibility
+        return true;
+    }
+    
+    // Handle special cases for subtitle format names
+    if (codecName == "D_WEBVTT/SUBTITLES") {
+        codecName = "WEBVTT";
+    }
+    if (codecName == "PGS" && extension == "mp4") {
+        return false; // PGS is not supported in MP4
+    }
+    if (codecName == "VobSub" && extension == "mp4") {
+        return false; // VobSub is not supported in MP4
+    }
+    
+    return subtitleSupport[extension].contains(codecName, Qt::CaseInsensitive);
 }
 
 void Helper::nonBlockDelay(int msec)

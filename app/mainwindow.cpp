@@ -2383,6 +2383,17 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             if (durationTime == "00:00:00")
                 durationTime = "Undef";
 
+            // Check video codec compatibility with current container selection
+            if (!fmt_qstr.isEmpty() && fmt_qstr != "Undef") {
+                const QString currentContainer = m_curParams[CurParamIndex::CONTAINER];
+                if (!Helper::isVideoSupported(currentContainer, fmt_qstr)) {
+                    const QString warningMsg = tr("Warning: Video codec '%1' may not be compatible with container '%2'.\n"
+                                                 "This may cause encoding errors.")
+                                               .arg(fmt_qstr, currentContainer);
+                    showInfoMessage(warningMsg);
+                }
+            }
+
             const QString arr_items[] = {
                 inputFile,
                 fmt_qstr,
@@ -2861,7 +2872,7 @@ void MainWindow::onAddExtStream()
                         if (vcnt == 0 && scnt == 1) {
                             const QString subtitleFormat = SINFO(0, "Format");
                             if (!subtitleFormat.isEmpty()) {
-                                m_data[m_row].checks[Data::externSubtChecks].push_back(false);// Helper::isSubtitleSupported(m_curParams[CurParamIndex::CONTAINER], subtitleFormat));
+                                m_data[m_row].checks[Data::externSubtChecks].push_back(Helper::isSubtitleSupported(m_curParams[CurParamIndex::CONTAINER], subtitleFormat));
                                 m_data[m_row].fields[Data::externSubtFormats].push_back(subtitleFormat);
                                 m_data[m_row].fields[Data::externSubtDuration].push_back(SINFO(0, "Duration"));
                                 m_data[m_row].fields[Data::externSubtLangs].push_back(SINFO(0, "Language"));
