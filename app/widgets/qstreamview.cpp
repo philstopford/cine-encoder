@@ -14,6 +14,8 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QRadioButton>
+#include <QIcon>
+#include <QFile>
 #include <iostream>
 
 #define ROW_HEIGHT 22
@@ -512,10 +514,14 @@ QWidget *QStreamView::createCell(bool &state,
     infoLut->addWidget(labDuration, 0, 0);
 
     bool burn_only = false;
+    bool isIncompatible = false; // Track incompatibility for visual styling
+    
     // Label channels
     if (m_type == Content::Audio) {
-        if (!Helper::isAudioSupported(extension, format))
+        if (!Helper::isAudioSupported(extension, format)) {
             tit->setText(tit->text() + tr("unsupported"));
+            isIncompatible = true;
+        }
         if (chLayouts.isEmpty())
             chLayouts = tr("No layouts");
 
@@ -538,6 +544,7 @@ QWidget *QStreamView::createCell(bool &state,
             tit->setText(tit->text() + tr("Hard-burn only"));
             burn_only = true;
             state = false;
+            isIncompatible = true;
         }
         QRadioButton *brn_rbtn = QStreamViewPrivate::createRadio(info, "burnInto", tr("Burn into video"), burn);
         brn_rbtn->setFixedHeight(12 * Helper::scaling());
@@ -672,6 +679,35 @@ QWidget *QStreamView::createCell(bool &state,
     line->setMaximumWidth(30 * Helper::scaling());
     connectAction(line, true);
     lut->addWidget(line, 1, 3);
+
+    // Apply visual styling for incompatible streams
+    if (isIncompatible) {
+        // Set yellow background color for incompatible streams
+        cell->setStyleSheet("QWidget#Cell { background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 3px; }");
+        
+        // Add warning icon to the format checkbox
+        chkBox->setStyleSheet("QCheckBox { color: #856404; }");
+        QIcon warningIcon;
+        
+        // Try to load warning icon from resources, fall back to system icon if not available
+        if (QFile::exists(":/resources/icons/svg/warning.svg")) {
+            warningIcon = QIcon(":/resources/icons/svg/warning.svg");
+        } else {
+            warningIcon = style()->standardIcon(QStyle::SP_MessageBoxWarning);
+        }
+        
+        if (!warningIcon.isNull()) {
+            // Add warning icon to the checkbox text
+            chkBox->setIcon(warningIcon);
+            chkBox->setIconSize(QSize(12, 12) * Helper::scaling());
+        }
+        
+        // Update tooltip to indicate incompatibility
+        QString incompatibilityReason = (m_type == Content::Audio) ? 
+            tr("Audio codec not supported in target container") :
+            tr("Subtitle codec not supported in target container - burn-in required");
+        chkBox->setToolTip(incompatibilityReason);
+    }
 
     return cell;
 }

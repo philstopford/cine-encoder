@@ -87,13 +87,16 @@ void Message::showEvent(QShowEvent *event)
         const int margins = 60 * Helper::scaling(); // Total margins including title bar
         const int buttonHeight = 80 * Helper::scaling(); // Space for buttons and spacing
         
-        // Calculate text dimensions
-        QRect textRect = fm.boundingRect(QRect(0, 0, maxWidth - margins, 0), 
-                                        Qt::TextWordWrap, m_message);
+        // Calculate text dimensions with better text measurement
+        const int availableWidth = maxWidth - margins;
+        QRect textRect = fm.boundingRect(QRect(0, 0, availableWidth, 0), 
+                                        Qt::TextWordWrap | Qt::AlignCenter, m_message);
         
-        int optimalWidth = qMax(minWidth, qMin(maxWidth, textRect.width() + margins));
+        // Add some padding to ensure text fits properly
+        const int textPadding = 20 * Helper::scaling();
+        int optimalWidth = qMax(minWidth, qMin(maxWidth, textRect.width() + margins + textPadding));
         int optimalHeight = qMax(static_cast<int>(165 * Helper::scaling()), 
-                                textRect.height() + buttonHeight);
+                                textRect.height() + buttonHeight + textPadding);
         
         resize(optimalWidth, optimalHeight);
         
@@ -139,7 +142,14 @@ void Message::show_message()
 {
     ui->textBrowser->clear();
     ui->textBrowser->setAlignment(Qt::AlignCenter);
-    ui->textBrowser->append(m_message);
+    
+    // Ensure proper word wrapping is enabled
+    ui->textBrowser->setWordWrapMode(QTextOption::WordWrap);
+    ui->textBrowser->setLineWrapMode(QTextEdit::WidgetWidth);
+    
+    // Use setPlainText instead of append for better text handling
+    ui->textBrowser->setPlainText(m_message);
+    
     QTextCursor textCursor = ui->textBrowser->textCursor();
     textCursor.movePosition(QTextCursor::Start);
     ui->textBrowser->setTextCursor(textCursor);
