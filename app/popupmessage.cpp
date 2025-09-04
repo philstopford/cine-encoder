@@ -48,7 +48,7 @@ PopupMessage::PopupMessage(QWidget *parent, Icon icon, const QString &text) :
     ui->imageLabel->setLayout(lt);
 
     auto *lab = new QLabel(ui->imageLabel);
-    lab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    lab->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     lab->setFixedSize(QSize(30, 30)* Helper::scaling());
 
     QString iconPath(":/resources/icons/svg/info.svg");
@@ -69,9 +69,32 @@ PopupMessage::PopupMessage(QWidget *parent, Icon icon, const QString &text) :
     auto *br = new QTextBrowser(ui->imageLabel);
     br->setEnabled(false);
     br->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    br->setWordWrapMode(QTextOption::WordWrap);
+    br->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    br->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     lt->addWidget(br, 0, 1);
     br->setText(text);
     br->setStyleSheet("color: #303030");
+
+    // Calculate optimal size based on text content
+    QFontMetrics fm(br->font());
+    const int maxWidth = 400 * Helper::scaling(); // Maximum popup width
+    const int minWidth = 275 * Helper::scaling(); // Minimum popup width
+    const int iconSpace = 48 * Helper::scaling(); // Space for icon and margins
+    const int margins = 24 * Helper::scaling(); // Total margins
+    
+    // Calculate text dimensions
+    QRect textRect = fm.boundingRect(QRect(0, 0, maxWidth - iconSpace - margins, 0), 
+                                    Qt::TextWordWrap, text);
+    
+    int optimalWidth = qMax(minWidth, qMin(maxWidth, textRect.width() + iconSpace + margins));
+    int optimalHeight = qMax(115 * Helper::scaling(), 
+                            textRect.height() + 80 * Helper::scaling()); // 80 for icon area + margins
+    
+    // Set the calculated size
+    ui_widget->setMinimumSize(optimalWidth, optimalHeight);
+    ui_widget->setMaximumSize(optimalWidth, optimalHeight);
+    resize(optimalWidth, optimalHeight);
 
     auto *tmr = new QTimer(this);
     tmr->setSingleShot(false);

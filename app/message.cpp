@@ -78,13 +78,30 @@ void Message::showEvent(QShowEvent *event)
     BaseWindow::showEvent(event);
     if (!m_windowActivated) {
         m_windowActivated = true;
-        //resize(QSize(330, 175) * Helper::scaling());
+        setMessage();
+        
+        // Calculate optimal size based on text content
+        QFontMetrics fm(ui->textBrowser->font());
+        const int maxWidth = 600 * Helper::scaling();
+        const int minWidth = 300 * Helper::scaling();
+        const int margins = 60 * Helper::scaling(); // Total margins including title bar
+        const int buttonHeight = 80 * Helper::scaling(); // Space for buttons and spacing
+        
+        // Calculate text dimensions
+        QRect textRect = fm.boundingRect(QRect(0, 0, maxWidth - margins, 0), 
+                                        Qt::TextWordWrap, m_message);
+        
+        int optimalWidth = qMax(minWidth, qMin(maxWidth, textRect.width() + margins));
+        int optimalHeight = qMax(165 * Helper::scaling(), 
+                                textRect.height() + buttonHeight);
+        
+        resize(optimalWidth, optimalHeight);
+        
+        // Center the dialog
         QSizeF size(this->size());
         QPoint center = QPointF(size.width()/2, size.height()/2).toPoint();
         move(parentWidget()->geometry().center() - center);
-        setMessage();
     }
-    this->adjustSize();
 }
 
 void Message::setMessage()
