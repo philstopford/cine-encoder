@@ -23,7 +23,7 @@ jobs:
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2019_64'
-        modules: 'qtmultimedia qtsvg'
+        modules: 'multimedia svg'
         cache: true
         
     - name: Verify Qt installation
@@ -186,7 +186,7 @@ jobs:
         version: '6.6.3'
         host: 'mac'
         target: 'desktop'
-        modules: 'qtmultimedia qtsvg'
+        modules: 'multimedia svg'
         cache: true
         
     - name: Verify Qt installation
