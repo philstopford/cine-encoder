@@ -2677,7 +2677,7 @@
                  <row/>
                  <column>
                   <property name="text">
-                   <string>File name</string>
+                   <string>File path</string>
                   </property>
                  </column>
                  <column>

@@ -36,6 +36,7 @@
 #include <QGridLayout>
 #include <QDockWidget>
 #include <QFile>
+#include <QFileInfo>
 #include <QSizePolicy>
 #include <QTranslator>
 #include <QScreen>
@@ -905,7 +906,7 @@ void MainWindow::setParameters()    // Set parameters
     ui->tableWidget->setDragDropOverwriteMode(true);
     ui->tableWidget->setDragDropMode(QAbstractItemView::DropOnly);
     ui->tableWidget->setDefaultDropAction(Qt::TargetMoveAction);
-    ui->tableWidget->setColumnWidth(ColumnIndex::FILENAME, 250);
+    ui->tableWidget->setColumnWidth(ColumnIndex::FILENAME, 350); // Make wider to accommodate path + filename
     ui->tableWidget->setColumnWidth(ColumnIndex::FORMAT, 80);
     ui->tableWidget->setColumnWidth(ColumnIndex::RESOLUTION, 85);
     ui->tableWidget->setColumnWidth(ColumnIndex::DURATION, 70);
@@ -923,6 +924,9 @@ void MainWindow::setParameters()    // Set parameters
 
     for (int i = ColumnIndex::T_DUR; i <= ColumnIndex::T_ID; i++)
         ui->tableWidget->hideColumn(i);
+    
+    // Hide PATH column since filename now shows full path
+    ui->tableWidget->hideColumn(ColumnIndex::PATH);
 
     //************* Read settings ******************//
     QList<int> dockSizesX{};
@@ -1558,9 +1562,12 @@ void MainWindow::get_current_data() // Get current data
     QString curDepth = GETTEXT(m_row, BITDEPTH);
     QString curSpace = GETTEXT(m_row, COLORSPACE);
 
-    m_curPath = GETTEXT(m_row, PATH);
-    m_curFilename = GETTEXT(m_row, FILENAME);
-    m_input_file = m_curPath + QString("/") + m_curFilename;
+    // FILENAME now contains the full path, extract path and filename separately
+    QString fullPath = GETTEXT(m_row, FILENAME);
+    QFileInfo fileInfo(fullPath);
+    m_curPath = fileInfo.absolutePath();
+    m_curFilename = fileInfo.fileName();
+    m_input_file = fullPath;
     m_hdr[CUR_COLOR_RANGE] = GETTEXT(m_row, COLORRANGE);
     m_hdr[CUR_COLOR_PRIMARY] = GETTEXT(m_row, COLORPRIM);
     m_hdr[CUR_COLOR_MATRIX] = GETTEXT(m_row, COLORMATRIX);
@@ -2438,7 +2445,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             }
 
             const QString arr_items[] = {
-                inputFile,
+                inputFolder + "/" + inputFile, // Combine path and filename for display
                 fmt_qstr,
                 size,
                 durationTime,
@@ -2459,7 +2466,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                 VINFO(0, "MaxCLL").replace(" cd/m2", ""),
                 VINFO(0, "MaxFALL").replace(" cd/m2", ""),
                 color_prim,
-                inputFolder,
+                inputFolder, // Keep separate path for internal use
                 QString::number(duration_double, 'f', 3),
                 chroma_coord,
                 white_coord,
