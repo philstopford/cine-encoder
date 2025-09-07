@@ -178,47 +178,47 @@ void ConfigurationManager::setValue(const QString &key, const QVariant &value)
 
 bool ConfigurationManager::getBool(const QString &key, bool defaultValue) const
 {
-    return getValue(key, defaultValue).toBool();
+    return getValue(key, defaultValue);
 }
 
 int ConfigurationManager::getInt(const QString &key, int defaultValue) const
 {
-    return getValue(key, defaultValue).toInt();
+    return getValue(key, defaultValue);
 }
 
 double ConfigurationManager::getDouble(const QString &key, double defaultValue) const
 {
-    return getValue(key, defaultValue).toDouble();
+    return getValue(key, defaultValue);
 }
 
 QString ConfigurationManager::getString(const QString &key, const QString &defaultValue) const
 {
-    return getValue(key, defaultValue).toString();
+    return getValue(key, defaultValue);
 }
 
 QStringList ConfigurationManager::getStringList(const QString &key, const QStringList &defaultValue) const
 {
-    return getValue(key, defaultValue).toStringList();
+    return getValue(key, defaultValue);
 }
 
 QSize ConfigurationManager::getSize(const QString &key, const QSize &defaultValue) const
 {
-    return getValue(key, defaultValue).toSize();
+    return getValue(key, defaultValue);
 }
 
 QPoint ConfigurationManager::getPoint(const QString &key, const QPoint &defaultValue) const
 {
-    return getValue(key, defaultValue).toPoint();
+    return getValue(key, defaultValue);
 }
 
 QColor ConfigurationManager::getColor(const QString &key, const QColor &defaultValue) const
 {
-    return getValue(key, defaultValue).value<QColor>();
+    return getValue(key, defaultValue);
 }
 
 QFont ConfigurationManager::getFont(const QString &key, const QFont &defaultValue) const
 {
-    return getValue(key, defaultValue).value<QFont>();
+    return getValue(key, defaultValue);
 }
 
 void ConfigurationManager::setBool(const QString &key, bool value)
