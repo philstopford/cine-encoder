@@ -240,6 +240,9 @@ MainWindow::MainWindow(QWidget *parent):
     
     // Load column visibility settings
     loadColumnVisibilitySettings();
+    
+    // Load column order settings  
+    loadColumnOrderSettings();
 }
 
 MainWindow::~MainWindow()
@@ -365,6 +368,9 @@ void MainWindow::closeEvent(QCloseEvent *event) // Show prompt when close app
         
         // Save column visibility settings
         saveColumnVisibilitySettings();
+        
+        // Save column order settings
+        saveColumnOrderSettings();
 
         if (m_pTrayIcon)
             m_pTrayIcon->deleteLater();
@@ -737,6 +743,12 @@ void MainWindow::createConnections()
     ui->tableWidget->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->tableWidget->horizontalHeader(), &QHeaderView::customContextMenuRequested, 
             this, &MainWindow::provideHeaderContextMenu);
+    
+    // Enable drag reordering for columns
+    ui->tableWidget->horizontalHeader()->setSectionsMovable(true);
+    ui->tableWidget->horizontalHeader()->setDragDropMode(QAbstractItemView::InternalMove);
+    connect(ui->tableWidget->horizontalHeader(), &QHeaderView::sectionMoved,
+            this, &MainWindow::onColumnSectionMoved);
 
     //********** File Browser actions **************//
     ui->listFiles->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -3746,4 +3758,70 @@ void MainWindow::updateColumnVisibilityMenus()
         bool visible = !ui->tableWidget->isColumnHidden(i);
         m_columnActions[i]->setChecked(visible);
     }
+}
+
+/************************************************
+** Column Order Management
+************************************************/
+
+void MainWindow::loadColumnOrderSettings()
+{
+    QList<int> visualOrder(31);
+    
+    // Load saved order, defaulting to natural order (0,1,2,3...)
+    for (int i = 0; i < 31; ++i) {
+        visualOrder[i] = CONFIG.getInt(QString("table/column_order_%1").arg(i), i);
+    }
+    
+    // Validate and fix any invalid order (ensure each position 0-30 appears exactly once)
+    QList<bool> usedPositions(31, false);
+    QList<int> invalidColumns;
+    
+    // Mark used positions and identify invalid ones
+    for (int i = 0; i < 31; ++i) {
+        int pos = visualOrder[i];
+        if (pos >= 0 && pos < 31 && !usedPositions[pos]) {
+            usedPositions[pos] = true;
+        } else {
+            invalidColumns.append(i);
+        }
+    }
+    
+    // Assign unused positions to invalid columns
+    int nextAvailablePos = 0;
+    for (int col : invalidColumns) {
+        while (nextAvailablePos < 31 && usedPositions[nextAvailablePos]) {
+            nextAvailablePos++;
+        }
+        if (nextAvailablePos < 31) {
+            visualOrder[col] = nextAvailablePos;
+            usedPositions[nextAvailablePos] = true;
+        }
+    }
+    
+    // Apply the column order to the table header
+    QHeaderView *header = ui->tableWidget->horizontalHeader();
+    for (int logical = 0; logical < 31; ++logical) {
+        int visual = visualOrder[logical];
+        header->moveSection(header->visualIndex(logical), visual);
+    }
+}
+
+void MainWindow::saveColumnOrderSettings()
+{
+    QHeaderView *header = ui->tableWidget->horizontalHeader();
+    for (int logical = 0; logical < 31; ++logical) {
+        int visual = header->visualIndex(logical);
+        CONFIG.setInt(QString("table/column_order_%1").arg(logical), visual);
+    }
+}
+
+void MainWindow::onColumnSectionMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex)
+{
+    Q_UNUSED(logicalIndex)
+    Q_UNUSED(oldVisualIndex)
+    Q_UNUSED(newVisualIndex)
+    
+    // Save the new column order immediately when user drags a column
+    saveColumnOrderSettings();
 }

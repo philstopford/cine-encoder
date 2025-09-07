@@ -350,6 +350,11 @@ private slots:
     void loadColumnVisibilitySettings();
     void saveColumnVisibilitySettings();
     void updateColumnVisibilityMenus();
+    
+    // ============== Column Reordering ==============
+    void loadColumnOrderSettings();
+    void saveColumnOrderSettings();
+    void onColumnSectionMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex);
 };
 
 #endif // WIDGET_H
