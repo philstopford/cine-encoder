@@ -307,7 +307,7 @@ bool ConfigurationManager::validateValue(const QString &key, const QVariant &val
     const ConfigKey &configKey = m_keys[key];
     
     // Check type compatibility
-    if (!value.canConvert(configKey.defaultValue.type())) {
+    if (!value.canConvert(configKey.defaultValue.metaType())) {
         m_validationErrors.append(QString("Type mismatch for key %1").arg(key));
         return false;
     }
