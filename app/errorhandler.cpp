@@ -16,6 +16,7 @@
 #include <QMessageBox>
 #include <QApplication>
 #include <QFileInfo>
+#include <QPushButton>
 
 ErrorHandler::ErrorHandler(QObject *parent) : QObject(parent)
 {
