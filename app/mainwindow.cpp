@@ -23,6 +23,7 @@
 #include "report.h"
 #include "streamconverter.h"
 #include "fileiconprovider.h"
+#include "configurationmanager.h"
 #include <QDragEnterEvent>
 #include <QMimeDatabase>
 #include <QMimeData>
@@ -40,6 +41,7 @@
 #include <QSizePolicy>
 #include <QTranslator>
 #include <QScreen>
+#include <QHeaderView>
 #include <iostream>
 #include <iomanip>
 #include <cmath>
@@ -235,6 +237,9 @@ MainWindow::MainWindow(QWidget *parent):
     ui->labelPreview->installEventFilter(this);
     ui->frameMiddle->setFocusPolicy(Qt::StrongFocus);
     setAcceptDrops(true);
+    
+    // Load column visibility settings
+    loadColumnVisibilitySettings();
 }
 
 MainWindow::~MainWindow()
@@ -683,6 +688,13 @@ void MainWindow::createConnections()
     connect(m_pActResetView, &QAction::triggered, this, &MainWindow::resetView);
     for (int i = 0; i < DOCKS_COUNT; i++)
         menuView->addAction(m_pDocks[i]->toggleViewAction());
+    menuView->addSeparator();
+    
+    // Column visibility submenu
+    setupColumnVisibilityMenus();
+    menuView->addMenu(m_pColumnsMenu);
+    menuView->addSeparator();
+    
     menuView->addAction(m_pActResetView);
 
     m_pActSettings = new QAction(tr("Settings"), menuPreferences);
@@ -716,6 +728,11 @@ void MainWindow::createConnections()
     m_pItemMenu->addSeparator();
     m_pItemMenu->addAction(m_pActSplitVideo);
     connect(ui->tableWidget, &QTableWidget::customContextMenuRequested, this, &MainWindow::provideContextMenu);
+    
+    // Setup header context menu for column visibility
+    ui->tableWidget->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->tableWidget->horizontalHeader(), &QHeaderView::customContextMenuRequested, 
+            this, &MainWindow::provideHeaderContextMenu);
 
     //********** File Browser actions **************//
     ui->listFiles->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -3639,5 +3656,87 @@ void MainWindow::updateFileIncompatibilityStatus(int fileRow)
             filenameItem->setIcon(QIcon());
             filenameItem->setToolTip("");
         }
+    }
+}
+
+
+/************************************************
+** Column Visibility Management
+************************************************/
+
+void MainWindow::setupColumnVisibilityMenus()
+{
+    // Initialize column names array
+    m_columnNames = {
+        tr("File path"), tr("Format"), tr("Resolution"), tr("Duration"), tr("FPS"), tr("AR"), tr("Status"), tr("Preset"),
+        tr("Bitrate"), tr("Subsampling"), tr("Bit depth"), tr("Color space"), tr("Color range"), tr("Color prim"),
+        tr("Color mtrx"), tr("Transfer"), tr("Max lum"), tr("Min lum"), tr("Max CLL"), tr("Max Fall"), tr("Master display"),
+        tr("Path"), tr("Duration (technical)"), tr("Chroma coord"), tr("White coord"), tr("Stream size"), 
+        tr("Width (technical)"), tr("Height (technical)"), tr("Start Time"), tr("End Time"), tr("ID")
+    };
+
+    // Create Columns menu
+    m_pColumnsMenu = new QMenu(tr("Columns"), this);
+    
+    // Create header context menu
+    m_pHeaderContextMenu = new QMenu(this);
+    
+    // Create column visibility actions
+    for (int i = 0; i < m_columnNames.size(); ++i) {
+        auto *action = new QAction(m_columnNames[i], this);
+        action->setCheckable(true);
+        action->setData(i);
+        connect(action, &QAction::triggered, this, &MainWindow::onToggleColumnVisibility);
+        
+        m_columnActions.append(action);
+        m_pColumnsMenu->addAction(action);
+        m_pHeaderContextMenu->addAction(action);
+    }
+}
+
+void MainWindow::provideHeaderContextMenu(const QPoint& pos)
+{
+    updateColumnVisibilityMenus();
+    m_pHeaderContextMenu->exec(ui->tableWidget->horizontalHeader()->mapToGlobal(pos));
+}
+
+void MainWindow::onToggleColumnVisibility()
+{
+    auto *action = qobject_cast<QAction*>(sender());
+    if (!action) return;
+    
+    int column = action->data().toInt();
+    bool visible = action->isChecked();
+    
+    ui->tableWidget->setColumnHidden(column, !visible);
+    
+    // Save the setting
+    CONFIG.setBool(QString("table/column_visible_%1").arg(column), visible);
+}
+
+void MainWindow::loadColumnVisibilitySettings()
+{
+    for (int i = 0; i < 31; ++i) {
+        bool visible = CONFIG.getBool(QString("table/column_visible_%1").arg(i), 
+                                    i < 9); // First 9 columns visible by default
+        ui->tableWidget->setColumnHidden(i, !visible);
+    }
+    
+    updateColumnVisibilityMenus();
+}
+
+void MainWindow::saveColumnVisibilitySettings()
+{
+    for (int i = 0; i < 31; ++i) {
+        bool visible = !ui->tableWidget->isColumnHidden(i);
+        CONFIG.setBool(QString("table/column_visible_%1").arg(i), visible);
+    }
+}
+
+void MainWindow::updateColumnVisibilityMenus()
+{
+    for (int i = 0; i < m_columnActions.size(); ++i) {
+        bool visible = !ui->tableWidget->isColumnHidden(i);
+        m_columnActions[i]->setChecked(visible);
     }
 }

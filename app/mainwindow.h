@@ -152,7 +152,13 @@ private:
     QMenu       *m_pItemMenu,
                 *m_pFilesItemMenu,
                 *m_pSectionMenu,
-                *m_pPresetMenu;
+                *m_pPresetMenu,
+                *m_pColumnsMenu,
+                *m_pHeaderContextMenu;
+
+    // ============= Column visibility =============
+    QStringList m_columnNames;
+    QList<QAction*> m_columnActions;
 
     // ============= Processes =============
     QProcess    *m_pProcessThumbCreation;
@@ -336,6 +342,14 @@ private slots:
     void onAddToTask();
     void onExtract(QStreamView::Content type, int num);
     void updateFileIncompatibilityStatus(int fileRow);
+    
+    // ============== Column Visibility ==============
+    void provideHeaderContextMenu(const QPoint& pos);
+    void onToggleColumnVisibility();
+    void setupColumnVisibilityMenus();
+    void loadColumnVisibilitySettings();
+    void saveColumnVisibilitySettings();
+    void updateColumnVisibilityMenus();
 };
 
 #endif // WIDGET_H
