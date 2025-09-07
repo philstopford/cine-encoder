@@ -48,7 +48,7 @@ PopupMessage::PopupMessage(QWidget *parent, Icon icon, const QString &text) :
     ui->imageLabel->setLayout(lt);
 
     auto *lab = new QLabel(ui->imageLabel);
-    lab->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    lab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     lab->setFixedSize(QSize(30, 30)* Helper::scaling());
 
     QString iconPath(":/resources/icons/svg/info.svg");
@@ -69,36 +69,9 @@ PopupMessage::PopupMessage(QWidget *parent, Icon icon, const QString &text) :
     auto *br = new QTextBrowser(ui->imageLabel);
     br->setEnabled(false);
     br->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    br->setWordWrapMode(QTextOption::WordWrap);
-    br->setLineWrapMode(QTextEdit::WidgetWidth);
-    br->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    br->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     lt->addWidget(br, 0, 1);
-    br->setPlainText(text); // Use setPlainText instead of setText for better wrapping
+    br->setText(text);
     br->setStyleSheet("color: #303030");
-
-    // Calculate optimal size based on text content with improved measurement
-    QFontMetrics fm(br->font());
-    const int maxWidth = 400 * Helper::scaling(); // Maximum popup width
-    const int minWidth = 275 * Helper::scaling(); // Minimum popup width
-    const int iconSpace = 48 * Helper::scaling(); // Space for icon and margins
-    const int margins = 24 * Helper::scaling(); // Total margins
-    
-    // Calculate text dimensions with proper word wrapping
-    const int availableTextWidth = maxWidth - iconSpace - margins;
-    QRect textRect = fm.boundingRect(QRect(0, 0, availableTextWidth, 0), 
-                                    Qt::TextWordWrap, text);
-    
-    // Add padding for better appearance
-    const int textPadding = 10 * Helper::scaling();
-    int optimalWidth = qMax(minWidth, qMin(maxWidth, textRect.width() + iconSpace + margins + textPadding));
-    int optimalHeight = qMax(static_cast<int>(115 * Helper::scaling()), 
-                            textRect.height() + static_cast<int>(80 * Helper::scaling()) + textPadding);
-    
-    // Set the calculated size
-    ui_widget->setMinimumSize(optimalWidth, optimalHeight);
-    ui_widget->setMaximumSize(optimalWidth, optimalHeight);
-    resize(optimalWidth, optimalHeight);
 
     auto *tmr = new QTimer(this);
     tmr->setSingleShot(false);
