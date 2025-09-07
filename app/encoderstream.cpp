@@ -64,6 +64,7 @@ void EncoderStream::initEncoding(StreamData *data,
     m_preset_0 = QStringList();
     m_preset = QStringList();
     m_error_message = "";
+    m_error_lines.clear();  // Clear accumulated error lines for new encoding
     m_output_file = QFileInfo(data->output_file).absolutePath() + "/" +
                     QFileInfo(data->output_file).completeBaseName() +
                     "_" + numToStr(m_pData->stream) + ".";
@@ -353,7 +354,33 @@ void EncoderStream::progress()   // Progress
     QString line = QString(m_pProcessEncoding->readAllStandardOutput());
     const QString line_mod = line.replace("   ", " ").replace("  ", " ").replace("  ", " ").replace("= ", "=");
     emit onEncodingLog(line_mod);
+    
+    // Accumulate potential error lines for better error reporting
+    // Look for lines that indicate errors, warnings, or important status information
+    if (line_mod.contains("error", Qt::CaseInsensitive) || 
+        line_mod.contains("failed", Qt::CaseInsensitive) ||
+        line_mod.contains("invalid", Qt::CaseInsensitive) ||
+        line_mod.contains("unable", Qt::CaseInsensitive) ||
+        line_mod.contains("cannot", Qt::CaseInsensitive) ||
+        line_mod.contains("not found", Qt::CaseInsensitive) ||
+        line_mod.contains("no such", Qt::CaseInsensitive) ||
+        line_mod.contains("unrecognized", Qt::CaseInsensitive) ||
+        line_mod.contains("unknown", Qt::CaseInsensitive) ||
+        line_mod.contains("could not", Qt::CaseInsensitive)) {
+        
+        QString cleanLine = line_mod.trimmed();
+        if (!cleanLine.isEmpty() && !m_error_lines.contains(cleanLine)) {
+            m_error_lines.append(cleanLine);
+            // Keep only the last 20 error lines to avoid memory bloat
+            if (m_error_lines.size() > 20) {
+                m_error_lines.removeFirst();
+            }
+        }
+    }
+    
+    // Store the most recent line for backward compatibility
     m_error_message = line_mod;
+    
     const int pos_st = line_mod.indexOf("time=");
     if (pos_st != -1) {
         const QString data = line_mod.split("time=").at(1);
@@ -485,8 +512,24 @@ void EncoderStream::completed(int exit_code)
     if (exit_code == 0) {
         emit onEncodingProgress(100, 0.0f);
         emit onEncodingCompleted();
-    } else
-        emit onEncodingError(m_error_message);
+    } else {
+        // Provide a comprehensive error message with accumulated error information
+        QString detailedError;
+        if (!m_error_lines.isEmpty()) {
+            detailedError = tr("FFmpeg encoding failed with exit code %1:\n\n").arg(exit_code);
+            detailedError += tr("Error details:\n");
+            detailedError += m_error_lines.join("\n");
+        } else if (!m_error_message.trimmed().isEmpty()) {
+            // Fallback to last message if no specific errors were captured
+            detailedError = tr("FFmpeg encoding failed with exit code %1:\n\n").arg(exit_code);
+            detailedError += m_error_message;
+        } else {
+            // Generic error message
+            detailedError = tr("FFmpeg encoding failed with exit code %1.\n\nNo detailed error information available.").arg(exit_code);
+        }
+        
+        emit onEncodingError(detailedError);
+    }
 }
 
 void EncoderStream::abort()
