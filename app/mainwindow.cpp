@@ -362,6 +362,9 @@ void MainWindow::closeEvent(QCloseEvent *event) // Show prompt when close app
         stn.endGroup();
 
         saveXMLSettingsFile();
+        
+        // Save column visibility settings
+        saveColumnVisibilitySettings();
 
         if (m_pTrayIcon)
             m_pTrayIcon->deleteLater();
@@ -692,6 +695,7 @@ void MainWindow::createConnections()
     
     // Column visibility submenu
     setupColumnVisibilityMenus();
+    updateColumnVisibilityMenus(); // Ensure checkmarks reflect current state
     menuView->addMenu(m_pColumnsMenu);
     menuView->addSeparator();
     
@@ -3722,7 +3726,10 @@ void MainWindow::loadColumnVisibilitySettings()
         ui->tableWidget->setColumnHidden(i, !visible);
     }
     
-    updateColumnVisibilityMenus();
+    // Only update menus if they've been initialized
+    if (!m_columnActions.isEmpty()) {
+        updateColumnVisibilityMenus();
+    }
 }
 
 void MainWindow::saveColumnVisibilitySettings()
