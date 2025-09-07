@@ -12,6 +12,7 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "uiconnectionhelper.h"
 #include "notification.h"
 #include "settings.h"
 #include "preset.h"
@@ -71,7 +72,6 @@ using namespace MediaInfoLib;
 #define WINDOW_SIZE (QSize(1500, 920) * Helper::scaling())
 #define ROWHEIGHT 25
 #define ROWHEIGHTDFLT 45
-#define DEFAULTTIMER 30
 #define DEFAULTPATH QDir::homePath()
 #define PRESETFILE (SETTINGSPATH + QString("/presets.ini"))
 #define XMLPRESETFILE (SETTINGSPATH + QString("/presets.xml"))
@@ -518,7 +518,7 @@ void MainWindow::setTrayIcon()
 
 void MainWindow::createConnections()
 {
-    // Buttons
+    // Use UIConnectionHelper for button array connections
     const int BTN_COUNT = 31;
     QPushButton *btns[BTN_COUNT] = {
         ui->closeWindow,  ui->hideWindow,    ui->expandWindow,
@@ -546,15 +546,18 @@ void MainWindow::createConnections()
             &MainWindow::onBack,         &MainWindow::onForward,       &MainWindow::onRemoveAllFiles,
             &MainWindow::onDeselectTitles
     };
-    for (int i = 0; i < BTN_COUNT; i++)
-        connect(btns[i], &QPushButton::clicked, this, btn_methods[i]);
+    UIConnectionHelper::connectButtons(btns, btn_methods, BTN_COUNT, this);
 
-    connect(ui->comboBox_changePrio, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-            this, &MainWindow::changePriority);
+    // Individual connections using helper
+    UIConnectionHelper::connectSafely(ui->comboBox_changePrio, 
+                                     static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+                                     this, &MainWindow::changePriority);
 
     // Streams actions
-    connect(ui->streamAudio, &QStreamView::onExtractTrack, this, &MainWindow::onExtract);
-    connect(ui->streamSubtitle, &QStreamView::onExtractTrack, this, &MainWindow::onExtract);
+    UIConnectionHelper::connectSafely(ui->streamAudio, &QStreamView::onExtractTrack, 
+                                     this, &MainWindow::onExtract);
+    UIConnectionHelper::connectSafely(ui->streamSubtitle, &QStreamView::onExtractTrack, 
+                                     this, &MainWindow::onExtract);
     
     // Stream selection change notifications for incompatibility highlighting
     connect(ui->streamAudio, &QStreamView::streamSelectionChanged, this, [this]() {
@@ -564,40 +567,60 @@ void MainWindow::createConnections()
         updateFileIncompatibilityStatus(ui->tableWidget->currentRow());
     });
 
-    // Table
-    connect(ui->tableWidget, &QTableWidget::itemSelectionChanged,
-            this, &MainWindow::onTableSelectionChanged);
+    // Table and UI controls
+    UIConnectionHelper::connectSafely(ui->tableWidget, &QTableWidget::itemSelectionChanged,
+                                     this, &MainWindow::onTableSelectionChanged);
+    UIConnectionHelper::connectSafely(ui->switchViewMode, &QDoubleButton::indexChanged, 
+                                     this, &MainWindow::onViewMode);
+    UIConnectionHelper::connectSafely(ui->sliderTimeline, &QSlider::valueChanged, 
+                                     this, &MainWindow::onSliderTimelineChanged);
+    UIConnectionHelper::connectSafely(ui->sliderResize, &QSlider::valueChanged, 
+                                     this, &MainWindow::onSliderResizeChanged);
 
-    connect(ui->switchViewMode, &QDoubleButton::indexChanged, this, &MainWindow::onViewMode);
+    // Tree widget connections
+    UIConnectionHelper::connectSafely(ui->treeWidget, &QTreeWidget::itemCollapsed, 
+                                     this, &MainWindow::onTreeCollapsed);
+    UIConnectionHelper::connectSafely(ui->treeWidget, &QTreeWidget::itemExpanded, 
+                                     this, &MainWindow::onTreeExpanded);
+    UIConnectionHelper::connectSafely(ui->treeWidget, &QTreeWidget::itemChanged, 
+                                     this, &MainWindow::onTreeChanged);
+    UIConnectionHelper::connectSafely(ui->treeWidget, &QTreeWidget::itemDoubleClicked, 
+                                     this, &MainWindow::onTreeDblClicked);
 
-    connect(ui->comboBoxMode, SIGNAL(currentIndexChanged(int)), this, SLOT(onComboModeChanged(int)));
-    connect(ui->sliderTimeline, &QSlider::valueChanged, this, &MainWindow::onSliderTimelineChanged);
-    connect(ui->sliderResize, &QSlider::valueChanged, this, &MainWindow::onSliderResizeChanged);
+    UIConnectionHelper::connectSafely(ui->treeDirs, &QTreeView::clicked, 
+                                     this, &MainWindow::onTreeDirsClicked);
+    UIConnectionHelper::connectSafely(ui->treeDirs, &QTreeView::doubleClicked, 
+                                     this, &MainWindow::onTreeDirsDblClicked);
 
-    connect(ui->treeWidget, &QTreeWidget::itemCollapsed, this, &MainWindow::onTreeCollapsed);
-    connect(ui->treeWidget, &QTreeWidget::itemExpanded, this, &MainWindow::onTreeExpanded);
-    connect(ui->treeWidget, &QTreeWidget::itemChanged, this, &MainWindow::onTreeChanged);
-    connect(ui->treeWidget, &QTreeWidget::itemDoubleClicked, this, &MainWindow::onTreeDblClicked);
-
-    connect(ui->treeDirs, &QTreeView::clicked, this, &MainWindow::onTreeDirsClicked);
-    connect(ui->treeDirs, &QTreeView::doubleClicked, this, &MainWindow::onTreeDirsDblClicked);
-
+    // Encoder connections
     m_pEncoder = new Encoder(this);
-    connect(m_pEncoder, &Encoder::onEncodingMode, this, &MainWindow::onEncodingMode);
-    connect(m_pEncoder, &Encoder::onEncodingStarted, this, &MainWindow::onEncodingStarted);
-    connect(m_pEncoder, &Encoder::onEncodingInitError, this, &MainWindow::onEncodingInitError);
-    connect(m_pEncoder, &Encoder::onEncodingProgress, this, &MainWindow::onEncodingProgress);
-    connect(m_pEncoder, &Encoder::onEncodingLog, this, &MainWindow::onEncodingLog);
-    connect(m_pEncoder, &Encoder::onEncodingCompleted, this, &MainWindow::onEncodingCompleted);
-    connect(m_pEncoder, &Encoder::onEncodingAborted, this, &MainWindow::onEncodingAborted);
-    connect(m_pEncoder, &Encoder::onEncodingError, this, &MainWindow::onEncodingError);
+    UIConnectionHelper::connectSafely(m_pEncoder, &Encoder::onEncodingMode, 
+                                     this, &MainWindow::onEncodingMode);
+    UIConnectionHelper::connectSafely(m_pEncoder, &Encoder::onEncodingStarted, 
+                                     this, &MainWindow::onEncodingStarted);
+    UIConnectionHelper::connectSafely(m_pEncoder, &Encoder::onEncodingInitError, 
+                                     this, &MainWindow::onEncodingInitError);
+    UIConnectionHelper::connectSafely(m_pEncoder, &Encoder::onEncodingProgress, 
+                                     this, &MainWindow::onEncodingProgress);
+    UIConnectionHelper::connectSafely(m_pEncoder, &Encoder::onEncodingLog, 
+                                     this, &MainWindow::onEncodingLog);
+    UIConnectionHelper::connectSafely(m_pEncoder, &Encoder::onEncodingCompleted, 
+                                     this, &MainWindow::onEncodingCompleted);
+    UIConnectionHelper::connectSafely(m_pEncoder, &Encoder::onEncodingAborted, 
+                                     this, &MainWindow::onEncodingAborted);
+    UIConnectionHelper::connectSafely(m_pEncoder, &Encoder::onEncodingError, 
+                                     this, &MainWindow::onEncodingError);
 
+    // Timer connections (keeping old style for compatibility with SIGNAL/SLOT macros)
     m_pTimer = new QTimer(this);
     connect(m_pTimer, SIGNAL(timeout()), this, SLOT(repeatHandler_Type_1()));
     m_pTimerSetThumbnail = new QTimer(this);
     m_pTimerSetThumbnail->setSingleShot(true);
     m_pTimerSetThumbnail->setInterval(800);
     connect(m_pTimerSetThumbnail, SIGNAL(timeout()), this, SLOT(repeatHandler_Type_2()));
+
+    // Legacy combo box connection (keeping for compatibility)  
+    connect(ui->comboBoxMode, SIGNAL(currentIndexChanged(int)), this, SLOT(onComboModeChanged(int)));
 
     //************ Top menu actions ****************//
     m_pMenuBar = new QMenuBar(ui->frame_top);

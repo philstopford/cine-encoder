@@ -53,7 +53,15 @@ SOURCES += \
     preset.cpp \
     progress.cpp \
     settings.cpp \
-    streamconverter.cpp
+    settingsdata.cpp \
+    settingscontroller.cpp \
+    streamconverter.cpp \
+    uiconnectionhelper.cpp \
+    logger.cpp \
+    inputvalidator.cpp \
+    errorhandler.cpp \
+    encodingmanager.cpp \
+    configurationmanager.cpp
 
 HEADERS += \
     fileiconprovider.h \
@@ -73,8 +81,16 @@ HEADERS += \
     preset.h \
     progress.h \
     settings.h \
+    settingsdata.h \
+    settingscontroller.h \
     streamconverter.h \
-    tables.h
+    tables.h \
+    uiconnectionhelper.h \
+    logger.h \
+    inputvalidator.h \
+    errorhandler.h \
+    encodingmanager.h \
+    configurationmanager.h
 
 FORMS += \
     mainwindow.ui \

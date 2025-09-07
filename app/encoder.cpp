@@ -124,37 +124,40 @@ void Encoder::initEncoding(const QString  &temp_file,
     // Comprehensive pre-flight validation of stream compatibility
     QStringList validationErrors;
     
-    // Validate audio streams
+    // Get the target audio codec for transcoding consideration
+    const QString targetAudioCodec = t.arr_acodec[CE_CODEC][CE_AUDIO_CODEC];
+    
+    // Validate audio streams (considering transcoding)
     for (int i = 0; i < data.fields[Data::audioFormats].size(); i++) {
         const QString& audioFormat = data.fields[Data::audioFormats][i];
-        if (!Helper::isAudioSupported(container, audioFormat)) {
+        if (Helper::isAudioIncompatible(container, audioFormat, targetAudioCodec)) {
             validationErrors.append(tr("Audio stream %1 (%2) is not compatible with container '%3'")
                                   .arg(i + 1).arg(audioFormat).arg(container));
         }
     }
     
-    // Validate external audio streams
+    // Validate external audio streams (considering transcoding)
     for (int i = 0; i < data.fields[Data::externAudioFormats].size(); i++) {
         const QString& audioFormat = data.fields[Data::externAudioFormats][i];
-        if (!Helper::isAudioSupported(container, audioFormat)) {
+        if (Helper::isAudioIncompatible(container, audioFormat, targetAudioCodec)) {
             validationErrors.append(tr("External audio stream %1 (%2) is not compatible with container '%3'")
                                   .arg(i + 1).arg(audioFormat).arg(container));
         }
     }
     
-    // Validate subtitle streams
+    // Validate subtitle streams (considering burn-in behavior)
     for (int i = 0; i < data.fields[Data::subtFormats].size(); i++) {
         const QString& subtFormat = data.fields[Data::subtFormats][i];
-        if (!Helper::isSubtitleSupported(container, subtFormat)) {
+        if (Helper::isSubtitleIncompatible(container, subtFormat, CE_USE_PRESET_SUBTITLES == 1)) {
             validationErrors.append(tr("Subtitle stream %1 (%2) is not compatible with container '%3'")
                                   .arg(i + 1).arg(subtFormat).arg(container));
         }
     }
     
-    // Validate external subtitle streams
+    // Validate external subtitle streams (considering burn-in behavior)
     for (int i = 0; i < data.fields[Data::externSubtFormats].size(); i++) {
         const QString& subtFormat = data.fields[Data::externSubtFormats][i];
-        if (!Helper::isSubtitleSupported(container, subtFormat)) {
+        if (Helper::isSubtitleIncompatible(container, subtFormat, CE_USE_PRESET_SUBTITLES == 1)) {
             validationErrors.append(tr("External subtitle stream %1 (%2) is not compatible with container '%3'")
                                   .arg(i + 1).arg(subtFormat).arg(container));
         }

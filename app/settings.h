@@ -20,6 +20,7 @@
     #include "basewindow.h"
 #endif
 #include "helper.h"
+#include "settingscontroller.h"
 
 
 namespace Ui
@@ -82,7 +83,12 @@ private:
     void subtitles_color_change();
     void subtitles_background_color_change();
 
+    // UI setup methods (separated concerns)
+    void setupConnections();
+    void setupUIComponents();
+
     Ui::Settings *ui;
+    SettingsController *m_controller;
 
     QColor  *m_pSubtitlesColor,
             *m_pSubtitlesBackgroundColor;

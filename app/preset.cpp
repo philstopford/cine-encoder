@@ -12,6 +12,7 @@
 
 #include "preset.h"
 #include "ui_preset.h"
+#include "uiconnectionhelper.h"
 #include "tables.h"
 #include "message.h"
 #include "helper.h"
@@ -49,68 +50,7 @@ Preset::Preset(QWidget *parent, QVector<QString> *pOld_param, int theme):
     ui->label_title->setFont(font);
     ui->frameMiddle->setFocusPolicy(Qt::StrongFocus);
 
-    connect(ui->closeWindow, &QPushButton::clicked, this, &Preset::onCloseWindow);
-    connect(ui->buttonCancel, &QPushButton::clicked, this, &Preset::onCloseWindow);
-    connect(ui->buttonApply, &QPushButton::clicked, this, &Preset::onButtonApply);
-    // Tab buttons
-    QList<QPushButton*> tabButtons = {ui->buttonTab_presetTransform, ui->buttonTab_presetVideo,
-                                      ui->buttonTab_presetAudio, ui->buttonTab_presetMetadata,
-                                      ui->buttonTab_presetSubtitles};
-    for (int i = 0; i < tabButtons.size(); i++) {
-        connect(tabButtons[i], &QPushButton::clicked, this, [this, i, tabButtons]() {
-            for (int j = 0; j < tabButtons.size(); j++)
-                tabButtons[j]->setEnabled(i != j);
-            ui->tabWidgetSettings->setCurrentIndex(i);
-        });
-    }
-
-    QComboBox *iboxes[] = {
-        ui->comboBoxAspectRatio, ui->comboBoxFrameRate,
-        ui->comboBox_preset, ui->comboBox_pass
-    };
-    FnVoidInt iboxes_methods[] = {
-        SLT(onComboBoxAspectRatio_indexChanged), SLT(onComboBoxFrameRate_indexChanged),
-        SLT(onComboBox_preset_indexChanged), SLT(onComboBox_pass_indexChanged)
-    };
-    for (int i = 0; i < 4; i++)
-        connect(iboxes[i], static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-                this, iboxes_methods[i]);
-
-    QComboBox *boxes[] = {
-        ui->comboBox_width, ui->comboBox_height, ui->comboBox_codec,
-        ui->comboBox_mode, ui->comboBox_audio_codec, ui->comboBox_master_disp
-    };
-    FnVoidStr boxes_methods[] = {
-        SLT(onComboBox_width_textChanged), SLT(onComboBox_height_textChanged), SLT(onComboBox_codec_textChanged),
-        SLT(onComboBox_mode_textChanged), SLT(onComboBox_audio_codec_textChanged), SLT(onComboBox_master_disp_textChanged)
-    };
-    for (int i = 0; i < 6; i++)
-        connect(boxes[i], &QComboBox::currentTextChanged, this, boxes_methods[i]);
-
-    connect(ui->comboBox_container, &QComboBox::currentTextChanged,
-            this, &Preset::onComboBox_container_textChanged);
-    connect(ui->comboBox_audio_bitrate, &QComboBox::currentTextChanged,
-            this, &Preset::onComboBox_audio_bitrate_textChanged);
-    connect(ui->lineEdit_bitrate, &QLineEdit::editingFinished,
-            this, &Preset::onLineEdit_bitrate_editingFinished);
-
-    connect(this, &Preset::destroyed, this, [this]() {
-        SETTINGS(stn);
-        stn.beginGroup("PresetWidget");
-        stn.setValue("PresetWidget/geometry", this->saveGeometry());
-        stn.endGroup();
-    });
-
-    QPushButton *btns[] = {
-            ui->preset_subtitles_background_color, ui->preset_subtitles_color
-    };
-    FnVoidVoid btn_methods[] = {
-            SLT(subtitles_background_color_change), SLT(subtitles_color_change)
-    };
-    for (int i = 0; i < 2; i++)
-        connect(btns[i], &QPushButton::clicked, this, btn_methods[i]);
-
-    connect(ui->comboBox_preset_subtitles_font, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, SLT(onComboBoxSubtitlesFont_indexChanged));
+    setupConnections();
 }
 
 Preset::~Preset()
@@ -1297,4 +1237,77 @@ void Preset::subtitles_background_color_change() {
         ui->preset_subtitles_background_color->setStyleSheet(s);
         ui->preset_subtitles_background_color->update();
     }
+}
+
+void Preset::setupConnections()
+{
+    // Basic window controls
+    UIConnectionHelper::connectSafely(ui->closeWindow, &QPushButton::clicked, 
+                                     this, &Preset::onCloseWindow);
+    UIConnectionHelper::connectSafely(ui->buttonCancel, &QPushButton::clicked,
+                                     this, &Preset::onCloseWindow);
+    UIConnectionHelper::connectSafely(ui->buttonApply, &QPushButton::clicked,
+                                     this, &Preset::onButtonApply);
+
+    // Tab buttons using helper
+    QList<QPushButton*> tabButtons = {
+        ui->buttonTab_presetTransform, ui->buttonTab_presetVideo,
+        ui->buttonTab_presetAudio, ui->buttonTab_presetMetadata,
+        ui->buttonTab_presetSubtitles
+    };
+    UIConnectionHelper::connectTabButtons(tabButtons, this, [this](int index) {
+        ui->tabWidgetSettings->setCurrentIndex(index);
+    });
+
+    // Integer combo box connections
+    QComboBox *iboxes[] = {
+        ui->comboBoxAspectRatio, ui->comboBoxFrameRate,
+        ui->comboBox_preset, ui->comboBox_pass
+    };
+    FnVoidInt iboxes_methods[] = {
+        SLT(onComboBoxAspectRatio_indexChanged), SLT(onComboBoxFrameRate_indexChanged),
+        SLT(onComboBox_preset_indexChanged), SLT(onComboBox_pass_indexChanged)
+    };
+    UIConnectionHelper::connectComboBoxes(iboxes, iboxes_methods, 4, this);
+
+    // String combo box connections
+    QComboBox *boxes[] = {
+        ui->comboBox_width, ui->comboBox_height, ui->comboBox_codec,
+        ui->comboBox_mode, ui->comboBox_audio_codec, ui->comboBox_master_disp
+    };
+    FnVoidStr boxes_methods[] = {
+        SLT(onComboBox_width_textChanged), SLT(onComboBox_height_textChanged), SLT(onComboBox_codec_textChanged),
+        SLT(onComboBox_mode_textChanged), SLT(onComboBox_audio_codec_textChanged), SLT(onComboBox_master_disp_textChanged)
+    };
+    UIConnectionHelper::connectComboBoxesText(boxes, boxes_methods, 6, this);
+
+    // Individual connections
+    UIConnectionHelper::connectSafely(ui->comboBox_container, &QComboBox::currentTextChanged,
+                                     this, &Preset::onComboBox_container_textChanged);
+    UIConnectionHelper::connectSafely(ui->comboBox_audio_bitrate, &QComboBox::currentTextChanged,
+                                     this, &Preset::onComboBox_audio_bitrate_textChanged);
+    UIConnectionHelper::connectSafely(ui->lineEdit_bitrate, &QLineEdit::editingFinished,
+                                     this, &Preset::onLineEdit_bitrate_editingFinished);
+
+    // Subtitle buttons
+    QPushButton *subtitleBtns[] = {
+        ui->preset_subtitles_background_color, ui->preset_subtitles_color
+    };
+    FnVoidVoid subtitleBtnMethods[] = {
+        SLT(subtitles_background_color_change), SLT(subtitles_color_change)
+    };
+    UIConnectionHelper::connectButtons(subtitleBtns, subtitleBtnMethods, 2, this);
+
+    // Subtitle font combo
+    UIConnectionHelper::connectSafely(ui->comboBox_preset_subtitles_font, 
+                                     static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+                                     this, SLT(onComboBoxSubtitlesFont_indexChanged));
+
+    // On close event
+    connect(this, &Preset::destroyed, this, [this]() {
+        SETTINGS(stn);
+        stn.beginGroup("PresetWidget");
+        stn.setValue("PresetWidget/geometry", this->saveGeometry());
+        stn.endGroup();
+    });
 }
