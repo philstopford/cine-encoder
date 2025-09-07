@@ -64,11 +64,12 @@ namespace Constants {
     // ***************** Table Widget Columns *********************//
     enum ColumnIndex {
         FILENAME,   FORMAT,     RESOLUTION,    DURATION,     FPS,
-        AR,         STATUS,     BITRATE,       SUBSAMPLING,  BITDEPTH,
-        COLORSPACE, COLORRANGE, COLORPRIM,     COLORMATRIX,  TRANSFER,
-        MAXLUM,     MINLUM,     MAXCLL,        MAXFALL,      MASTERDISPLAY,
-        PATH,       T_DUR,      T_CHROMACOORD, T_WHITECOORD, T_STREAMSIZE,
-        T_WIDTH,    T_HEIGHT,   T_STARTTIME,   T_ENDTIME,    T_ID
+        AR,         STATUS,     PRESET_COL,    BITRATE,      SUBSAMPLING,
+        BITDEPTH,   COLORSPACE, COLORRANGE,    COLORPRIM,    COLORMATRIX,
+        TRANSFER,   MAXLUM,     MINLUM,        MAXCLL,       MAXFALL,
+        MASTERDISPLAY, PATH,    T_DUR,         T_CHROMACOORD, T_WHITECOORD,
+        T_STREAMSIZE,  T_WIDTH, T_HEIGHT,      T_STARTTIME,  T_ENDTIME,
+        T_ID
     };
 
     // **************** Geometry and Themes *********************//
@@ -151,12 +152,19 @@ namespace Constants {
         QVector<QString> videoMetadata;
         QVector<bool>    checks[CHECKS_COUNT];
         QVector<QString> fields[FIELDS_COUNT];
+        
+        // Per-file preset parameters
+        QVector<QString> presetParams;
+        QString presetName;
+        
         void clear() {
             videoMetadata.clear();
             for (auto & check : checks)
                 check.clear();
             for (auto & field : fields)
                 field.clear();
+            presetParams.clear();
+            presetName.clear();
         }
     };
 

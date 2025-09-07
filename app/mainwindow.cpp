@@ -912,6 +912,7 @@ void MainWindow::setParameters()    // Set parameters
     ui->tableWidget->setColumnWidth(ColumnIndex::FPS, 70);
     ui->tableWidget->setColumnWidth(ColumnIndex::AR, 60);
     ui->tableWidget->setColumnWidth(ColumnIndex::STATUS, 80);
+    ui->tableWidget->setColumnWidth(ColumnIndex::PRESET_COL, 120);
     ui->tableWidget->setIconSize(QSize(16, 16) * Helper::scaling());
 
     for (int i = ColumnIndex::COLORRANGE; i <= ColumnIndex::MAXFALL; i++)
@@ -2444,6 +2445,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                 fps_qstr,
                 VINFO(0, "DisplayAspectRatio"),
                 status,
+                tr("Default"), // PRESET column - will be updated when preset is applied
                 numToStr(bitrate_int),
                 VINFO(0, "ChromaSubsampling"),
                 VINFO(0, "BitDepth"),
@@ -2474,8 +2476,12 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
 
             m_data.resize(numRows + 1);
             m_data[numRows].clear();
-            for (int j = 27; j < 33; j++)
+            for (int j = 28; j < 34; j++)
                 m_data[numRows].videoMetadata.push_back(arr_items[j]);
+            
+            // Initialize with default preset parameters
+            m_data[numRows].presetParams = default_preset.toVector();
+            m_data[numRows].presetName = tr("Default");
 
             for (int column = ColumnIndex::FILENAME; column <= ColumnIndex::T_HEIGHT; column++) {
                 auto *item = new QTableWidgetItem(arr_items[column]);
@@ -2571,7 +2577,13 @@ void MainWindow::onTableSelectionChanged()
     if (m_row != -1) {
         m_pTableLabel->hide();
         get_current_data();
-
+        
+        // Load per-file preset parameters if available
+        if (m_row < m_data.size() && !m_data[m_row].presetParams.isEmpty()) {
+            for (int k = 0; k < PARAMETERS_COUNT && k < m_data[m_row].presetParams.size(); k++) {
+                m_curParams[k] = m_data[m_row].presetParams[k];
+            }
+        }
     } else {
         //************* Reset widgets ******************//
         m_pTableLabel->show();
@@ -2786,10 +2798,20 @@ void MainWindow::repeatHandler_Type_2()
 
 void MainWindow::get_output_filename()  // Get output data
 {
+    if (m_row < 0 || m_row >= m_data.size()) {
+        return; // Invalid row
+    }
+    
+    // Use per-file preset parameters if available, otherwise use global
+    QVector<QString> *params = &m_curParams;
+    if (m_row < m_data.size() && !m_data[m_row].presetParams.isEmpty()) {
+        params = &m_data[m_row].presetParams;
+    }
+    
     ui->textBrowser_2->clear();
-    ui->textBrowser_2->setText(m_curParams[CurParamIndex::OUTPUT_PARAM]);
-    const int CE_CODEC = m_curParams[CurParamIndex::CODEC].toInt();
-    const int CE_CONTAINER = m_curParams[CurParamIndex::CONTAINER].toInt();
+    ui->textBrowser_2->setText((*params)[CurParamIndex::OUTPUT_PARAM]);
+    const int CE_CODEC = (*params)[CurParamIndex::CODEC].toInt();
+    const int CE_CONTAINER = (*params)[CurParamIndex::CONTAINER].toInt();
     Tables t;
     extension = t.arr_container[CE_CODEC][CE_CONTAINER].toLower();
     QString suffix;
@@ -3074,25 +3096,70 @@ void MainWindow::onApplyPreset()  // Apply preset
         showPopup(tr("Select preset first!\n"));
         return;
     }
+    
+    // Get selected rows
+    QList<int> selectedRows;
+    QModelIndexList selectedIndexes = ui->tableWidget->selectionModel()->selectedRows();
+    
+    if (selectedIndexes.isEmpty()) {
+        showPopup(tr("Select files first!\n"));
+        return;
+    }
+    
+    for (const QModelIndex &index : selectedIndexes) {
+        selectedRows.append(index.row());
+    }
+    
     QTreeWidgetItem *item = ui->treeWidget->currentItem();
     QTreeWidgetItem *parentItem = item->parent();
     if (parentItem) {
-        // Item is child...
+        // Item is child - get preset parameters
+        QVector<QString> presetParams(PARAMETERS_COUNT);
         for (int k = 0; k < PARAMETERS_COUNT; k++)
-            m_curParams[k] = item->text(k+7);
+            presetParams[k] = item->text(k+7);
+        
+        QString presetName = item->text(0);  // Get preset name
+        
+        // Apply preset to all selected files
+        for (int row : selectedRows) {
+            if (row < m_data.size()) {
+                m_data[row].presetParams = presetParams;
+                m_data[row].presetName = presetName;
+                
+                // Update the preset column in the table
+                QTableWidgetItem *presetItem = ui->tableWidget->item(row, ColumnIndex::PRESET_COL);
+                if (presetItem) {
+                    presetItem->setText(presetName);
+                    
+                    // Add tooltip showing preset details
+                    Tables t;
+                    int codecIndex = presetParams[CurParamIndex::CODEC].toInt();
+                    QString container = t.arr_container[codecIndex][presetParams[CurParamIndex::CONTAINER].toInt()];
+                    QString tooltip = tr("Preset: %1\nCodec: %2\nContainer: %3")
+                                     .arg(presetName)
+                                     .arg(t.arr_codec[codecIndex][0])
+                                     .arg(container);
+                    presetItem->setToolTip(tooltip);
+                }
+            }
+        }
+        
+        // Update current global parameters from the preset for UI consistency
+        for (int k = 0; k < PARAMETERS_COUNT; k++)
+            m_curParams[k] = presetParams[k];
+            
+        m_pos_top = ui->treeWidget->indexOfTopLevelItem(parentItem);
+        m_pos_cld = parentItem->indexOfChild(item);
+        
+        if (m_row != -1)
+            get_output_filename();
+        
+        showPopup(tr("Applied preset '%1' to %2 file(s)").arg(presetName).arg(selectedRows.size()));
     } else {
         // Item is parent...
         showPopup(tr("Select preset first!\n"));
         return;
     }
-    m_pos_top = ui->treeWidget->indexOfTopLevelItem(parentItem);
-    m_pos_cld = parentItem->indexOfChild(item);
-    if (m_row != -1)
-        get_output_filename();
-    // Force a refresh because the preset may not support all streams and we need to update the UI to indicate this.
-    int selected_row = ui->tableWidget->currentRow();
-    ui->tableWidget->clearSelection();
-    ui->tableWidget->selectRow(selected_row);
     
     // Update incompatibility status for all files since container format may have changed
     for (int i = 0; i < ui->tableWidget->rowCount(); i++) {
@@ -3501,13 +3568,19 @@ void MainWindow::updateFileIncompatibilityStatus(int fileRow)
     if (fileRow < 0 || fileRow >= ui->tableWidget->rowCount() || fileRow >= m_data.size())
         return;
 
+    // Get preset parameters for this specific file, fallback to global if not set
+    QVector<QString> *params = &m_curParams;
+    if (fileRow < m_data.size() && !m_data[fileRow].presetParams.isEmpty()) {
+        params = &m_data[fileRow].presetParams;
+    }
+    
     // Get current container extension and preset parameters
     Tables t;
-    QString extension = t.arr_container[m_curParams[CurParamIndex::CODEC].toInt()][CurParamIndex::CONTAINER].toLower();
-    int codecIndex = m_curParams[CurParamIndex::CODEC].toInt();
-    int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+    QString extension = t.arr_container[(*params)[CurParamIndex::CODEC].toInt()][(*params)[CurParamIndex::CONTAINER].toInt()].toLower();
+    int codecIndex = (*params)[CurParamIndex::CODEC].toInt();
+    int audioCodecIndex = (*params)[CurParamIndex::AUDIO_CODEC].toInt();
     QString targetAudioCodec = t.arr_acodec[codecIndex][audioCodecIndex];
-    bool usePresetSubtitleSettings = m_curParams[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
+    bool usePresetSubtitleSettings = (*params)[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
     
     bool hasIncompatibleStreams = false;
     bool hasSelectedIncompatibleStreams = false;
