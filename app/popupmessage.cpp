@@ -48,7 +48,7 @@ PopupMessage::PopupMessage(QWidget *parent, Icon icon, const QString &text) :
     ui->imageLabel->setLayout(lt);
 
     auto *lab = new QLabel(ui->imageLabel);
-    lab->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    lab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     lab->setFixedSize(QSize(30, 30)* Helper::scaling());
 
     QString iconPath(":/resources/icons/svg/info.svg");
@@ -69,48 +69,9 @@ PopupMessage::PopupMessage(QWidget *parent, Icon icon, const QString &text) :
     auto *br = new QTextBrowser(ui->imageLabel);
     br->setEnabled(false);
     br->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    br->setWordWrapMode(QTextOption::WordWrap);
-    br->setLineWrapMode(QTextEdit::WidgetWidth);
-    br->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    br->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    br->setPlainText(text);
-    br->setStyleSheet("color: #303030; background-color: transparent; border: none;");
     lt->addWidget(br, 0, 1);
-    
-    // Calculate optimal size based on text content with proper measurement
-    const int maxWidth = 450 * Helper::scaling(); // Increased maximum popup width
-    const int minWidth = 275 * Helper::scaling(); // Minimum popup width
-    const int iconSpace = 48 * Helper::scaling(); // Space for icon and margins
-    const int layoutMargins = 24 * Helper::scaling(); // Total layout margins
-    
-    // Calculate available space for text
-    const int availableTextWidth = maxWidth - iconSpace - layoutMargins;
-    
-    // Create a temporary QTextDocument to measure text properly
-    QTextDocument tempDoc;
-    tempDoc.setDefaultFont(br->font());
-    tempDoc.setTextWidth(availableTextWidth);
-    tempDoc.setPlainText(text);
-    
-    // Get the actual size needed for the text
-    QSizeF docSize = tempDoc.size();
-    const int textPadding = 16 * Helper::scaling(); // Padding for better appearance
-    
-    // Calculate optimal dimensions
-    int optimalWidth = qMax(minWidth, qMin(maxWidth, 
-                           static_cast<int>(docSize.width()) + iconSpace + layoutMargins + textPadding));
-    int optimalHeight = qMax(static_cast<int>(115 * Helper::scaling()), 
-                            static_cast<int>(docSize.height()) + static_cast<int>(80 * Helper::scaling()) + textPadding);
-    
-    // Set explicit size for the text browser to ensure proper text fitting
-    const int textBrowserWidth = optimalWidth - iconSpace - layoutMargins;
-    br->setMinimumWidth(textBrowserWidth);
-    br->setMaximumWidth(textBrowserWidth);
-    
-    // Set the calculated size for the popup
-    ui_widget->setMinimumSize(optimalWidth, optimalHeight);
-    ui_widget->setMaximumSize(optimalWidth, optimalHeight);
-    resize(optimalWidth, optimalHeight);
+    br->setText(text);
+    br->setStyleSheet("color: #303030");
 
     auto *tmr = new QTimer(this);
     tmr->setSingleShot(false);
