@@ -55,6 +55,7 @@ add_executable(cine_encoder WIN32 MACOSX_BUNDLE
     app/settingscontroller.cpp app/settingscontroller.h
     app/streamconverter.cpp app/streamconverter.h app/streamconverter.ui
     app/tables.h
+    app/uiconnectionhelper.cpp app/uiconnectionhelper.h
     app/widgets/qanimatedsvg.cpp app/widgets/qanimatedsvg.h
     app/widgets/qdoublebutton.cpp app/widgets/qdoublebutton.h
     app/widgets/qstreamview.cpp app/widgets/qstreamview.h

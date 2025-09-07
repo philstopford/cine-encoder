@@ -39,6 +39,10 @@ private:
     void lockSignals(bool status);
     void showEvent(QShowEvent*) final;
     bool eventFilter(QObject*, QEvent*) final;
+    
+    // UI setup methods (separated concerns)
+    void setupConnections();
+    
     // Transform
     void repeat_handler();
     void change_preset_name();

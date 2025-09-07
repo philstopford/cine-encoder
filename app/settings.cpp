@@ -13,6 +13,7 @@
 #include "settings.h"
 #include "ui_settings.h"
 #include "settingscontroller.h"
+#include "uiconnectionhelper.h"
 #include <QFileDialog>
 #include <QKeyEvent>
 #include <QListView>
@@ -302,7 +303,7 @@ void Settings::subtitles_background_color_change()
 
 void Settings::setupConnections()
 {
-    // Buttons
+    // Use helper for button connections
     QPushButton *btns[] = {
         ui->closeWindow, ui->buttonCancel, ui->buttonApply, ui->buttonReset,
         ui->buttonOutputPath, ui->buttonTempPath,
@@ -313,40 +314,35 @@ void Settings::setupConnections()
         &Settings::onButtonReset, &Settings::onButtonOutputPath, &Settings::onButtonTempPath,
         &Settings::subtitles_background_color_change, &Settings::subtitles_color_change
     };
-    for (int i = 0; i < 8; i++)
-        connect(btns[i], &QPushButton::clicked, this, btn_methods[i]);
+    UIConnectionHelper::connectButtons(btns, btn_methods, 8, this);
 
-    // Tab buttons
-    QList<QPushButton*> tabButtons = {ui->buttonTab_settingsPathsAndFiles, ui->buttonTab_settingsAdvanced, ui->buttonTab_settingsSubtitles};
-    for (int i = 0; i < tabButtons.size(); i++) {
-        connect(tabButtons[i], &QPushButton::clicked, this, [this, i, tabButtons]() {
-            for (int j = 0; j < tabButtons.size(); j++)
-                tabButtons[j]->setEnabled(i != j);
-            ui->tabWidgetSettings->setCurrentIndex(i);
-        });
-    }
+    // Use helper for tab button connections
+    QList<QPushButton*> tabButtons = {
+        ui->buttonTab_settingsPathsAndFiles, 
+        ui->buttonTab_settingsAdvanced, 
+        ui->buttonTab_settingsSubtitles
+    };
+    UIConnectionHelper::connectTabButtons(tabButtons, this, [this](int index) {
+        ui->tabWidgetSettings->setCurrentIndex(index);
+    });
 
-    // Check boxes
-    connect(ui->checkBox_protection, &QCheckBox::clicked, this,
-            &Settings::onCheckBoxProtectFlag_clicked);
+    // Single checkbox connection
+    UIConnectionHelper::connectSafely(ui->checkBox_protection, &QCheckBox::clicked, 
+                                     this, &Settings::onCheckBoxProtectFlag_clicked);
 
-    // Combo boxes
+    // Use helper for combo box connections
     QComboBox *boxes[] = {
-        ui->comboBoxPrefixType, ui->comboBoxSuffixType, ui->comboBox_font, ui->comboBox_subtitles_font, ui->comboBox_priority
+        ui->comboBoxPrefixType, ui->comboBoxSuffixType, ui->comboBox_font, 
+        ui->comboBox_subtitles_font, ui->comboBox_priority
     };
     FnVoidInt boxes_methods[] = {
         &Settings::onComboBoxPrefixType_indexChanged, &Settings::onComboBoxSuffixType_indexChanged,
         &Settings::onComboBoxFont_indexChanged, &Settings::onComboBoxSubtitlesFont_indexChanged,
         &Settings::onComboBoxFfmpegPriority_indexChanged
     };
-    // Use constexpr to avoid potential runtime issues that caused the original loop to crash
-    constexpr int numComboBoxes = 5;
-    for (int i = 0; i < numComboBoxes; i++) {
-        connect(boxes[i], static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-                this, boxes_methods[i]);
-    }
+    UIConnectionHelper::connectComboBoxes(boxes, boxes_methods, 5, this);
 
-    // On close
+    // On close event
     connect(this, &Settings::destroyed, this, [this]() {
         SETTINGS(stn);
         stn.beginGroup("SettingsWidget");
