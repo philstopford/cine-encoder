@@ -72,7 +72,6 @@ using namespace MediaInfoLib;
 #define WINDOW_SIZE (QSize(1500, 920) * Helper::scaling())
 #define ROWHEIGHT 25
 #define ROWHEIGHTDFLT 45
-#define DEFAULTTIMER 30
 #define DEFAULTPATH QDir::homePath()
 #define PRESETFILE (SETTINGSPATH + QString("/presets.ini"))
 #define XMLPRESETFILE (SETTINGSPATH + QString("/presets.xml"))
