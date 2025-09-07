@@ -2722,8 +2722,20 @@ void MainWindow::provideContextMenu(const QPoint &pos)     // Call table items m
 
 void MainWindow::dragEnterEvent(QDragEnterEvent* event)     // Drag enter event
 {
+    // Only accept external file drops, not internal Qt drag operations (like column reordering)
     if (event->mimeData()->hasUrls()) {
-        event->acceptProposedAction();
+        // Check if this is an external file drop by verifying the URLs are actual file paths
+        QList<QUrl> urlList = event->mimeData()->urls();
+        bool hasValidFiles = false;
+        for (const QUrl& url : urlList) {
+            if (url.isLocalFile() && QFileInfo::exists(url.toLocalFile())) {
+                hasValidFiles = true;
+                break;
+            }
+        }
+        if (hasValidFiles) {
+            event->acceptProposedAction();
+        }
     }
 }
 
@@ -2734,11 +2746,19 @@ void MainWindow::dropEvent(QDropEvent* event)     // Drag & Drop
         QStringList formats;
         QStringList pathList;
         QList<QUrl> urlList = mimeData->urls();
+        
+        // Only process external file drops, not internal Qt drag operations
+        bool hasValidFiles = false;
         for (int i = 0; i < urlList.size(); ++i) {
-            pathList.append(urlList.at(i).toLocalFile());
-            formats.append(QMimeDatabase().mimeTypeForFile(pathList.at(i)).name());
+            QString filePath = urlList.at(i).toLocalFile();
+            if (QFileInfo::exists(filePath)) {
+                pathList.append(filePath);
+                formats.append(QMimeDatabase().mimeTypeForFile(pathList.at(i)).name());
+                hasValidFiles = true;
+            }
         }
-        if (!formats.filter("audio/").empty() || !formats.filter("video/").empty()) {
+        
+        if (hasValidFiles && (!formats.filter("audio/").empty() || !formats.filter("video/").empty())) {
             openFiles(pathList);
         }
     }
