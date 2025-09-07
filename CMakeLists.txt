@@ -51,6 +51,8 @@ add_executable(cine_encoder WIN32 MACOSX_BUNDLE
     app/progress.cpp app/progress.h app/progress.ui
     app/report.cpp app/report.h app/report.ui
     app/settings.cpp app/settings.h app/settings.ui
+    app/settingsdata.cpp app/settingsdata.h
+    app/settingscontroller.cpp app/settingscontroller.h
     app/streamconverter.cpp app/streamconverter.h app/streamconverter.ui
     app/tables.h
     app/widgets/qanimatedsvg.cpp app/widgets/qanimatedsvg.h
