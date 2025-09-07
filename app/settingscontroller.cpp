@@ -13,6 +13,7 @@
 #include "settingscontroller.h"
 #include "ui_settings.h"
 #include "constants.h"
+#include "logger.h"
 #include <QFontDatabase>
 #include <QStringListModel>
 #include <QListView>

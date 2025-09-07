@@ -16,6 +16,9 @@
 #include <QObject>
 #include <QColor>
 #include "settingsdata.h"
+#include "configurationmanager.h"
+#include "inputvalidator.h"
+#include "errorhandler.h"
 
 namespace Ui {
     class Settings;
