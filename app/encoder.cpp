@@ -431,6 +431,7 @@ void Encoder::initVariables(const QString &temp_file, const QString &input_file,
     _preset_mkvmerge = "";
     _sub_mux_param.clear();
     _error_message = "";
+    _error_lines.clear();  // Clear accumulated error lines for new encoding
     _flag_two_pass = false;
     _flag_hdr = false;
     _burn_subtitle = false;
@@ -1542,6 +1543,31 @@ void Encoder::progress_1()   // Progress
     QString line = QString(processEncoding->readAllStandardOutput());
     const QString line_mod = line.replace("   ", " ").replace("  ", " ").replace("  ", " ").replace("= ", "=");
     emit onEncodingLog(line_mod);
+    
+    // Accumulate potential error lines for better error reporting
+    // Look for lines that indicate errors, warnings, or important status information
+    if (line_mod.contains("error", Qt::CaseInsensitive) || 
+        line_mod.contains("failed", Qt::CaseInsensitive) ||
+        line_mod.contains("invalid", Qt::CaseInsensitive) ||
+        line_mod.contains("unable", Qt::CaseInsensitive) ||
+        line_mod.contains("cannot", Qt::CaseInsensitive) ||
+        line_mod.contains("not found", Qt::CaseInsensitive) ||
+        line_mod.contains("no such", Qt::CaseInsensitive) ||
+        line_mod.contains("unrecognized", Qt::CaseInsensitive) ||
+        line_mod.contains("unknown", Qt::CaseInsensitive) ||
+        line_mod.contains("could not", Qt::CaseInsensitive)) {
+        
+        QString cleanLine = line_mod.trimmed();
+        if (!cleanLine.isEmpty() && !_error_lines.contains(cleanLine)) {
+            _error_lines.append(cleanLine);
+            // Keep only the last 20 error lines to avoid memory bloat
+            if (_error_lines.size() > 20) {
+                _error_lines.removeFirst();
+            }
+        }
+    }
+    
+    // Store the most recent line for backward compatibility  
     _error_message = line_mod;
     
     // Check for common codec/container compatibility errors and provide helpful feedback
@@ -1624,7 +1650,32 @@ void Encoder::progress_2()   // Progress mkvpropedit
 {
     const QString line = QString(processEncoding->readAllStandardOutput());
     emit onEncodingLog(line);
+    
+    // Accumulate potential error lines for better error reporting
+    if (line.contains("error", Qt::CaseInsensitive) || 
+        line.contains("failed", Qt::CaseInsensitive) ||
+        line.contains("invalid", Qt::CaseInsensitive) ||
+        line.contains("unable", Qt::CaseInsensitive) ||
+        line.contains("cannot", Qt::CaseInsensitive) ||
+        line.contains("not found", Qt::CaseInsensitive) ||
+        line.contains("no such", Qt::CaseInsensitive) ||
+        line.contains("unrecognized", Qt::CaseInsensitive) ||
+        line.contains("unknown", Qt::CaseInsensitive) ||
+        line.contains("could not", Qt::CaseInsensitive)) {
+        
+        QString cleanLine = line.trimmed();
+        if (!cleanLine.isEmpty() && !_error_lines.contains(cleanLine)) {
+            _error_lines.append(cleanLine);
+            // Keep only the last 20 error lines to avoid memory bloat
+            if (_error_lines.size() > 20) {
+                _error_lines.removeFirst();
+            }
+        }
+    }
+    
+    // Store the most recent line for backward compatibility
     _error_message = line;
+    
     const int pos_st = line.indexOf("Done.");
     const int pos_nf = line.indexOf("Nothing to do.");
     static bool lock = false;
@@ -1758,7 +1809,23 @@ void Encoder::completed(int exit_code)
     } else {
         if (_flag_hdr)
             QDir().remove(_temp_file);
-        emit onEncodingError(_error_message, false);
+        
+        // Provide a comprehensive error message with accumulated error information
+        QString detailedError;
+        if (!_error_lines.isEmpty()) {
+            detailedError = tr("FFmpeg encoding failed with exit code %1:\n\n").arg(exit_code);
+            detailedError += tr("Error details:\n");
+            detailedError += _error_lines.join("\n");
+        } else if (!_error_message.trimmed().isEmpty()) {
+            // Fallback to last message if no specific errors were captured
+            detailedError = tr("FFmpeg encoding failed with exit code %1:\n\n").arg(exit_code);
+            detailedError += _error_message;
+        } else {
+            // Generic error message
+            detailedError = tr("FFmpeg encoding failed with exit code %1.\n\nNo detailed error information available.").arg(exit_code);
+        }
+        
+        emit onEncodingError(detailedError, false);
     }
 }
 

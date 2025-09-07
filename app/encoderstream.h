@@ -64,6 +64,7 @@ private:
     QString m_output_file,
             m_message,
             m_error_message;
+    QStringList m_error_lines;  // Accumulate error lines for better error reporting
 
     StreamData *m_pData;
     QProcess   *m_pProcessEncoding;

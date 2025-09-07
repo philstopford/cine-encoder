@@ -106,6 +106,7 @@ private:
             _message,
             _error_message,
             _encoding_mode;
+    QStringList _error_lines;  // Accumulate error lines for better error reporting
 
     QStringList _preset, _preset_pass1, _sub_mux_param;
 
