@@ -937,7 +937,7 @@ void MainWindow::setParameters()    // Set parameters
     ui->tableWidget->setDropIndicatorShown(true);
     ui->tableWidget->setDragEnabled(true);
     ui->tableWidget->setDragDropOverwriteMode(true);
-    ui->tableWidget->setDragDropMode(QAbstractItemView::DropOnly);
+    ui->tableWidget->setDragDropMode(QAbstractItemView::DragDrop);
     ui->tableWidget->setDefaultDropAction(Qt::TargetMoveAction);
     ui->tableWidget->setColumnWidth(ColumnIndex::FILENAME, 350); // Make wider to accommodate path + filename
     ui->tableWidget->setColumnWidth(ColumnIndex::FORMAT, 80);
