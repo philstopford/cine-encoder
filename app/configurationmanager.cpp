@@ -117,6 +117,76 @@ void ConfigurationManager::initializeKeys()
     registerKey("subtitles/deselectAll", false, ValueType::Bool, Category::Interface,
                 "Deselect all subtitles by default");
 
+    // Table column visibility settings
+    registerKey("table/column_visible_0", true, ValueType::Bool, Category::Interface,
+                "File path column visible");
+    registerKey("table/column_visible_1", true, ValueType::Bool, Category::Interface,
+                "Format column visible");
+    registerKey("table/column_visible_2", true, ValueType::Bool, Category::Interface,
+                "Resolution column visible");
+    registerKey("table/column_visible_3", true, ValueType::Bool, Category::Interface,
+                "Duration column visible");
+    registerKey("table/column_visible_4", true, ValueType::Bool, Category::Interface,
+                "FPS column visible");
+    registerKey("table/column_visible_5", true, ValueType::Bool, Category::Interface,
+                "AR column visible");
+    registerKey("table/column_visible_6", true, ValueType::Bool, Category::Interface,
+                "Status column visible");
+    registerKey("table/column_visible_7", true, ValueType::Bool, Category::Interface,
+                "Preset column visible");
+    registerKey("table/column_visible_8", true, ValueType::Bool, Category::Interface,
+                "Bitrate column visible");
+    registerKey("table/column_visible_9", false, ValueType::Bool, Category::Interface,
+                "Subsampling column visible");
+    registerKey("table/column_visible_10", false, ValueType::Bool, Category::Interface,
+                "Bit depth column visible");
+    registerKey("table/column_visible_11", false, ValueType::Bool, Category::Interface,
+                "Color space column visible");
+    registerKey("table/column_visible_12", false, ValueType::Bool, Category::Interface,
+                "Color range column visible");
+    registerKey("table/column_visible_13", false, ValueType::Bool, Category::Interface,
+                "Color prim column visible");
+    registerKey("table/column_visible_14", false, ValueType::Bool, Category::Interface,
+                "Color mtrx column visible");
+    registerKey("table/column_visible_15", false, ValueType::Bool, Category::Interface,
+                "Transfer column visible");
+    registerKey("table/column_visible_16", false, ValueType::Bool, Category::Interface,
+                "Max lum column visible");
+    registerKey("table/column_visible_17", false, ValueType::Bool, Category::Interface,
+                "Min lum column visible");
+    registerKey("table/column_visible_18", false, ValueType::Bool, Category::Interface,
+                "Max CLL column visible");
+    registerKey("table/column_visible_19", false, ValueType::Bool, Category::Interface,
+                "Max Fall column visible");
+    registerKey("table/column_visible_20", false, ValueType::Bool, Category::Interface,
+                "Master display column visible");
+    registerKey("table/column_visible_21", false, ValueType::Bool, Category::Interface,
+                "Path column visible");
+    registerKey("table/column_visible_22", false, ValueType::Bool, Category::Interface,
+                "Duration (technical) column visible");
+    registerKey("table/column_visible_23", false, ValueType::Bool, Category::Interface,
+                "Chroma coord column visible");
+    registerKey("table/column_visible_24", false, ValueType::Bool, Category::Interface,
+                "White coord column visible");
+    registerKey("table/column_visible_25", false, ValueType::Bool, Category::Interface,
+                "Stream size column visible");
+    registerKey("table/column_visible_26", false, ValueType::Bool, Category::Interface,
+                "Width (technical) column visible");
+    registerKey("table/column_visible_27", false, ValueType::Bool, Category::Interface,
+                "Height (technical) column visible");
+    registerKey("table/column_visible_28", false, ValueType::Bool, Category::Interface,
+                "Start Time column visible");
+    registerKey("table/column_visible_29", false, ValueType::Bool, Category::Interface,
+                "End Time column visible");
+    registerKey("table/column_visible_30", false, ValueType::Bool, Category::Interface,
+                "ID column visible");
+
+    // Table column order settings (stores visual index for each logical index)
+    for (int i = 0; i < 31; ++i) {
+        registerKey(QString("table/column_order_%1").arg(i), i, ValueType::Int, Category::Interface,
+                    QString("Column %1 visual order position").arg(i), 0, 30);
+    }
+
     LOG_DEBUG(QString("Registered %1 configuration keys").arg(m_keys.size()));
 }
 

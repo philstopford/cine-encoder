@@ -23,6 +23,7 @@
 #include "report.h"
 #include "streamconverter.h"
 #include "fileiconprovider.h"
+#include "configurationmanager.h"
 #include <QDragEnterEvent>
 #include <QMimeDatabase>
 #include <QMimeData>
@@ -40,6 +41,7 @@
 #include <QSizePolicy>
 #include <QTranslator>
 #include <QScreen>
+#include <QHeaderView>
 #include <iostream>
 #include <iomanip>
 #include <cmath>
@@ -231,10 +233,16 @@ MainWindow::MainWindow(QWidget *parent):
     ui->switchViewMode->setToolTips(tr("List view"), tr("Icon view"));
 
     //*********** Set Event Filters ****************//
-    m_pTableLabel->installEventFilter(this);
+    // Don't install m_pTableLabel event filter here - will do it after UI is ready
     ui->labelPreview->installEventFilter(this);
     ui->frameMiddle->setFocusPolicy(Qt::StrongFocus);
     setAcceptDrops(true);
+    
+    // Load column visibility settings
+    loadColumnVisibilitySettings();
+    
+    // Load column order settings  
+    loadColumnOrderSettings();
 }
 
 MainWindow::~MainWindow()
@@ -248,6 +256,9 @@ void MainWindow::showEvent(QShowEvent *event)
     if (!m_windowActivated) {
         m_windowActivated = true;
         setParameters();
+        
+        // Install event filters after UI is fully ready
+        m_pTableLabel->installEventFilter(this);
     }
 }
 
@@ -357,6 +368,12 @@ void MainWindow::closeEvent(QCloseEvent *event) // Show prompt when close app
         stn.endGroup();
 
         saveXMLSettingsFile();
+        
+        // Save column visibility settings
+        saveColumnVisibilitySettings();
+        
+        // Save column order settings
+        saveColumnOrderSettings();
 
         if (m_pTrayIcon)
             m_pTrayIcon->deleteLater();
@@ -683,6 +700,14 @@ void MainWindow::createConnections()
     connect(m_pActResetView, &QAction::triggered, this, &MainWindow::resetView);
     for (int i = 0; i < DOCKS_COUNT; i++)
         menuView->addAction(m_pDocks[i]->toggleViewAction());
+    menuView->addSeparator();
+    
+    // Column visibility submenu
+    setupColumnVisibilityMenus();
+    updateColumnVisibilityMenus(); // Ensure checkmarks reflect current state
+    menuView->addMenu(m_pColumnsMenu);
+    menuView->addSeparator();
+    
     menuView->addAction(m_pActResetView);
 
     m_pActSettings = new QAction(tr("Settings"), menuPreferences);
@@ -716,6 +741,17 @@ void MainWindow::createConnections()
     m_pItemMenu->addSeparator();
     m_pItemMenu->addAction(m_pActSplitVideo);
     connect(ui->tableWidget, &QTableWidget::customContextMenuRequested, this, &MainWindow::provideContextMenu);
+    
+    // Setup header context menu for column visibility
+    ui->tableWidget->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->tableWidget->horizontalHeader(), &QHeaderView::customContextMenuRequested, 
+            this, &MainWindow::provideHeaderContextMenu);
+    
+    // Enable drag reordering for columns
+    ui->tableWidget->horizontalHeader()->setSectionsMovable(true);
+    ui->tableWidget->horizontalHeader()->setDragDropMode(QAbstractItemView::InternalMove);
+    connect(ui->tableWidget->horizontalHeader(), &QHeaderView::sectionMoved,
+            this, &MainWindow::onColumnSectionMoved);
 
     //********** File Browser actions **************//
     ui->listFiles->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -904,7 +940,7 @@ void MainWindow::setParameters()    // Set parameters
     ui->tableWidget->setDropIndicatorShown(true);
     ui->tableWidget->setDragEnabled(true);
     ui->tableWidget->setDragDropOverwriteMode(true);
-    ui->tableWidget->setDragDropMode(QAbstractItemView::DropOnly);
+    ui->tableWidget->setDragDropMode(QAbstractItemView::DragDrop);
     ui->tableWidget->setDefaultDropAction(Qt::TargetMoveAction);
     ui->tableWidget->setColumnWidth(ColumnIndex::FILENAME, 350); // Make wider to accommodate path + filename
     ui->tableWidget->setColumnWidth(ColumnIndex::FORMAT, 80);
@@ -1819,6 +1855,11 @@ void MainWindow::changeEvent(QEvent *event)
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
+    // Safety check to ensure UI is fully initialized before processing any events
+    if (!ui || !ui->tableWidget) {
+        return BaseWindow::eventFilter(watched, event);
+    }
+    
     if (event->type() == QEvent::KeyPress) {
         auto *keyEvent = dynamic_cast<QKeyEvent*>(event);
         if (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) {
@@ -1843,7 +1884,8 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         }
     } else
     if (watched == m_pTableLabel) {
-        if (event->type() == QEvent::MouseButtonPress) {
+        // Simple logic since event filter is only active when table is empty
+        if (event->type() == QEvent::MouseButtonPress && m_pTableLabel->isVisible()) {
             auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
             if (mouse_event->button() == Qt::LeftButton) {
                 onAddFiles();
@@ -2452,7 +2494,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                 fps_qstr,
                 VINFO(0, "DisplayAspectRatio"),
                 status,
-                tr("Default"), // PRESET column - will be updated when preset is applied
+                "", // PRESET column - will be set after determining current preset
                 numToStr(bitrate_int),
                 VINFO(0, "ChromaSubsampling"),
                 VINFO(0, "BitDepth"),
@@ -2486,15 +2528,45 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             for (int j = 28; j < 34; j++)
                 m_data[numRows].videoMetadata.push_back(arr_items[j]);
             
-            // Initialize with default preset parameters
-            m_data[numRows].presetParams = default_preset.toVector();
-            m_data[numRows].presetName = tr("Default");
+            // Initialize with current selected preset parameters
+            QString currentPresetName;
+            QVector<QString> currentPresetParams;
+            
+            // Check if there's a currently selected preset
+            if (m_pos_top != -1 && m_pos_cld != -1) {
+                // Use the currently selected preset
+                QTreeWidgetItem *currentItem = ui->treeWidget->topLevelItem(m_pos_top)->child(m_pos_cld);
+                if (currentItem) {
+                    currentPresetName = currentItem->text(0);
+                    currentPresetParams.resize(PARAMETERS_COUNT);
+                    for (int k = 0; k < PARAMETERS_COUNT; k++) {
+                        currentPresetParams[k] = currentItem->text(k + 7);
+                    }
+                } else {
+                    // Fallback to default preset if current item is invalid
+                    currentPresetName = tr("Default");
+                    currentPresetParams = default_preset.toVector();
+                }
+            } else {
+                // No preset selected, use default
+                currentPresetName = tr("Default");
+                currentPresetParams = default_preset.toVector();
+            }
+            
+            m_data[numRows].presetParams = currentPresetParams;
+            m_data[numRows].presetName = currentPresetName;
 
             for (int column = ColumnIndex::FILENAME; column <= ColumnIndex::T_HEIGHT; column++) {
                 auto *item = new QTableWidgetItem(arr_items[column]);
                 if (column >= ColumnIndex::FORMAT && column <= ColumnIndex::MASTERDISPLAY)
                     item->setTextAlignment(Qt::AlignCenter);
                 ui->tableWidget->setItem(numRows, column, item);
+            }
+            
+            // Set the preset column with the current preset name
+            QTableWidgetItem *presetItem = ui->tableWidget->item(numRows, ColumnIndex::PRESET_COL);
+            if (presetItem) {
+                presetItem->setText(currentPresetName);
             }
 
             auto *startTime = new QTableWidgetItem("0");
@@ -2581,8 +2653,12 @@ void MainWindow::onTableSelectionChanged()
     m_pSubtitleLabel->setVisible(true);
 
     m_row = ui->tableWidget->currentRow();
+    qDebug() << "Table selection changed - current row:" << m_row << "total rows:" << ui->tableWidget->rowCount();
     if (m_row != -1) {
+        qDebug() << "Files present, hiding table label and removing event filter";
         m_pTableLabel->hide();
+        // Remove event filter when files are present to avoid interfering with header drag operations
+        m_pTableLabel->removeEventFilter(this);
         get_current_data();
         
         // Load per-file preset parameters if available
@@ -2593,7 +2669,10 @@ void MainWindow::onTableSelectionChanged()
         }
     } else {
         //************* Reset widgets ******************//
+        qDebug() << "No files, showing table label and installing event filter";
         m_pTableLabel->show();
+        // Re-install event filter when no files are present to enable file dialog trigger
+        m_pTableLabel->installEventFilter(this);
         m_preview_pixmap = QPixmap();
         ui->labelPreview->clear();
         ui->textBrowser_1->clear();
@@ -2689,23 +2768,47 @@ void MainWindow::provideContextMenu(const QPoint &pos)     // Call table items m
 
 void MainWindow::dragEnterEvent(QDragEnterEvent* event)     // Drag enter event
 {
-    if (event->mimeData()->hasUrls()) {
-        event->acceptProposedAction();
+    // Only accept external file drops, not internal Qt drag operations (like column reordering)
+    // For external drags, event->source() will be null or from outside our application
+    if (event->source() == nullptr && event->mimeData()->hasUrls()) {
+        // Check if this is an external file drop by verifying the URLs are actual file paths
+        QList<QUrl> urlList = event->mimeData()->urls();
+        bool hasValidFiles = false;
+        for (const QUrl& url : urlList) {
+            if (url.isLocalFile() && QFileInfo::exists(url.toLocalFile())) {
+                hasValidFiles = true;
+                break;
+            }
+        }
+        if (hasValidFiles) {
+            event->acceptProposedAction();
+        }
     }
 }
 
 void MainWindow::dropEvent(QDropEvent* event)     // Drag & Drop
 {
     const QMimeData *mimeData = event->mimeData();
-    if (mimeData->hasUrls()) {
+    
+    // Only process external file drops, not internal Qt drag operations (like column reordering)
+    // For external drags, event->source() will be null or from outside our application
+    if (event->source() == nullptr && mimeData->hasUrls()) {
         QStringList formats;
         QStringList pathList;
         QList<QUrl> urlList = mimeData->urls();
+        
+        // Only process external file drops with valid files
+        bool hasValidFiles = false;
         for (int i = 0; i < urlList.size(); ++i) {
-            pathList.append(urlList.at(i).toLocalFile());
-            formats.append(QMimeDatabase().mimeTypeForFile(pathList.at(i)).name());
+            QString filePath = urlList.at(i).toLocalFile();
+            if (QFileInfo::exists(filePath)) {
+                pathList.append(filePath);
+                formats.append(QMimeDatabase().mimeTypeForFile(pathList.at(i)).name());
+                hasValidFiles = true;
+            }
         }
-        if (!formats.filter("audio/").empty() || !formats.filter("video/").empty()) {
+        
+        if (hasValidFiles && (!formats.filter("audio/").empty() || !formats.filter("video/").empty())) {
             openFiles(pathList);
         }
     }
@@ -3639,5 +3742,257 @@ void MainWindow::updateFileIncompatibilityStatus(int fileRow)
             filenameItem->setIcon(QIcon());
             filenameItem->setToolTip("");
         }
+    }
+}
+
+
+/************************************************
+** Column Visibility Management
+************************************************/
+
+void MainWindow::setupColumnVisibilityMenus()
+{
+    // Initialize column names array
+    m_columnNames = {
+        tr("File path"), tr("Format"), tr("Resolution"), tr("Duration"), tr("FPS"), tr("AR"), tr("Status"), tr("Preset"),
+        tr("Bitrate"), tr("Subsampling"), tr("Bit depth"), tr("Color space"), tr("Color range"), tr("Color prim"),
+        tr("Color mtrx"), tr("Transfer"), tr("Max lum"), tr("Min lum"), tr("Max CLL"), tr("Max Fall"), tr("Master display"),
+        tr("Path"), tr("Duration (technical)"), tr("Chroma coord"), tr("White coord"), tr("Stream size"), 
+        tr("Width (technical)"), tr("Height (technical)"), tr("Start Time"), tr("End Time"), tr("ID")
+    };
+
+    // Create Columns menu
+    m_pColumnsMenu = new QMenu(tr("Columns"), this);
+    
+    // Create header context menu
+    m_pHeaderContextMenu = new QMenu(this);
+    
+    // Create column visibility actions
+    for (int i = 0; i < m_columnNames.size(); ++i) {
+        auto *action = new QAction(m_columnNames[i], this);
+        action->setCheckable(true);
+        action->setData(i);
+        connect(action, &QAction::triggered, this, &MainWindow::onToggleColumnVisibility);
+        
+        m_columnActions.append(action);
+        m_pColumnsMenu->addAction(action);
+        m_pHeaderContextMenu->addAction(action);
+    }
+    
+    // Add separator and column reordering actions
+    m_pHeaderContextMenu->addSeparator();
+    
+    // Create column reordering actions
+    m_pActMoveColumnLeft = new QAction(tr("Move Left"), this);
+    m_pActMoveColumnRight = new QAction(tr("Move Right"), this);
+    
+    connect(m_pActMoveColumnLeft, &QAction::triggered, this, &MainWindow::onMoveColumnLeft);
+    connect(m_pActMoveColumnRight, &QAction::triggered, this, &MainWindow::onMoveColumnRight);
+    
+    m_pHeaderContextMenu->addAction(m_pActMoveColumnLeft);
+    m_pHeaderContextMenu->addAction(m_pActMoveColumnRight);
+    
+    // Initialize last clicked column tracking
+    m_lastHeaderClickedColumn = -1;
+}
+
+void MainWindow::provideHeaderContextMenu(const QPoint& pos)
+{
+    // Determine which column was clicked
+    QHeaderView *header = ui->tableWidget->horizontalHeader();
+    m_lastHeaderClickedColumn = header->logicalIndexAt(pos);
+    
+    updateColumnVisibilityMenus();
+    
+    // Enable/disable move actions based on column position
+    if (m_lastHeaderClickedColumn >= 0) {
+        int visualIndex = header->visualIndex(m_lastHeaderClickedColumn);
+        
+        // Can move left if not already at leftmost visible position
+        bool canMoveLeft = false;
+        for (int i = 0; i < visualIndex; ++i) {
+            int logicalIndex = header->logicalIndex(i);
+            if (!ui->tableWidget->isColumnHidden(logicalIndex)) {
+                canMoveLeft = true;
+                break;
+            }
+        }
+        
+        // Can move right if not already at rightmost visible position
+        bool canMoveRight = false;
+        for (int i = visualIndex + 1; i < header->count(); ++i) {
+            int logicalIndex = header->logicalIndex(i);
+            if (!ui->tableWidget->isColumnHidden(logicalIndex)) {
+                canMoveRight = true;
+                break;
+            }
+        }
+        
+        m_pActMoveColumnLeft->setEnabled(canMoveLeft);
+        m_pActMoveColumnRight->setEnabled(canMoveRight);
+    } else {
+        // No valid column clicked
+        m_pActMoveColumnLeft->setEnabled(false);
+        m_pActMoveColumnRight->setEnabled(false);
+    }
+    
+    m_pHeaderContextMenu->exec(ui->tableWidget->horizontalHeader()->mapToGlobal(pos));
+}
+
+void MainWindow::onToggleColumnVisibility()
+{
+    auto *action = qobject_cast<QAction*>(sender());
+    if (!action) return;
+    
+    int column = action->data().toInt();
+    bool visible = action->isChecked();
+    
+    ui->tableWidget->setColumnHidden(column, !visible);
+    
+    // Save the setting
+    CONFIG.setBool(QString("table/column_visible_%1").arg(column), visible);
+}
+
+void MainWindow::loadColumnVisibilitySettings()
+{
+    for (int i = 0; i < 31; ++i) {
+        bool visible = CONFIG.getBool(QString("table/column_visible_%1").arg(i), 
+                                    i < 9); // First 9 columns visible by default
+        ui->tableWidget->setColumnHidden(i, !visible);
+    }
+    
+    // Only update menus if they've been initialized
+    if (!m_columnActions.isEmpty()) {
+        updateColumnVisibilityMenus();
+    }
+}
+
+void MainWindow::saveColumnVisibilitySettings()
+{
+    for (int i = 0; i < 31; ++i) {
+        bool visible = !ui->tableWidget->isColumnHidden(i);
+        CONFIG.setBool(QString("table/column_visible_%1").arg(i), visible);
+    }
+}
+
+void MainWindow::updateColumnVisibilityMenus()
+{
+    for (int i = 0; i < m_columnActions.size(); ++i) {
+        bool visible = !ui->tableWidget->isColumnHidden(i);
+        m_columnActions[i]->setChecked(visible);
+    }
+}
+
+/************************************************
+** Column Order Management
+************************************************/
+
+void MainWindow::loadColumnOrderSettings()
+{
+    QList<int> visualOrder(31);
+    
+    // Load saved order, defaulting to natural order (0,1,2,3...)
+    for (int i = 0; i < 31; ++i) {
+        visualOrder[i] = CONFIG.getInt(QString("table/column_order_%1").arg(i), i);
+    }
+    
+    // Validate and fix any invalid order (ensure each position 0-30 appears exactly once)
+    QList<bool> usedPositions(31, false);
+    QList<int> invalidColumns;
+    
+    // Mark used positions and identify invalid ones
+    for (int i = 0; i < 31; ++i) {
+        int pos = visualOrder[i];
+        if (pos >= 0 && pos < 31 && !usedPositions[pos]) {
+            usedPositions[pos] = true;
+        } else {
+            invalidColumns.append(i);
+        }
+    }
+    
+    // Assign unused positions to invalid columns
+    int nextAvailablePos = 0;
+    for (int col : invalidColumns) {
+        while (nextAvailablePos < 31 && usedPositions[nextAvailablePos]) {
+            nextAvailablePos++;
+        }
+        if (nextAvailablePos < 31) {
+            visualOrder[col] = nextAvailablePos;
+            usedPositions[nextAvailablePos] = true;
+        }
+    }
+    
+    // Apply the column order to the table header
+    QHeaderView *header = ui->tableWidget->horizontalHeader();
+    for (int logical = 0; logical < 31; ++logical) {
+        int visual = visualOrder[logical];
+        header->moveSection(header->visualIndex(logical), visual);
+    }
+}
+
+void MainWindow::saveColumnOrderSettings()
+{
+    QHeaderView *header = ui->tableWidget->horizontalHeader();
+    for (int logical = 0; logical < 31; ++logical) {
+        int visual = header->visualIndex(logical);
+        CONFIG.setInt(QString("table/column_order_%1").arg(logical), visual);
+    }
+}
+
+void MainWindow::onColumnSectionMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex)
+{
+    Q_UNUSED(logicalIndex)
+    Q_UNUSED(oldVisualIndex)
+    Q_UNUSED(newVisualIndex)
+    
+    // Save the new column order immediately when user drags a column
+    saveColumnOrderSettings();
+}
+
+void MainWindow::onMoveColumnLeft()
+{
+    if (m_lastHeaderClickedColumn < 0) return;
+    
+    QHeaderView *header = ui->tableWidget->horizontalHeader();
+    int currentVisualIndex = header->visualIndex(m_lastHeaderClickedColumn);
+    
+    // Find the nearest visible column to the left
+    int targetVisualIndex = -1;
+    for (int i = currentVisualIndex - 1; i >= 0; --i) {
+        int logicalIndex = header->logicalIndex(i);
+        if (!ui->tableWidget->isColumnHidden(logicalIndex)) {
+            targetVisualIndex = i;
+            break;
+        }
+    }
+    
+    if (targetVisualIndex >= 0) {
+        // Swap the two columns
+        header->moveSection(currentVisualIndex, targetVisualIndex);
+        saveColumnOrderSettings();
+    }
+}
+
+void MainWindow::onMoveColumnRight()
+{
+    if (m_lastHeaderClickedColumn < 0) return;
+    
+    QHeaderView *header = ui->tableWidget->horizontalHeader();
+    int currentVisualIndex = header->visualIndex(m_lastHeaderClickedColumn);
+    
+    // Find the nearest visible column to the right
+    int targetVisualIndex = -1;
+    for (int i = currentVisualIndex + 1; i < header->count(); ++i) {
+        int logicalIndex = header->logicalIndex(i);
+        if (!ui->tableWidget->isColumnHidden(logicalIndex)) {
+            targetVisualIndex = i;
+            break;
+        }
+    }
+    
+    if (targetVisualIndex >= 0) {
+        // Swap the two columns
+        header->moveSection(currentVisualIndex, targetVisualIndex);
+        saveColumnOrderSettings();
     }
 }

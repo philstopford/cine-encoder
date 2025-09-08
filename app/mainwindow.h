@@ -152,7 +152,18 @@ private:
     QMenu       *m_pItemMenu,
                 *m_pFilesItemMenu,
                 *m_pSectionMenu,
-                *m_pPresetMenu;
+                *m_pPresetMenu,
+                *m_pColumnsMenu,
+                *m_pHeaderContextMenu;
+
+    // ============= Column visibility =============
+    QStringList m_columnNames;
+    QList<QAction*> m_columnActions;
+    
+    // ============= Column reordering =============
+    QAction *m_pActMoveColumnLeft;
+    QAction *m_pActMoveColumnRight;
+    int m_lastHeaderClickedColumn;
 
     // ============= Processes =============
     QProcess    *m_pProcessThumbCreation;
@@ -336,6 +347,21 @@ private slots:
     void onAddToTask();
     void onExtract(QStreamView::Content type, int num);
     void updateFileIncompatibilityStatus(int fileRow);
+    
+    // ============== Column Visibility ==============
+    void provideHeaderContextMenu(const QPoint& pos);
+    void onToggleColumnVisibility();
+    void setupColumnVisibilityMenus();
+    void loadColumnVisibilitySettings();
+    void saveColumnVisibilitySettings();
+    void updateColumnVisibilityMenus();
+    
+    // ============== Column Reordering ==============
+    void loadColumnOrderSettings();
+    void saveColumnOrderSettings();
+    void onColumnSectionMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex);
+    void onMoveColumnLeft();
+    void onMoveColumnRight();
 };
 
 #endif // WIDGET_H
