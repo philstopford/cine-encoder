@@ -1876,18 +1876,12 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         }
     } else
     if (watched == m_pTableLabel) {
-        // Only handle events if the table label is actually visible (no files loaded or no row selected)
+        // Simple logic since event filter is only active when table is empty
         if (event->type() == QEvent::MouseButtonPress && m_pTableLabel->isVisible()) {
             auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
             if (mouse_event->button() == Qt::LeftButton) {
-                // Only trigger file dialog if there are no files in the table
-                // If there are files but no selection, let clicks pass through to allow header operations
-                if (ui->tableWidget->rowCount() == 0) {
-                    onAddFiles();
-                    return true;
-                }
-                // If there are files in table, let clicks pass through for normal table operations
-                return false;
+                onAddFiles();
+                return true;
             }
         }
     } else
@@ -2653,6 +2647,8 @@ void MainWindow::onTableSelectionChanged()
     m_row = ui->tableWidget->currentRow();
     if (m_row != -1) {
         m_pTableLabel->hide();
+        // Remove event filter when files are present to avoid interfering with header drag operations
+        m_pTableLabel->removeEventFilter(this);
         get_current_data();
         
         // Load per-file preset parameters if available
@@ -2664,6 +2660,8 @@ void MainWindow::onTableSelectionChanged()
     } else {
         //************* Reset widgets ******************//
         m_pTableLabel->show();
+        // Re-install event filter when no files are present to enable file dialog trigger
+        m_pTableLabel->installEventFilter(this);
         m_preview_pixmap = QPixmap();
         ui->labelPreview->clear();
         ui->textBrowser_1->clear();
