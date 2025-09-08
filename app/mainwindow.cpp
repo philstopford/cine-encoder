@@ -1876,21 +1876,18 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         }
     } else
     if (watched == m_pTableLabel) {
-        if (event->type() == QEvent::MouseButtonPress) {
+        // Only handle events if the table label is actually visible (no files loaded or no row selected)
+        if (event->type() == QEvent::MouseButtonPress && m_pTableLabel->isVisible()) {
             auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
             if (mouse_event->button() == Qt::LeftButton) {
-                // Check if the click is within the header area - if so, don't handle it
-                // to allow column header operations (drag reordering, context menus, etc.)
-                QHeaderView* header = ui->tableWidget->horizontalHeader();
-                QPoint headerPos = header->mapFromGlobal(m_pTableLabel->mapToGlobal(mouse_event->pos()));
-                QRect headerRect = header->rect();
-                
-                // If click is NOT within header area, then handle it as a file add request
-                if (!headerRect.contains(headerPos)) {
+                // Only trigger file dialog if there are no files in the table
+                // If there are files but no selection, let clicks pass through to allow header operations
+                if (ui->tableWidget->rowCount() == 0) {
                     onAddFiles();
                     return true;
                 }
-                // If click IS within header area, let it pass through for header operations
+                // If there are files in table, let clicks pass through for normal table operations
+                return false;
             }
         }
     } else
@@ -2495,7 +2492,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                 fps_qstr,
                 VINFO(0, "DisplayAspectRatio"),
                 status,
-                tr("Default"), // PRESET column - will be updated when preset is applied
+                default_preset[0], // PRESET column - use descriptive preset name
                 numToStr(bitrate_int),
                 VINFO(0, "ChromaSubsampling"),
                 VINFO(0, "BitDepth"),
@@ -2531,7 +2528,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             
             // Initialize with default preset parameters
             m_data[numRows].presetParams = default_preset.toVector();
-            m_data[numRows].presetName = tr("Default");
+            m_data[numRows].presetName = default_preset[0]; // Use descriptive preset name
 
             for (int column = ColumnIndex::FILENAME; column <= ColumnIndex::T_HEIGHT; column++) {
                 auto *item = new QTableWidgetItem(arr_items[column]);
