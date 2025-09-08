@@ -3778,11 +3778,64 @@ void MainWindow::setupColumnVisibilityMenus()
         m_pColumnsMenu->addAction(action);
         m_pHeaderContextMenu->addAction(action);
     }
+    
+    // Add separator and column reordering actions
+    m_pHeaderContextMenu->addSeparator();
+    
+    // Create column reordering actions
+    m_pActMoveColumnLeft = new QAction(tr("Move Left"), this);
+    m_pActMoveColumnRight = new QAction(tr("Move Right"), this);
+    
+    connect(m_pActMoveColumnLeft, &QAction::triggered, this, &MainWindow::onMoveColumnLeft);
+    connect(m_pActMoveColumnRight, &QAction::triggered, this, &MainWindow::onMoveColumnRight);
+    
+    m_pHeaderContextMenu->addAction(m_pActMoveColumnLeft);
+    m_pHeaderContextMenu->addAction(m_pActMoveColumnRight);
+    
+    // Initialize last clicked column tracking
+    m_lastHeaderClickedColumn = -1;
 }
 
 void MainWindow::provideHeaderContextMenu(const QPoint& pos)
 {
+    // Determine which column was clicked
+    QHeaderView *header = ui->tableWidget->horizontalHeader();
+    m_lastHeaderClickedColumn = header->logicalIndexAt(pos);
+    
     updateColumnVisibilityMenus();
+    
+    // Enable/disable move actions based on column position
+    if (m_lastHeaderClickedColumn >= 0) {
+        int visualIndex = header->visualIndex(m_lastHeaderClickedColumn);
+        
+        // Can move left if not already at leftmost visible position
+        bool canMoveLeft = false;
+        for (int i = 0; i < visualIndex; ++i) {
+            int logicalIndex = header->logicalIndex(i);
+            if (!ui->tableWidget->isColumnHidden(logicalIndex)) {
+                canMoveLeft = true;
+                break;
+            }
+        }
+        
+        // Can move right if not already at rightmost visible position
+        bool canMoveRight = false;
+        for (int i = visualIndex + 1; i < header->count(); ++i) {
+            int logicalIndex = header->logicalIndex(i);
+            if (!ui->tableWidget->isColumnHidden(logicalIndex)) {
+                canMoveRight = true;
+                break;
+            }
+        }
+        
+        m_pActMoveColumnLeft->setEnabled(canMoveLeft);
+        m_pActMoveColumnRight->setEnabled(canMoveRight);
+    } else {
+        // No valid column clicked
+        m_pActMoveColumnLeft->setEnabled(false);
+        m_pActMoveColumnRight->setEnabled(false);
+    }
+    
     m_pHeaderContextMenu->exec(ui->tableWidget->horizontalHeader()->mapToGlobal(pos));
 }
 
@@ -3894,4 +3947,52 @@ void MainWindow::onColumnSectionMoved(int logicalIndex, int oldVisualIndex, int 
     
     // Save the new column order immediately when user drags a column
     saveColumnOrderSettings();
+}
+
+void MainWindow::onMoveColumnLeft()
+{
+    if (m_lastHeaderClickedColumn < 0) return;
+    
+    QHeaderView *header = ui->tableWidget->horizontalHeader();
+    int currentVisualIndex = header->visualIndex(m_lastHeaderClickedColumn);
+    
+    // Find the nearest visible column to the left
+    int targetVisualIndex = -1;
+    for (int i = currentVisualIndex - 1; i >= 0; --i) {
+        int logicalIndex = header->logicalIndex(i);
+        if (!ui->tableWidget->isColumnHidden(logicalIndex)) {
+            targetVisualIndex = i;
+            break;
+        }
+    }
+    
+    if (targetVisualIndex >= 0) {
+        // Swap the two columns
+        header->moveSection(currentVisualIndex, targetVisualIndex);
+        saveColumnOrderSettings();
+    }
+}
+
+void MainWindow::onMoveColumnRight()
+{
+    if (m_lastHeaderClickedColumn < 0) return;
+    
+    QHeaderView *header = ui->tableWidget->horizontalHeader();
+    int currentVisualIndex = header->visualIndex(m_lastHeaderClickedColumn);
+    
+    // Find the nearest visible column to the right
+    int targetVisualIndex = -1;
+    for (int i = currentVisualIndex + 1; i < header->count(); ++i) {
+        int logicalIndex = header->logicalIndex(i);
+        if (!ui->tableWidget->isColumnHidden(logicalIndex)) {
+            targetVisualIndex = i;
+            break;
+        }
+    }
+    
+    if (targetVisualIndex >= 0) {
+        // Swap the two columns
+        header->moveSection(currentVisualIndex, targetVisualIndex);
+        saveColumnOrderSettings();
+    }
 }

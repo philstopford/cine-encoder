@@ -159,6 +159,11 @@ private:
     // ============= Column visibility =============
     QStringList m_columnNames;
     QList<QAction*> m_columnActions;
+    
+    // ============= Column reordering =============
+    QAction *m_pActMoveColumnLeft;
+    QAction *m_pActMoveColumnRight;
+    int m_lastHeaderClickedColumn;
 
     // ============= Processes =============
     QProcess    *m_pProcessThumbCreation;
@@ -355,6 +360,8 @@ private slots:
     void loadColumnOrderSettings();
     void saveColumnOrderSettings();
     void onColumnSectionMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex);
+    void onMoveColumnLeft();
+    void onMoveColumnRight();
 };
 
 #endif // WIDGET_H
