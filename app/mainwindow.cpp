@@ -1879,8 +1879,18 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         if (event->type() == QEvent::MouseButtonPress) {
             auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
             if (mouse_event->button() == Qt::LeftButton) {
-                onAddFiles();
-                return true;
+                // Check if the click is within the header area - if so, don't handle it
+                // to allow column header operations (drag reordering, context menus, etc.)
+                QHeaderView* header = ui->tableWidget->horizontalHeader();
+                QPoint headerPos = header->mapFromGlobal(m_pTableLabel->mapToGlobal(mouse_event->pos()));
+                QRect headerRect = header->rect();
+                
+                // If click is NOT within header area, then handle it as a file add request
+                if (!headerRect.contains(headerPos)) {
+                    onAddFiles();
+                    return true;
+                }
+                // If click IS within header area, let it pass through for header operations
             }
         }
     } else
