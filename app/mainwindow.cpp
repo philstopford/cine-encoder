@@ -233,7 +233,7 @@ MainWindow::MainWindow(QWidget *parent):
     ui->switchViewMode->setToolTips(tr("List view"), tr("Icon view"));
 
     //*********** Set Event Filters ****************//
-    m_pTableLabel->installEventFilter(this);
+    // Don't install m_pTableLabel event filter here - will do it after UI is ready
     ui->labelPreview->installEventFilter(this);
     ui->frameMiddle->setFocusPolicy(Qt::StrongFocus);
     setAcceptDrops(true);
@@ -256,6 +256,12 @@ void MainWindow::showEvent(QShowEvent *event)
     if (!m_windowActivated) {
         m_windowActivated = true;
         setParameters();
+        
+        // Install event filters after UI is fully ready
+        qDebug() << "Installing event filters in showEvent";
+        m_pTableLabel->installEventFilter(this);
+        // Don't install header event filter for now to avoid crashes
+        // ui->tableWidget->horizontalHeader()->installEventFilter(this);
     }
 }
 
@@ -745,10 +751,15 @@ void MainWindow::createConnections()
             this, &MainWindow::provideHeaderContextMenu);
     
     // Enable drag reordering for columns
+    qDebug() << "Setting up column reordering...";
     ui->tableWidget->horizontalHeader()->setSectionsMovable(true);
     ui->tableWidget->horizontalHeader()->setDragDropMode(QAbstractItemView::InternalMove);
+    qDebug() << "Header sections movable:" << ui->tableWidget->horizontalHeader()->sectionsMovable();
+    qDebug() << "Header drag drop mode:" << ui->tableWidget->horizontalHeader()->dragDropMode();
     connect(ui->tableWidget->horizontalHeader(), &QHeaderView::sectionMoved,
             this, &MainWindow::onColumnSectionMoved);
+    // Don't install event filter here - will do it after UI is fully ready
+    qDebug() << "Column reordering setup completed";
 
     //********** File Browser actions **************//
     ui->listFiles->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -1852,6 +1863,11 @@ void MainWindow::changeEvent(QEvent *event)
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
+    // Safety check to ensure UI is fully initialized before processing any events
+    if (!ui || !ui->tableWidget) {
+        return BaseWindow::eventFilter(watched, event);
+    }
+    
     if (event->type() == QEvent::KeyPress) {
         auto *keyEvent = dynamic_cast<QKeyEvent*>(event);
         if (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) {
@@ -2645,7 +2661,9 @@ void MainWindow::onTableSelectionChanged()
     m_pSubtitleLabel->setVisible(true);
 
     m_row = ui->tableWidget->currentRow();
+    qDebug() << "Table selection changed - current row:" << m_row << "total rows:" << ui->tableWidget->rowCount();
     if (m_row != -1) {
+        qDebug() << "Files present, hiding table label and removing event filter";
         m_pTableLabel->hide();
         // Remove event filter when files are present to avoid interfering with header drag operations
         m_pTableLabel->removeEventFilter(this);
@@ -2659,6 +2677,7 @@ void MainWindow::onTableSelectionChanged()
         }
     } else {
         //************* Reset widgets ******************//
+        qDebug() << "No files, showing table label and installing event filter";
         m_pTableLabel->show();
         // Re-install event filter when no files are present to enable file dialog trigger
         m_pTableLabel->installEventFilter(this);
@@ -3877,9 +3896,7 @@ void MainWindow::saveColumnOrderSettings()
 
 void MainWindow::onColumnSectionMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex)
 {
-    Q_UNUSED(logicalIndex)
-    Q_UNUSED(oldVisualIndex)
-    Q_UNUSED(newVisualIndex)
+    qDebug() << "Column moved - Logical:" << logicalIndex << "Old Visual:" << oldVisualIndex << "New Visual:" << newVisualIndex;
     
     // Save the new column order immediately when user drags a column
     saveColumnOrderSettings();
