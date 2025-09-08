@@ -2723,7 +2723,8 @@ void MainWindow::provideContextMenu(const QPoint &pos)     // Call table items m
 void MainWindow::dragEnterEvent(QDragEnterEvent* event)     // Drag enter event
 {
     // Only accept external file drops, not internal Qt drag operations (like column reordering)
-    if (event->mimeData()->hasUrls()) {
+    // For external drags, event->source() will be null or from outside our application
+    if (event->source() == nullptr && event->mimeData()->hasUrls()) {
         // Check if this is an external file drop by verifying the URLs are actual file paths
         QList<QUrl> urlList = event->mimeData()->urls();
         bool hasValidFiles = false;
@@ -2742,12 +2743,15 @@ void MainWindow::dragEnterEvent(QDragEnterEvent* event)     // Drag enter event
 void MainWindow::dropEvent(QDropEvent* event)     // Drag & Drop
 {
     const QMimeData *mimeData = event->mimeData();
-    if (mimeData->hasUrls()) {
+    
+    // Only process external file drops, not internal Qt drag operations (like column reordering)
+    // For external drags, event->source() will be null or from outside our application
+    if (event->source() == nullptr && mimeData->hasUrls()) {
         QStringList formats;
         QStringList pathList;
         QList<QUrl> urlList = mimeData->urls();
         
-        // Only process external file drops, not internal Qt drag operations
+        // Only process external file drops with valid files
         bool hasValidFiles = false;
         for (int i = 0; i < urlList.size(); ++i) {
             QString filePath = urlList.at(i).toLocalFile();
