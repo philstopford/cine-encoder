@@ -2492,7 +2492,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                 fps_qstr,
                 VINFO(0, "DisplayAspectRatio"),
                 status,
-                default_preset[0], // PRESET column - use descriptive preset name
+                "", // PRESET column - will be set after determining current preset
                 numToStr(bitrate_int),
                 VINFO(0, "ChromaSubsampling"),
                 VINFO(0, "BitDepth"),
@@ -2526,15 +2526,45 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             for (int j = 28; j < 34; j++)
                 m_data[numRows].videoMetadata.push_back(arr_items[j]);
             
-            // Initialize with default preset parameters
-            m_data[numRows].presetParams = default_preset.toVector();
-            m_data[numRows].presetName = default_preset[0]; // Use descriptive preset name
+            // Initialize with current selected preset parameters
+            QString currentPresetName;
+            QVector<QString> currentPresetParams;
+            
+            // Check if there's a currently selected preset
+            if (m_pos_top != -1 && m_pos_cld != -1) {
+                // Use the currently selected preset
+                QTreeWidgetItem *currentItem = ui->treeWidget->topLevelItem(m_pos_top)->child(m_pos_cld);
+                if (currentItem) {
+                    currentPresetName = currentItem->text(0);
+                    currentPresetParams.resize(PARAMETERS_COUNT);
+                    for (int k = 0; k < PARAMETERS_COUNT; k++) {
+                        currentPresetParams[k] = currentItem->text(k + 7);
+                    }
+                } else {
+                    // Fallback to default preset if current item is invalid
+                    currentPresetName = tr("Default");
+                    currentPresetParams = default_preset.toVector();
+                }
+            } else {
+                // No preset selected, use default
+                currentPresetName = tr("Default");
+                currentPresetParams = default_preset.toVector();
+            }
+            
+            m_data[numRows].presetParams = currentPresetParams;
+            m_data[numRows].presetName = currentPresetName;
 
             for (int column = ColumnIndex::FILENAME; column <= ColumnIndex::T_HEIGHT; column++) {
                 auto *item = new QTableWidgetItem(arr_items[column]);
                 if (column >= ColumnIndex::FORMAT && column <= ColumnIndex::MASTERDISPLAY)
                     item->setTextAlignment(Qt::AlignCenter);
                 ui->tableWidget->setItem(numRows, column, item);
+            }
+            
+            // Set the preset column with the current preset name
+            QTableWidgetItem *presetItem = ui->tableWidget->item(numRows, ColumnIndex::PRESET_COL);
+            if (presetItem) {
+                presetItem->setText(currentPresetName);
             }
 
             auto *startTime = new QTableWidgetItem("0");
