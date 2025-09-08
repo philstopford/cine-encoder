@@ -258,10 +258,7 @@ void MainWindow::showEvent(QShowEvent *event)
         setParameters();
         
         // Install event filters after UI is fully ready
-        qDebug() << "Installing event filters in showEvent";
         m_pTableLabel->installEventFilter(this);
-        // Don't install header event filter for now to avoid crashes
-        // ui->tableWidget->horizontalHeader()->installEventFilter(this);
     }
 }
 
@@ -751,15 +748,10 @@ void MainWindow::createConnections()
             this, &MainWindow::provideHeaderContextMenu);
     
     // Enable drag reordering for columns
-    qDebug() << "Setting up column reordering...";
     ui->tableWidget->horizontalHeader()->setSectionsMovable(true);
     ui->tableWidget->horizontalHeader()->setDragDropMode(QAbstractItemView::InternalMove);
-    qDebug() << "Header sections movable:" << ui->tableWidget->horizontalHeader()->sectionsMovable();
-    qDebug() << "Header drag drop mode:" << ui->tableWidget->horizontalHeader()->dragDropMode();
     connect(ui->tableWidget->horizontalHeader(), &QHeaderView::sectionMoved,
             this, &MainWindow::onColumnSectionMoved);
-    // Don't install event filter here - will do it after UI is fully ready
-    qDebug() << "Column reordering setup completed";
 
     //********** File Browser actions **************//
     ui->listFiles->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -3896,7 +3888,9 @@ void MainWindow::saveColumnOrderSettings()
 
 void MainWindow::onColumnSectionMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex)
 {
-    qDebug() << "Column moved - Logical:" << logicalIndex << "Old Visual:" << oldVisualIndex << "New Visual:" << newVisualIndex;
+    Q_UNUSED(logicalIndex)
+    Q_UNUSED(oldVisualIndex)
+    Q_UNUSED(newVisualIndex)
     
     // Save the new column order immediately when user drags a column
     saveColumnOrderSettings();
