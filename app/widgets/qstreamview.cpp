@@ -713,30 +713,31 @@ void QStreamView::updateIncompatibleStreamStyling(QWidget* cell, QCheckBox* chkB
         tr("Subtitle codec not supported in target container - burn-in required");
     
     if (isSelected) {
-        // Yellow background for selected incompatible streams
+        // Yellow background and warning icon for selected incompatible streams
         cell->setStyleSheet("QWidget#Cell[incompatible=\"true\"] { background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 3px; }"
                            "QWidget#Cell[incompatible=\"true\"][hover=\"true\"] { background-color: #ffe69c; border: 1px solid #ffcc02; }");
         cell->setProperty("incompatible", "true");
         chkBox->setStyleSheet("QCheckBox { color: #856404; }");
         chkBox->setToolTip(tr("WARNING: %1 - This will cause encoding issues!").arg(incompatibilityReason));
+        
+        // Add warning icon for selected incompatible streams
+        QIcon warningIcon;
+        if (QFile::exists(":/resources/icons/svg/warning.svg")) {
+            warningIcon = QIcon(":/resources/icons/svg/warning.svg");
+        } else {
+            warningIcon = style()->standardIcon(QStyle::SP_MessageBoxWarning);
+        }
+        
+        if (!warningIcon.isNull()) {
+            chkBox->setIcon(warningIcon);
+            chkBox->setIconSize(QSize(12, 12) * Helper::scaling());
+        }
     } else {
-        // Only warning icon for unselected incompatible streams
+        // Reset styling for unselected incompatible streams (no warning needed)
         cell->setStyleSheet("");
         cell->setProperty("incompatible", "false");
-        chkBox->setStyleSheet("QCheckBox { color: #856404; }");
-        chkBox->setToolTip(incompatibilityReason);
-    }
-
-    // Add warning icon for all incompatible streams
-    QIcon warningIcon;
-    if (QFile::exists(":/resources/icons/svg/warning.svg")) {
-        warningIcon = QIcon(":/resources/icons/svg/warning.svg");
-    } else {
-        warningIcon = style()->standardIcon(QStyle::SP_MessageBoxWarning);
-    }
-    
-    if (!warningIcon.isNull()) {
-        chkBox->setIcon(warningIcon);
-        chkBox->setIconSize(QSize(12, 12) * Helper::scaling());
+        chkBox->setStyleSheet("");
+        chkBox->setIcon(QIcon());
+        chkBox->setToolTip("");
     }
 }
