@@ -127,39 +127,47 @@ void Encoder::initEncoding(const QString  &temp_file,
     // Get the target audio codec for transcoding consideration
     const QString targetAudioCodec = t.arr_acodec[CE_CODEC][CE_AUDIO_CODEC];
     
-    // Validate audio streams (considering transcoding)
+    // Validate audio streams (considering transcoding) - only check selected streams
     for (int i = 0; i < data.fields[Data::audioFormats].size(); i++) {
-        const QString& audioFormat = data.fields[Data::audioFormats][i];
-        if (Helper::isAudioIncompatible(container, audioFormat, targetAudioCodec)) {
-            validationErrors.append(tr("Audio stream %1 (%2) is not compatible with container '%3'")
-                                  .arg(i + 1).arg(audioFormat).arg(container));
+        if (i < data.checks[Data::audioChecks].size() && data.checks[Data::audioChecks][i]) {
+            const QString& audioFormat = data.fields[Data::audioFormats][i];
+            if (Helper::isAudioIncompatible(container, audioFormat, targetAudioCodec)) {
+                validationErrors.append(tr("Audio stream %1 (%2) is not compatible with container '%3'")
+                                      .arg(i + 1).arg(audioFormat).arg(container));
+            }
         }
     }
     
-    // Validate external audio streams (considering transcoding)
+    // Validate external audio streams (considering transcoding) - only check selected streams
     for (int i = 0; i < data.fields[Data::externAudioFormats].size(); i++) {
-        const QString& audioFormat = data.fields[Data::externAudioFormats][i];
-        if (Helper::isAudioIncompatible(container, audioFormat, targetAudioCodec)) {
-            validationErrors.append(tr("External audio stream %1 (%2) is not compatible with container '%3'")
-                                  .arg(i + 1).arg(audioFormat).arg(container));
+        if (i < data.checks[Data::externAudioChecks].size() && data.checks[Data::externAudioChecks][i]) {
+            const QString& audioFormat = data.fields[Data::externAudioFormats][i];
+            if (Helper::isAudioIncompatible(container, audioFormat, targetAudioCodec)) {
+                validationErrors.append(tr("External audio stream %1 (%2) is not compatible with container '%3'")
+                                      .arg(i + 1).arg(audioFormat).arg(container));
+            }
         }
     }
     
-    // Validate subtitle streams (considering burn-in behavior)
+    // Validate subtitle streams (considering burn-in behavior) - only check selected streams
     for (int i = 0; i < data.fields[Data::subtFormats].size(); i++) {
-        const QString& subtFormat = data.fields[Data::subtFormats][i];
-        if (Helper::isSubtitleIncompatible(container, subtFormat, CE_USE_PRESET_SUBTITLES == 1)) {
-            validationErrors.append(tr("Subtitle stream %1 (%2) is not compatible with container '%3'")
-                                  .arg(i + 1).arg(subtFormat).arg(container));
+        if (i < data.checks[Data::subtChecks].size() && data.checks[Data::subtChecks][i]) {
+            const QString& subtFormat = data.fields[Data::subtFormats][i];
+            if (Helper::isSubtitleIncompatible(container, subtFormat, CE_USE_PRESET_SUBTITLES == 1)) {
+                validationErrors.append(tr("Subtitle stream %1 (%2) is not compatible with container '%3'")
+                                      .arg(i + 1).arg(subtFormat).arg(container));
+            }
         }
     }
     
-    // Validate external subtitle streams (considering burn-in behavior)
+    // Validate external subtitle streams (considering burn-in behavior) - only check selected streams
     for (int i = 0; i < data.fields[Data::externSubtFormats].size(); i++) {
-        const QString& subtFormat = data.fields[Data::externSubtFormats][i];
-        if (Helper::isSubtitleIncompatible(container, subtFormat, CE_USE_PRESET_SUBTITLES == 1)) {
-            validationErrors.append(tr("External subtitle stream %1 (%2) is not compatible with container '%3'")
-                                  .arg(i + 1).arg(subtFormat).arg(container));
+        if (i < data.checks[Data::externSubtChecks].size() && data.checks[Data::externSubtChecks][i]) {
+            const QString& subtFormat = data.fields[Data::externSubtFormats][i];
+            if (Helper::isSubtitleIncompatible(container, subtFormat, CE_USE_PRESET_SUBTITLES == 1)) {
+                validationErrors.append(tr("External subtitle stream %1 (%2) is not compatible with container '%3'")
+                                      .arg(i + 1).arg(subtFormat).arg(container));
+            }
         }
     }
     
