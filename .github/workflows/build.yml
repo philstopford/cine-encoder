@@ -259,7 +259,7 @@ jobs:
         version: '6.7.2'  # Use stable version, Qt 6.9.2 may not be available yet
         target: 'desktop'
         arch: 'win64_mingw'
-        modules: 'qtmultimedia qtsvg'
+        modules: 'qtmultimedia'
         cache: true
 
     - name: Setup MediaInfo library
@@ -368,7 +368,6 @@ jobs:
         
         # Check for additional Qt components
         if (Test-Path "deploy\Qt6Multimedia.dll") { echo "✓ Qt6Multimedia.dll found" }
-        if (Test-Path "deploy\Qt6Svg.dll") { echo "✓ Qt6Svg.dll found" }
         if (Test-Path "deploy\Qt6Network.dll") { echo "✓ Qt6Network.dll found" }
         if (Test-Path "deploy\platforms") { echo "✓ platforms plugin folder found" }
         if (Test-Path "deploy\imageformats") { echo "✓ imageformats plugin folder found" }

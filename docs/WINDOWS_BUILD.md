@@ -10,7 +10,6 @@ The Windows build is configured in `.github/workflows/build.yml` and requires:
 - Qt 6.7.2 (MinGW 64-bit)
 - Qt6 Core, Gui, Widgets (standard components)
 - Qt6 Multimedia (for media processing)
-- Qt6 SVG (for SVG icon support)
 - Qt6 Network (dependency of other components)
 
 ### MediaInfo Library
@@ -36,8 +35,6 @@ The packaged Windows application includes all required runtime dependencies:
 - `Qt6Gui.dll` - GUI components
 - `Qt6Widgets.dll` - Widget toolkit
 - `Qt6Multimedia.dll` - Multimedia support
-- `Qt6Svg.dll` - SVG rendering
-- `Qt6SvgWidgets.dll` - SVG widget support
 - `Qt6Network.dll` - Network functionality
 
 ### MinGW Runtime Libraries
@@ -73,7 +70,7 @@ For local Windows development, see the `build-windows.bat` script which provides
 
 ### Common Issues
 
-1. **Missing Qt6 modules**: Ensure qtmultimedia and qtsvg modules are installed
+1. **Missing Qt6 modules**: Ensure qtmultimedia module is installed
 2. **MediaInfo not found**: The build will warn but continue if MediaInfo is unavailable
 3. **Missing DLLs at runtime**: `windeployqt` should handle this automatically
 
