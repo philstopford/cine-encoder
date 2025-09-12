@@ -245,3 +245,95 @@ jobs:
         name: cine-encoder-arch
         path: |
           cine-encoder-*-arch-x86_64.pkg.tar.zst
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Qt6
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.9.2'
+        target: 'desktop'
+        arch: 'win64_mingw'
+        modules: 'qtmultimedia qtsvg'
+        cache: true
+
+    - name: Setup MediaInfo library
+      run: |
+        # Download MediaInfo DLL from MediaArea
+        $url = "https://mediaarea.net/download/binary/libmediainfo0/24.06/MediaInfo_DLL_24.06_Windows_x64_WithoutInstaller.7z"
+        $output = "mediainfo.7z"
+        Invoke-WebRequest -Uri $url -OutFile $output
+
+        # Extract using 7z (available on windows-latest)
+        7z x $output -omediainfo_temp
+
+        # List contents to see what we have
+        Get-ChildItem -Recurse mediainfo_temp
+
+        # Copy MediaInfo.dll to the app folder for runtime
+        Copy-Item "mediainfo_temp\MediaInfoDLL\MediaInfo.dll" "app\"
+
+        # Copy library files to app/MediaInfoDLL for linking if they exist
+        if (Test-Path "mediainfo_temp\MediaInfoDLL\MediaInfo.lib") {
+          Copy-Item "mediainfo_temp\MediaInfoDLL\MediaInfo.lib" "app\MediaInfoDLL\"
+          echo "MediaInfo.lib copied"
+        }
+        if (Test-Path "mediainfo_temp\MediaInfoDLL\MediaInfoDLL.lib") {
+          Copy-Item "mediainfo_temp\MediaInfoDLL\MediaInfoDLL.lib" "app\MediaInfoDLL\"
+          echo "MediaInfoDLL.lib copied"
+        }
+
+        # List final contents of MediaInfoDLL directory
+        echo "Contents of app/MediaInfoDLL:"
+        Get-ChildItem app\MediaInfoDLL
+
+        echo "MediaInfo library setup completed"
+
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" ..
+
+    - name: Build
+      run: |
+        cd build
+        cmake --build . --config Release
+
+    - name: Package Windows application
+      run: |
+        # Create deployment directory
+        mkdir deploy
+
+        # Copy main executable
+        Copy-Item "build\cine_encoder.exe" "deploy\"
+
+        # Copy MediaInfo.dll to deployment
+        Copy-Item "app\MediaInfo.dll" "deploy\"
+
+        # Deploy Qt dependencies automatically (includes required DLLs and plugins)
+        windeployqt.exe --dir deploy --release --multimedia deploy\cine_encoder.exe
+
+        # Verify critical files are present
+        if (Test-Path "deploy\Qt6Core.dll") { echo "✓ Qt6Core.dll found" }
+        if (Test-Path "deploy\Qt6Gui.dll") { echo "✓ Qt6Gui.dll found" }
+        if (Test-Path "deploy\Qt6Widgets.dll") { echo "✓ Qt6Widgets.dll found" }
+        if (Test-Path "deploy\Qt6Multimedia.dll") { echo "✓ Qt6Multimedia.dll found" }
+        if (Test-Path "deploy\Qt6Svg.dll") { echo "✓ Qt6Svg.dll found" }
+        if (Test-Path "deploy\platforms") { echo "✓ platforms plugin folder found" }
+        if (Test-Path "deploy\imageformats") { echo "✓ imageformats plugin folder found" }
+
+        # Create ZIP package
+        Compress-Archive -Path "deploy\*" -DestinationPath "cine-encoder-3.5.5-windows-x64.zip"
+
+    - name: Upload Windows artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cine-encoder-windows
+        path: |
+          cine-encoder-*-windows-x64.zip

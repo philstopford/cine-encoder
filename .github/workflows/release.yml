@@ -9,7 +9,7 @@ on:
 
 jobs:
   release:
-    needs: [build-linux, build-ubuntu, build-arch]
+    needs: [build-linux, build-ubuntu, build-arch, build-windows]
     runs-on: ubuntu-latest
     
     steps:
@@ -28,6 +28,7 @@ jobs:
           artifacts/cine-encoder-linux/Cine_Encoder-*-x86_64.AppImage
           artifacts/cine-encoder-ubuntu/cine-encoder-*-ubuntu-amd64.deb
           artifacts/cine-encoder-arch/cine-encoder-*-arch-x86_64.pkg.tar.zst
+          artifacts/cine-encoder-windows/cine-encoder-*-windows-x64.zip
         generate_release_notes: true
         draft: false
         prerelease: false
