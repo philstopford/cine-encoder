@@ -25,9 +25,10 @@ The repository includes automated build workflows:
 - Uploads artifacts for testing
 
 ### Release Workflow (`.github/workflows/release.yml`)
-- Triggers on version tags (e.g., `v3.5.5`)
-- Builds release packages for all platforms
-- Automatically creates GitHub releases with binaries
+- Triggers on version tags (e.g., `v3.5.5`, `alpha4`, `beta1`)
+- Builds release packages for all platforms (same as build workflow)
+- Automatically creates GitHub releases with binaries attached
+- Downloads all build artifacts and attaches them to the release
 
 ## Local Development
 
@@ -124,6 +125,12 @@ Note: SVG icon support is available on macOS and Linux through qt6-svg packages.
 3. **File Associations**: Windows installer registers video file associations; other platforms rely on desktop environment configuration.
 
 4. **Updates**: Future releases can be deployed by creating new version tags, triggering automatic builds and releases.
+
+5. **Release Automation**: When a version tag is created (e.g., `v3.5.6`, `alpha5`, `beta2`), the GitHub Actions release workflow automatically:
+   - Builds packages for all supported platforms
+   - Creates a GitHub release
+   - Attaches all build artifacts to the release
+   - Generates release notes based on commits
 
 ## Testing Deployment
 
