@@ -17,7 +17,7 @@ The repository includes automated build workflows:
 ### Build Workflow (`.github/workflows/build.yml`)
 - Triggers on pushes to main/master branches and pull requests
 - Builds for all platforms:
-  - **Windows**: ZIP package with Qt6 + SVG + Multimedia deployment
+  - **Windows**: ZIP package with Qt6 + Multimedia deployment
   - **macOS**: DMG with universal binary and Qt6 + SVG deployment
   - **Linux**: AppImage with all dependencies bundled
   - **Ubuntu**: Native .deb packages with apt-compatible dependencies
@@ -38,7 +38,7 @@ build-windows.bat
 ```
 
 Requirements:
-- Qt6 with SVG and Multimedia modules (MinGW or MSVC)
+- Qt6 with Multimedia modules (MinGW or MSVC)
 - MediaInfo library
 - CMake 3.16+
 
@@ -73,15 +73,15 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build .
 ```
 
-## SVG Icon Support
+## Multimedia Support
 
-All builds include proper SVG support through Qt6's SVG module:
+All builds include proper multimedia support through Qt6's Multimedia module:
 
-- **Windows**: `qsvg.dll` is deployed via `windeployqt --svg`
-- **macOS**: `libqsvg.dylib` is deployed via `macdeployqt -svg`  
-- **Linux**: SVG support is included in Qt6 packages
+- **Windows**: `Qt6Multimedia.dll` is deployed via `windeployqt --multimedia`
+- **macOS**: Multimedia support is deployed via `macdeployqt`  
+- **Linux**: Multimedia support is included in Qt6 packages
 
-The application uses SVG icons from `app/resources/icons/svg/` which are embedded in the binary via Qt's resource system and will render correctly on all platforms with high DPI support.
+Note: SVG icon support is available on macOS and Linux through qt6-svg packages.
 
 ## Package Outputs
 
@@ -117,7 +117,7 @@ The application uses SVG icons from `app/resources/icons/svg/` which are embedde
 
 ## Deployment Notes
 
-1. **SVG Support**: All packages ensure SVG icons render correctly by including the appropriate Qt6 image format plugins.
+1. **Multimedia Support**: All packages ensure multimedia functionality works correctly by including the appropriate Qt6 multimedia components.
 
 2. **Dependencies**: Each platform package is self-contained with all required libraries bundled.
 
@@ -129,9 +129,9 @@ The application uses SVG icons from `app/resources/icons/svg/` which are embedde
 
 After building locally or downloading from GitHub releases:
 
-1. **Verify SVG icons display correctly** in the application UI
-2. **Test video file opening** and encoding functionality  
-3. **Check multimedia playback** works properly
-4. **Confirm window management** (resize, minimize, etc.) functions
+1. **Test video file opening** and encoding functionality  
+2. **Check multimedia playback** works properly
+3. **Confirm window management** (resize, minimize, etc.) functions
+4. **Verify UI elements display correctly** in the application
 
 The modernized Qt6 codebase ensures consistent behavior across all platforms while maintaining native look-and-feel.

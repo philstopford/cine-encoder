@@ -264,33 +264,48 @@ jobs:
 
     - name: Setup MediaInfo library
       run: |
-        # Download MediaInfo DLL from MediaArea
-        $url = "https://mediaarea.net/download/binary/libmediainfo0/24.06/MediaInfo_DLL_24.06_Windows_x64_WithoutInstaller.7z"
-        $output = "mediainfo.7z"
+        # Download MediaInfo DLL precompiled binary from MediaArea
+        $url = "https://mediaarea.net/download/binary/mediainfodll/24.06/MediaInfoDLL_24.06_Windows_x64.zip"
+        $output = "mediainfo.zip"
         Invoke-WebRequest -Uri $url -OutFile $output
 
-        # Extract using 7z (available on windows-latest)
-        7z x $output -omediainfo_temp
+        # Extract using built-in PowerShell
+        Expand-Archive -Path $output -DestinationPath "mediainfo_temp" -Force
 
         # List contents to see what we have
+        echo "MediaInfo archive contents:"
         Get-ChildItem -Recurse mediainfo_temp
 
-        # Copy MediaInfo.dll to the app folder for runtime
-        Copy-Item "mediainfo_temp\MediaInfoDLL\MediaInfo.dll" "app\"
-
-        # Copy library files to app/MediaInfoDLL for linking if they exist
-        if (Test-Path "mediainfo_temp\MediaInfoDLL\MediaInfo.lib") {
-          Copy-Item "mediainfo_temp\MediaInfoDLL\MediaInfo.lib" "app\MediaInfoDLL\"
-          echo "MediaInfo.lib copied"
+        # Find MediaInfo.dll in the extracted contents
+        $mediainfoDll = Get-ChildItem -Recurse mediainfo_temp -Name "MediaInfo.dll" | Select-Object -First 1
+        if ($mediainfoDll) {
+          $dllPath = Join-Path "mediainfo_temp" $mediainfoDll
+          echo "Found MediaInfo.dll at: $dllPath"
+          
+          # Copy MediaInfo.dll to the app folder for runtime
+          Copy-Item $dllPath "app\"
+          echo "✓ MediaInfo.dll copied to app/"
+        } else {
+          echo "⚠ MediaInfo.dll not found in downloaded package"
+          echo "Available files:"
+          Get-ChildItem -Recurse mediainfo_temp | Select-Object FullName
         }
-        if (Test-Path "mediainfo_temp\MediaInfoDLL\MediaInfoDLL.lib") {
-          Copy-Item "mediainfo_temp\MediaInfoDLL\MediaInfoDLL.lib" "app\MediaInfoDLL\"
-          echo "MediaInfoDLL.lib copied"
-        }
 
-        # List final contents of MediaInfoDLL directory
-        echo "Contents of app/MediaInfoDLL:"
-        Get-ChildItem app\MediaInfoDLL
+        # Look for library files for linking
+        $libFiles = Get-ChildItem -Recurse mediainfo_temp -Name "*.lib"
+        if ($libFiles) {
+          echo "Found library files:"
+          foreach ($lib in $libFiles) {
+            $libPath = Join-Path "mediainfo_temp" $lib
+            echo "  - $libPath"
+            # Ensure MediaInfoDLL directory exists
+            if (!(Test-Path "app\MediaInfoDLL")) {
+              New-Item -ItemType Directory -Path "app\MediaInfoDLL" -Force
+            }
+            Copy-Item $libPath "app\MediaInfoDLL\"
+            echo "✓ Copied $lib to app/MediaInfoDLL/"
+          }
+        }
 
         echo "MediaInfo library setup completed"
 
