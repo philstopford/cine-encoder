@@ -62,6 +62,7 @@ jobs:
         
         # Deploy Qt and create AppImage
         export QML_SOURCES_PATHS=.
+        export OUTPUT="Cine_Encoder-3.5.5-x86_64.AppImage"
         ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage --desktop-file=AppDir/cine_encoder.desktop
         
     - name: Upload Linux artifacts
@@ -69,7 +70,7 @@ jobs:
       with:
         name: cine-encoder-linux
         path: |
-          Cine_Encoder-*-x86_64.AppImage
+          Cine_Encoder-3.5.5-x86_64.AppImage
 
   build-ubuntu:
     runs-on: ubuntu-latest
@@ -152,7 +153,7 @@ jobs:
       with:
         name: cine-encoder-ubuntu
         path: |
-          cine-encoder-*-ubuntu-amd64.deb
+          cine-encoder-3.5.5-ubuntu-amd64.deb
 
   build-arch:
     runs-on: ubuntu-latest
@@ -243,7 +244,7 @@ jobs:
       with:
         name: cine-encoder-arch
         path: |
-          cine-encoder-*-arch-x86_64.pkg.tar.zst
+          cine-encoder-3.5.5-arch-x86_64.pkg.tar.zst
 
   build-windows:
     runs-on: windows-latest
@@ -434,4 +435,4 @@ jobs:
       with:
         name: cine-encoder-windows
         path: |
-          cine-encoder-*-windows-x64.zip
+          cine-encoder-3.5.5-windows-x64.zip
