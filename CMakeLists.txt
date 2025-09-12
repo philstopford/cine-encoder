@@ -127,14 +127,16 @@ if(WIN32)
     
     # Fix MinGW linking issue with Qt6EntryPoint
     if(MINGW)
-        # Add explicit linking to MinGW runtime libraries to resolve __imp___argc
+        # Add explicit linking to Windows CRT and MinGW runtime libraries to resolve __imp___argc
         target_link_libraries(cine_encoder PRIVATE
             -static-libgcc
             -static-libstdc++
+            msvcrt
         )
-        # Ensure proper entry point linkage
+        # Ensure proper entry point linkage and handle CRT imports
         target_link_options(cine_encoder PRIVATE
             -Wl,--enable-stdcall-fixup
+            -Wl,--enable-auto-import
         )
     endif()
     
