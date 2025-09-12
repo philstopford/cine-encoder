@@ -245,3 +245,194 @@ jobs:
         name: cine-encoder-arch
         path: |
           cine-encoder-*-arch-x86_64.pkg.tar.zst
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Qt6
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.7.2'  # Use stable version, Qt 6.9.2 may not be available yet
+        target: 'desktop'
+        arch: 'win64_mingw'
+        modules: 'qtmultimedia'
+        cache: true
+
+    - name: Setup MediaInfo library
+      run: |
+        # Download MediaInfo DLL from MediaArea
+        $url = "https://mediaarea.net/download/binary/libmediainfo0/24.06/MediaInfo_DLL_24.06_Windows_x64_WithoutInstaller.7z"
+        $output = "mediainfo.7z"
+        Invoke-WebRequest -Uri $url -OutFile $output
+
+        # Extract using 7z (available on windows-latest)
+        7z x $output -omediainfo_temp
+
+        # List contents to see what we have
+        Get-ChildItem -Recurse mediainfo_temp
+
+        # Copy MediaInfo.dll to the app folder for runtime
+        Copy-Item "mediainfo_temp\MediaInfo.dll" "app\"
+
+        # Copy library files to app/MediaInfoDLL for linking if they exist
+        if (Test-Path "mediainfo_temp\MediaInfo.lib") {
+          Copy-Item "mediainfo_temp\MediaInfo.lib" "app\MediaInfoDLL\"
+          echo "MediaInfo.lib copied"
+        }
+        if (Test-Path "mediainfo_temp\MediaInfoDLL.lib") {
+          Copy-Item "mediainfo_temp\MediaInfoDLL.lib" "app\MediaInfoDLL\"
+          echo "MediaInfoDLL.lib copied"
+        }
+
+        # List final contents of MediaInfoDLL directory
+        echo "Contents of app/MediaInfoDLL:"
+        Get-ChildItem app\MediaInfoDLL
+
+        echo "MediaInfo library setup completed"
+
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        
+        # Verify Qt6 installation
+        echo "Qt6_DIR: $env:Qt6_DIR"
+        echo "PATH: $env:PATH"
+        
+        # Configure with CMake
+        cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" ..
+        if ($LASTEXITCODE -ne 0) {
+          echo "CMake configuration failed!"
+          exit 1
+        }
+
+    - name: Build
+      run: |
+        cd build
+        cmake --build . --config Release
+        if ($LASTEXITCODE -ne 0) {
+          echo "Build failed!"
+          exit 1
+        }
+        
+        # Verify executable was created
+        if (Test-Path "cine_encoder.exe") {
+          echo "✓ cine_encoder.exe built successfully"
+        } else {
+          echo "✗ cine_encoder.exe not found!"
+          exit 1
+        }
+
+    - name: Package Windows application
+      run: |
+        # Create deployment directory
+        mkdir deploy
+
+        # Copy main executable
+        if (Test-Path "build\cine_encoder.exe") {
+          Copy-Item "build\cine_encoder.exe" "deploy\"
+          echo "✓ Copied cine_encoder.exe"
+        } else {
+          echo "✗ cine_encoder.exe not found!"
+          exit 1
+        }
+
+        # Copy MediaInfo.dll to deployment
+        if (Test-Path "app\MediaInfo.dll") {
+          Copy-Item "app\MediaInfo.dll" "deploy\"
+          echo "✓ Copied MediaInfo.dll"
+        } else {
+          echo "⚠ MediaInfo.dll not found, some features may not work"
+        }
+
+        # Deploy Qt dependencies automatically (includes required DLLs and plugins)
+        windeployqt.exe --dir deploy --release --multimedia deploy\cine_encoder.exe
+        if ($LASTEXITCODE -ne 0) {
+          echo "windeployqt failed, but continuing..."
+        }
+
+        # Copy MinGW runtime libraries
+        $possible_mingw_paths = @(
+          "C:\msys64\mingw64\bin",
+          "C:\mingw64\bin", 
+          "$env:Qt6_DIR\..\..\..\Tools\mingw1120_64\bin"
+        )
+        
+        $mingw_dlls = @("libgcc_s_seh-1.dll", "libstdc++-6.dll", "libwinpthread-1.dll")
+        $mingw_found = $false
+        
+        foreach ($path in $possible_mingw_paths) {
+          if (Test-Path $path) {
+            echo "Found MinGW path: $path"
+            foreach ($dll in $mingw_dlls) {
+              $source = "$path\$dll"
+              if (Test-Path $source) {
+                Copy-Item $source "deploy\"
+                echo "✓ Copied MinGW runtime: $dll from $path"
+                $mingw_found = $true
+              }
+            }
+            if ($mingw_found) { break }
+          }
+        }
+        
+        if (-not $mingw_found) {
+          echo "⚠ MinGW runtime libraries not found in any expected path"
+          echo "Checking current PATH for MinGW libraries:"
+          foreach ($dll in $mingw_dlls) {
+            $found = Get-Command $dll -ErrorAction SilentlyContinue
+            if ($found) {
+              $source = $found.Source
+              Copy-Item $source "deploy\"
+              echo "✓ Copied MinGW runtime: $dll from PATH: $source"
+            }
+          }
+        }
+
+        # Verify critical files are present
+        $critical_dlls = @("Qt6Core.dll", "Qt6Gui.dll", "Qt6Widgets.dll")
+        foreach ($dll in $critical_dlls) {
+          if (Test-Path "deploy\$dll") {
+            echo "✓ $dll found"
+          } else {
+            echo "✗ Critical DLL missing: $dll"
+            exit 1
+          }
+        }
+        
+        # Verify MinGW runtime libraries are present
+        $mingw_runtime_dlls = @("libgcc_s_seh-1.dll", "libstdc++-6.dll", "libwinpthread-1.dll")
+        foreach ($dll in $mingw_runtime_dlls) {
+          if (Test-Path "deploy\$dll") {
+            echo "✓ MinGW runtime $dll found"
+          } else {
+            echo "⚠ MinGW runtime library missing: $dll"
+          }
+        }
+        
+        # Check for additional Qt components
+        if (Test-Path "deploy\Qt6Multimedia.dll") { echo "✓ Qt6Multimedia.dll found" }
+        if (Test-Path "deploy\Qt6Network.dll") { echo "✓ Qt6Network.dll found" }
+        if (Test-Path "deploy\platforms") { echo "✓ platforms plugin folder found" }
+        if (Test-Path "deploy\imageformats") { echo "✓ imageformats plugin folder found" }
+        if (Test-Path "deploy\iconengines") { echo "✓ iconengines plugin folder found" }
+        if (Test-Path "deploy\styles") { echo "✓ styles plugin folder found" }
+
+        # List all files in deploy directory for debugging
+        echo "All files in deploy directory:"
+        Get-ChildItem -Recurse deploy | Select-Object FullName
+
+        # Create ZIP package
+        Compress-Archive -Path "deploy\*" -DestinationPath "cine-encoder-3.5.5-windows-x64.zip"
+        echo "✓ Created Windows package: cine-encoder-3.5.5-windows-x64.zip"
+
+    - name: Upload Windows artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cine-encoder-windows
+        path: |
+          cine-encoder-*-windows-x64.zip
