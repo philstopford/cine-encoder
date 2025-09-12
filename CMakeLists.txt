@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 project(cine_encoder VERSION 3.5.5 LANGUAGES C CXX)
 
+if(WIN32)
+    set(CMAKE_PREFIX_PATH "C:\\Qt\\6.9.2\\mingw_64\\")
+endif()
+
 # Support for GitHub Actions Qt installation path
 if(DEFINED ENV{Qt6_DIR})
     list(APPEND CMAKE_PREFIX_PATH "$ENV{Qt6_DIR}")
