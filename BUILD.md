@@ -4,7 +4,7 @@ This document describes the build and deployment infrastructure for Cine Encoder
 
 ## Supported Platforms
 
-- **Windows** (x64): Automated builds with Inno Setup installer
+- **Windows** (x64): Automated builds with ZIP packaging
 - **macOS** (Intel/Apple Silicon): Automated builds with DMG packaging  
 - **Linux** (x64): Automated builds with AppImage packaging
 - **Ubuntu** (x64): Native .deb packages with proper dependencies
@@ -17,7 +17,7 @@ The repository includes automated build workflows:
 ### Build Workflow (`.github/workflows/build.yml`)
 - Triggers on pushes to main/master branches and pull requests
 - Builds for all platforms:
-  - **Windows**: Inno Setup installer with Qt6 + SVG deployment
+  - **Windows**: ZIP package with Qt6 + SVG + Multimedia deployment
   - **macOS**: DMG with universal binary and Qt6 + SVG deployment
   - **Linux**: AppImage with all dependencies bundled
   - **Ubuntu**: Native .deb packages with apt-compatible dependencies
@@ -38,9 +38,11 @@ build-windows.bat
 ```
 
 Requirements:
-- Visual Studio 2022 (Community or higher)
-- Qt6 with SVG and Multimedia modules
+- Qt6 with SVG and Multimedia modules (MinGW or MSVC)
+- MediaInfo library
 - CMake 3.16+
+
+For automated GitHub Actions builds, see `docs/WINDOWS_BUILD.md` for detailed information.
 
 ### macOS
 ```bash
@@ -84,10 +86,10 @@ The application uses SVG icons from `app/resources/icons/svg/` which are embedde
 ## Package Outputs
 
 ### Windows
-- `cine-encoder-{version}-windows-x64.exe` - Inno Setup installer
-- Includes all Qt6 dependencies and MediaInfo library
-- Registers file associations for video files
-- Creates desktop shortcuts
+- `cine-encoder-{version}-windows-x64.zip` - Portable application package
+- Includes all Qt6 dependencies, MediaInfo library, and plugins
+- Ready to run without installation
+- Contains all required DLLs and plugin folders
 
 ### macOS  
 - `cine-encoder-{version}-macos.dmg` - Disk image with app bundle

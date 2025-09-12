@@ -256,7 +256,7 @@ jobs:
     - name: Install Qt6
       uses: jurplel/install-qt-action@v4
       with:
-        version: '6.9.2'
+        version: '6.7.2'  # Use stable version, Qt 6.9.2 may not be available yet
         target: 'desktop'
         arch: 'win64_mingw'
         modules: 'qtmultimedia qtsvg'
@@ -298,12 +298,34 @@ jobs:
       run: |
         mkdir build
         cd build
+        
+        # Verify Qt6 installation
+        echo "Qt6_DIR: $env:Qt6_DIR"
+        echo "PATH: $env:PATH"
+        
+        # Configure with CMake
         cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" ..
+        if ($LASTEXITCODE -ne 0) {
+          echo "CMake configuration failed!"
+          exit 1
+        }
 
     - name: Build
       run: |
         cd build
         cmake --build . --config Release
+        if ($LASTEXITCODE -ne 0) {
+          echo "Build failed!"
+          exit 1
+        }
+        
+        # Verify executable was created
+        if (Test-Path "cine_encoder.exe") {
+          echo "✓ cine_encoder.exe built successfully"
+        } else {
+          echo "✗ cine_encoder.exe not found!"
+          exit 1
+        }
 
     - name: Package Windows application
       run: |
@@ -311,25 +333,55 @@ jobs:
         mkdir deploy
 
         # Copy main executable
-        Copy-Item "build\cine_encoder.exe" "deploy\"
+        if (Test-Path "build\cine_encoder.exe") {
+          Copy-Item "build\cine_encoder.exe" "deploy\"
+          echo "✓ Copied cine_encoder.exe"
+        } else {
+          echo "✗ cine_encoder.exe not found!"
+          exit 1
+        }
 
         # Copy MediaInfo.dll to deployment
-        Copy-Item "app\MediaInfo.dll" "deploy\"
+        if (Test-Path "app\MediaInfo.dll") {
+          Copy-Item "app\MediaInfo.dll" "deploy\"
+          echo "✓ Copied MediaInfo.dll"
+        } else {
+          echo "⚠ MediaInfo.dll not found, some features may not work"
+        }
 
         # Deploy Qt dependencies automatically (includes required DLLs and plugins)
         windeployqt.exe --dir deploy --release --multimedia deploy\cine_encoder.exe
+        if ($LASTEXITCODE -ne 0) {
+          echo "windeployqt failed, but continuing..."
+        }
 
         # Verify critical files are present
-        if (Test-Path "deploy\Qt6Core.dll") { echo "✓ Qt6Core.dll found" }
-        if (Test-Path "deploy\Qt6Gui.dll") { echo "✓ Qt6Gui.dll found" }
-        if (Test-Path "deploy\Qt6Widgets.dll") { echo "✓ Qt6Widgets.dll found" }
+        $critical_dlls = @("Qt6Core.dll", "Qt6Gui.dll", "Qt6Widgets.dll")
+        foreach ($dll in $critical_dlls) {
+          if (Test-Path "deploy\$dll") {
+            echo "✓ $dll found"
+          } else {
+            echo "✗ Critical DLL missing: $dll"
+            exit 1
+          }
+        }
+        
+        # Check for additional Qt components
         if (Test-Path "deploy\Qt6Multimedia.dll") { echo "✓ Qt6Multimedia.dll found" }
         if (Test-Path "deploy\Qt6Svg.dll") { echo "✓ Qt6Svg.dll found" }
+        if (Test-Path "deploy\Qt6Network.dll") { echo "✓ Qt6Network.dll found" }
         if (Test-Path "deploy\platforms") { echo "✓ platforms plugin folder found" }
         if (Test-Path "deploy\imageformats") { echo "✓ imageformats plugin folder found" }
+        if (Test-Path "deploy\iconengines") { echo "✓ iconengines plugin folder found" }
+        if (Test-Path "deploy\styles") { echo "✓ styles plugin folder found" }
+
+        # List all files in deploy directory for debugging
+        echo "All files in deploy directory:"
+        Get-ChildItem -Recurse deploy | Select-Object FullName
 
         # Create ZIP package
         Compress-Archive -Path "deploy\*" -DestinationPath "cine-encoder-3.5.5-windows-x64.zip"
+        echo "✓ Created Windows package: cine-encoder-3.5.5-windows-x64.zip"
 
     - name: Upload Windows artifacts
       uses: actions/upload-artifact@v4
