@@ -8,6 +8,434 @@ on:
       - 'beta*'
 
 jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Qt6 and dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          qt6-base-dev \
+          qt6-svg-dev \
+          qt6-multimedia-dev \
+          libmediainfo-dev \
+          cmake \
+          build-essential
+          
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+        
+    - name: Build
+      run: |
+        cmake --build build --config Release
+        
+    - name: Package AppImage
+      run: |
+        # Install linuxdeploy and Qt plugin
+        wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+        chmod +x linuxdeploy*.AppImage
+        
+        # Create AppDir structure
+        mkdir -p AppDir/usr/bin
+        cp build/cine_encoder AppDir/usr/bin/
+        
+        # Create desktop file
+        cat > AppDir/cine_encoder.desktop << EOF
+        [Desktop Entry]
+        Type=Application
+        Name=Cine Encoder
+        Exec=cine_encoder
+        Icon=cine-encoder
+        Categories=AudioVideo;Video;
+        Comment=Video encoding application
+        EOF
+        
+        # Copy icon
+        mkdir -p AppDir/usr/share/icons/hicolor/64x64/apps
+        cp share/cine-encoder.png AppDir/usr/share/icons/hicolor/64x64/apps/cine-encoder.png
+        
+        # Deploy Qt and create AppImage
+        export QML_SOURCES_PATHS=.
+        ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage --desktop-file=AppDir/cine_encoder.desktop
+        
+    - name: Upload Linux artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cine-encoder-linux
+        path: |
+          Cine_Encoder-*-x86_64.AppImage
+
+  build-ubuntu:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Qt6 and dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          qt6-base-dev \
+          qt6-svg-dev \
+          qt6-multimedia-dev \
+          libmediainfo-dev \
+          cmake \
+          build-essential \
+          debhelper \
+          dh-make \
+          fakeroot
+          
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+        
+    - name: Build
+      run: |
+        cmake --build build --config Release
+        
+    - name: Install to staging directory
+      run: |
+        DESTDIR=$PWD/debian-staging cmake --install build
+        
+    - name: Create .deb package
+      run: |
+        # Create package directory structure
+        mkdir -p cine-encoder-deb/DEBIAN
+        mkdir -p cine-encoder-deb/usr
+        
+        # Copy installed files
+        cp -r debian-staging/usr/* cine-encoder-deb/usr/
+        
+        # Create control file
+        cat > cine-encoder-deb/DEBIAN/control << EOF
+        Package: cine-encoder
+        Version: 3.5.5-1
+        Section: video
+        Priority: optional
+        Architecture: amd64
+        Depends: libqt6core6, libqt6gui6, libqt6widgets6, libqt6svg6, libqt6multimedia6, libmediainfo0v5
+        Maintainer: Oleg Kozhukharenko <cine-encoder@example.com>
+        Description: Video encoding application
+         Cine Encoder is a video encoding application built with Qt6.
+         It supports various video formats and encoding options.
+        Homepage: https://github.com/philstopford/cine-encoder
+        EOF
+        
+        # Create desktop file
+        mkdir -p cine-encoder-deb/usr/share/applications
+        cat > cine-encoder-deb/usr/share/applications/cine-encoder.desktop << EOF
+        [Desktop Entry]
+        Type=Application
+        Name=Cine Encoder
+        Exec=cine_encoder
+        Icon=cine-encoder
+        Categories=AudioVideo;Video;
+        Comment=Video encoding application
+        EOF
+        
+        # Copy icon
+        mkdir -p cine-encoder-deb/usr/share/icons/hicolor/64x64/apps
+        cp share/cine-encoder.png cine-encoder-deb/usr/share/icons/hicolor/64x64/apps/cine-encoder.png
+        
+        # Build package
+        dpkg-deb --build cine-encoder-deb cine-encoder-3.5.5-ubuntu-amd64.deb
+        
+    - name: Upload Ubuntu artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cine-encoder-ubuntu
+        path: |
+          cine-encoder-*-ubuntu-amd64.deb
+
+  build-arch:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    
+    steps:
+    - name: Install base dependencies
+      run: |
+        pacman -Syu --noconfirm
+        pacman -S --noconfirm \
+          base-devel \
+          git \
+          cmake \
+          qt6-base \
+          qt6-svg \
+          qt6-multimedia \
+          libmediainfo \
+          fakeroot
+          
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+        
+    - name: Build
+      run: |
+        cmake --build build --config Release
+        
+    - name: Create PKGBUILD
+      run: |
+        cat > PKGBUILD << 'EOF'
+        # Maintainer: Oleg Kozhukharenko <cine-encoder@example.com>
+        pkgname=cine-encoder
+        pkgver=3.5.5
+        pkgrel=1
+        pkgdesc="Video encoding application built with Qt6"
+        arch=('x86_64')
+        url="https://github.com/philstopford/cine-encoder"
+        license=('custom')
+        depends=('qt6-base' 'qt6-svg' 'qt6-multimedia' 'libmediainfo')
+        makedepends=('cmake' 'qt6-base')
+        source=()
+        sha256sums=()
+
+        build() {
+          return 0
+        }
+
+        package() {
+          # Copy pre-built binary and resources
+          install -Dm755 "../build/cine_encoder" "$pkgdir/usr/bin/cine_encoder"
+          
+          # Install desktop file
+          install -Dm644 "../share/cine-encoder.png" "$pkgdir/usr/share/icons/hicolor/64x64/apps/cine-encoder.png"
+          
+          cat > cine-encoder.desktop << EOD
+        [Desktop Entry]
+        Type=Application
+        Name=Cine Encoder
+        Exec=cine_encoder
+        Icon=cine-encoder
+        Categories=AudioVideo;Video;
+        Comment=Video encoding application
+        EOD
+          install -Dm644 "cine-encoder.desktop" "$pkgdir/usr/share/applications/cine-encoder.desktop"
+          
+          # Install license
+          install -Dm644 "../LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+        }
+        EOF
+        
+    - name: Build Arch package
+      run: |
+        # Create a non-root user for makepkg
+        useradd -m builder
+        chown -R builder:builder .
+        
+        # Build package as non-root user
+        sudo -u builder makepkg --noconfirm
+        
+        # Rename main package for clarity (ignore debug package)
+        mv cine-encoder-3.5.5-1-x86_64.pkg.tar.zst cine-encoder-3.5.5-arch-x86_64.pkg.tar.zst
+        
+    - name: Upload Arch artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cine-encoder-arch
+        path: |
+          cine-encoder-*-arch-x86_64.pkg.tar.zst
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Qt6
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.7.2'  # Use stable version, Qt 6.9.2 may not be available yet
+        target: 'desktop'
+        arch: 'win64_mingw'
+        modules: 'qtmultimedia'
+        cache: true
+
+    - name: Setup MediaInfo library
+      run: |
+        # Download MediaInfo DLL from MediaArea
+        $url = "https://mediaarea.net/download/binary/libmediainfo0/24.06/MediaInfo_DLL_24.06_Windows_x64_WithoutInstaller.7z"
+        $output = "mediainfo.7z"
+        Invoke-WebRequest -Uri $url -OutFile $output
+
+        # Extract using 7z (available on windows-latest)
+        7z x $output -omediainfo_temp
+
+        # List contents to see what we have
+        Get-ChildItem -Recurse mediainfo_temp
+
+        # Copy MediaInfo.dll to the app folder for runtime
+        Copy-Item "mediainfo_temp\MediaInfo.dll" "app\"
+
+        # Copy library files to app/MediaInfoDLL for linking if they exist
+        if (Test-Path "mediainfo_temp\MediaInfo.lib") {
+          Copy-Item "mediainfo_temp\MediaInfo.lib" "app\MediaInfoDLL\"
+          echo "MediaInfo.lib copied"
+        }
+        if (Test-Path "mediainfo_temp\MediaInfoDLL.lib") {
+          Copy-Item "mediainfo_temp\MediaInfoDLL.lib" "app\MediaInfoDLL\"
+          echo "MediaInfoDLL.lib copied"
+        }
+
+        # List final contents of MediaInfoDLL directory
+        echo "Contents of app/MediaInfoDLL:"
+        Get-ChildItem app\MediaInfoDLL
+
+        echo "MediaInfo library setup completed"
+
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        
+        # Verify Qt6 installation
+        echo "Qt6_DIR: $env:Qt6_DIR"
+        echo "PATH: $env:PATH"
+        
+        # Configure with CMake
+        cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" ..
+        if ($LASTEXITCODE -ne 0) {
+          echo "CMake configuration failed!"
+          exit 1
+        }
+
+    - name: Build
+      run: |
+        cd build
+        cmake --build . --config Release
+        if ($LASTEXITCODE -ne 0) {
+          echo "Build failed!"
+          exit 1
+        }
+        
+        # Verify executable was created
+        if (Test-Path "cine_encoder.exe") {
+          echo "✓ cine_encoder.exe built successfully"
+        } else {
+          echo "✗ cine_encoder.exe not found!"
+          exit 1
+        }
+
+    - name: Package Windows application
+      run: |
+        # Create deployment directory
+        mkdir deploy
+
+        # Copy main executable
+        if (Test-Path "build\cine_encoder.exe") {
+          Copy-Item "build\cine_encoder.exe" "deploy\"
+          echo "✓ Copied cine_encoder.exe"
+        } else {
+          echo "✗ cine_encoder.exe not found!"
+          exit 1
+        }
+
+        # Copy MediaInfo.dll to deployment
+        if (Test-Path "app\MediaInfo.dll") {
+          Copy-Item "app\MediaInfo.dll" "deploy\"
+          echo "✓ Copied MediaInfo.dll"
+        } else {
+          echo "⚠ MediaInfo.dll not found, some features may not work"
+        }
+
+        # Deploy Qt dependencies automatically (includes required DLLs and plugins)
+        windeployqt.exe --dir deploy --release --multimedia deploy\cine_encoder.exe
+        if ($LASTEXITCODE -ne 0) {
+          echo "windeployqt failed, but continuing..."
+        }
+
+        # Copy MinGW runtime libraries
+        $possible_mingw_paths = @(
+          "C:\msys64\mingw64\bin",
+          "C:\mingw64\bin", 
+          "$env:Qt6_DIR\..\..\..\Tools\mingw1120_64\bin"
+        )
+        
+        $mingw_dlls = @("libgcc_s_seh-1.dll", "libstdc++-6.dll", "libwinpthread-1.dll")
+        $mingw_found = $false
+        
+        foreach ($path in $possible_mingw_paths) {
+          if (Test-Path $path) {
+            echo "Found MinGW path: $path"
+            foreach ($dll in $mingw_dlls) {
+              $source = "$path\$dll"
+              if (Test-Path $source) {
+                Copy-Item $source "deploy\"
+                echo "✓ Copied MinGW runtime: $dll from $path"
+                $mingw_found = $true
+              }
+            }
+            if ($mingw_found) { break }
+          }
+        }
+        
+        if (-not $mingw_found) {
+          echo "⚠ MinGW runtime libraries not found in any expected path"
+          echo "Checking current PATH for MinGW libraries:"
+          foreach ($dll in $mingw_dlls) {
+            $found = Get-Command $dll -ErrorAction SilentlyContinue
+            if ($found) {
+              $source = $found.Source
+              Copy-Item $source "deploy\"
+              echo "✓ Copied MinGW runtime: $dll from PATH: $source"
+            }
+          }
+        }
+
+        # Verify critical files are present
+        $critical_dlls = @("Qt6Core.dll", "Qt6Gui.dll", "Qt6Widgets.dll")
+        foreach ($dll in $critical_dlls) {
+          if (Test-Path "deploy\$dll") {
+            echo "✓ $dll found"
+          } else {
+            echo "✗ Critical DLL missing: $dll"
+            exit 1
+          }
+        }
+        
+        # Verify MinGW runtime libraries are present
+        $mingw_runtime_dlls = @("libgcc_s_seh-1.dll", "libstdc++-6.dll", "libwinpthread-1.dll")
+        foreach ($dll in $mingw_runtime_dlls) {
+          if (Test-Path "deploy\$dll") {
+            echo "✓ MinGW runtime $dll found"
+          } else {
+            echo "⚠ MinGW runtime library missing: $dll"
+          }
+        }
+        
+        # Check for additional Qt components
+        if (Test-Path "deploy\Qt6Multimedia.dll") { echo "✓ Qt6Multimedia.dll found" }
+        if (Test-Path "deploy\Qt6Network.dll") { echo "✓ Qt6Network.dll found" }
+        if (Test-Path "deploy\platforms") { echo "✓ platforms plugin folder found" }
+        if (Test-Path "deploy\imageformats") { echo "✓ imageformats plugin folder found" }
+        if (Test-Path "deploy\iconengines") { echo "✓ iconengines plugin folder found" }
+        if (Test-Path "deploy\styles") { echo "✓ styles plugin folder found" }
+
+        # List all files in deploy directory for debugging
+        echo "All files in deploy directory:"
+        Get-ChildItem -Recurse deploy | Select-Object FullName
+
+        # Create ZIP package
+        Compress-Archive -Path "deploy\*" -DestinationPath "cine-encoder-3.5.5-windows-x64.zip"
+        echo "✓ Created Windows package: cine-encoder-3.5.5-windows-x64.zip"
+
+    - name: Upload Windows artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cine-encoder-windows
+        path: |
+          cine-encoder-*-windows-x64.zip
+
   release:
     needs: [build-linux, build-ubuntu, build-arch, build-windows]
     runs-on: ubuntu-latest

@@ -3,7 +3,6 @@ name: Build and Package
 on:
   push:
     branches: [ main, master ]
-    tags: [ 'v*', 'alpha*', 'beta*' ]
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:
@@ -59,7 +58,7 @@ jobs:
         
         # Copy icon
         mkdir -p AppDir/usr/share/icons/hicolor/64x64/apps
-        cp app/resources/icons/64x64/cine-encoder.png AppDir/usr/share/icons/hicolor/64x64/apps/cine-encoder.png
+        cp share/cine-encoder.png AppDir/usr/share/icons/hicolor/64x64/apps/cine-encoder.png
         
         # Deploy Qt and create AppImage
         export QML_SOURCES_PATHS=.
@@ -143,7 +142,7 @@ jobs:
         
         # Copy icon
         mkdir -p cine-encoder-deb/usr/share/icons/hicolor/64x64/apps
-        cp app/resources/icons/64x64/cine-encoder.png cine-encoder-deb/usr/share/icons/hicolor/64x64/apps/cine-encoder.png
+        cp share/cine-encoder.png cine-encoder-deb/usr/share/icons/hicolor/64x64/apps/cine-encoder.png
         
         # Build package
         dpkg-deb --build cine-encoder-deb cine-encoder-3.5.5-ubuntu-amd64.deb
@@ -209,7 +208,7 @@ jobs:
           install -Dm755 "../build/cine_encoder" "$pkgdir/usr/bin/cine_encoder"
           
           # Install desktop file
-          install -Dm644 "../app/resources/icons/64x64/cine-encoder.png" "$pkgdir/usr/share/icons/hicolor/64x64/apps/cine-encoder.png"
+          install -Dm644 "../share/cine-encoder.png" "$pkgdir/usr/share/icons/hicolor/64x64/apps/cine-encoder.png"
           
           cat > cine-encoder.desktop << EOD
         [Desktop Entry]
