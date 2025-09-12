@@ -3727,17 +3727,12 @@ void MainWindow::updateFileIncompatibilityStatus(int fileRow)
     QTableWidgetItem* filenameItem = ui->tableWidget->item(fileRow, ColumnIndex::FILENAME);
     if (filenameItem) {
         if (hasSelectedIncompatibleStreams) {
-            // Yellow background for files with selected incompatible streams
+            // Yellow background and warning icon for files with selected incompatible streams
             filenameItem->setBackground(QColor("#fff3cd"));
             filenameItem->setIcon(style()->standardIcon(QStyle::SP_MessageBoxWarning));
             filenameItem->setToolTip(tr("WARNING: This file has incompatible streams selected for output. This will cause encoding issues!"));
-        } else if (hasIncompatibleStreams) {
-            // Only warning icon for files with unselected incompatible streams
-            filenameItem->setBackground(QColor());
-            filenameItem->setIcon(style()->standardIcon(QStyle::SP_MessageBoxWarning));
-            filenameItem->setToolTip(tr("This file contains streams that are incompatible with the current preset container format."));
         } else {
-            // Reset styling for compatible files
+            // Reset styling for files without selected incompatible streams
             filenameItem->setBackground(QColor());
             filenameItem->setIcon(QIcon());
             filenameItem->setToolTip("");
