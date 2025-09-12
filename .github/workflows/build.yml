@@ -355,6 +355,44 @@ jobs:
           echo "windeployqt failed, but continuing..."
         }
 
+        # Copy MinGW runtime libraries
+        $possible_mingw_paths = @(
+          "C:\msys64\mingw64\bin",
+          "C:\mingw64\bin", 
+          "$env:Qt6_DIR\..\..\..\Tools\mingw1120_64\bin"
+        )
+        
+        $mingw_dlls = @("libgcc_s_seh-1.dll", "libstdc++-6.dll", "libwinpthread-1.dll")
+        $mingw_found = $false
+        
+        foreach ($path in $possible_mingw_paths) {
+          if (Test-Path $path) {
+            echo "Found MinGW path: $path"
+            foreach ($dll in $mingw_dlls) {
+              $source = "$path\$dll"
+              if (Test-Path $source) {
+                Copy-Item $source "deploy\"
+                echo "✓ Copied MinGW runtime: $dll from $path"
+                $mingw_found = $true
+              }
+            }
+            if ($mingw_found) { break }
+          }
+        }
+        
+        if (-not $mingw_found) {
+          echo "⚠ MinGW runtime libraries not found in any expected path"
+          echo "Checking current PATH for MinGW libraries:"
+          foreach ($dll in $mingw_dlls) {
+            $found = Get-Command $dll -ErrorAction SilentlyContinue
+            if ($found) {
+              $source = $found.Source
+              Copy-Item $source "deploy\"
+              echo "✓ Copied MinGW runtime: $dll from PATH: $source"
+            }
+          }
+        }
+
         # Verify critical files are present
         $critical_dlls = @("Qt6Core.dll", "Qt6Gui.dll", "Qt6Widgets.dll")
         foreach ($dll in $critical_dlls) {
@@ -363,6 +401,16 @@ jobs:
           } else {
             echo "✗ Critical DLL missing: $dll"
             exit 1
+          }
+        }
+        
+        # Verify MinGW runtime libraries are present
+        $mingw_runtime_dlls = @("libgcc_s_seh-1.dll", "libstdc++-6.dll", "libwinpthread-1.dll")
+        foreach ($dll in $mingw_runtime_dlls) {
+          if (Test-Path "deploy\$dll") {
+            echo "✓ MinGW runtime $dll found"
+          } else {
+            echo "⚠ MinGW runtime library missing: $dll"
           }
         }
         
