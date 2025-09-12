@@ -31,8 +31,14 @@ include(GNUInstallDirs)
 set(CMAKE_AUTOUIC ON)
 
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Multimedia Svg)
-find_package(Qt${QT_VERSION_MAJOR} OPTIONAL_COMPONENTS Widgets) # X11Extras)
+# On Windows, skip Svg component since qtsvg causes build issues
+if(WIN32)
+    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Multimedia)
+    find_package(Qt${QT_VERSION_MAJOR} OPTIONAL_COMPONENTS Widgets Svg)
+else()
+    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Multimedia Svg)
+    find_package(Qt${QT_VERSION_MAJOR} OPTIONAL_COMPONENTS Widgets)
+endif()
 
 # Print Qt6 information for debugging
 message(STATUS "Qt6 version: ${Qt6_VERSION}")
@@ -74,8 +80,12 @@ target_link_libraries(cine_encoder PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Multimedia
-    Qt::Svg
 )
+
+# Link Qt::Svg conditionally based on availability
+if(Qt6Svg_FOUND)
+    target_link_libraries(cine_encoder PRIVATE Qt::Svg)
+endif()
 
 target_include_directories(cine_encoder PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/app)
 
@@ -114,6 +124,19 @@ if(WIN32)
         dwmapi
         user32
     )
+    
+    # Fix MinGW linking issue with Qt6EntryPoint
+    if(MINGW)
+        # Add explicit linking to MinGW runtime libraries to resolve __imp___argc
+        target_link_libraries(cine_encoder PRIVATE
+            -static-libgcc
+            -static-libstdc++
+        )
+        # Ensure proper entry point linkage
+        target_link_options(cine_encoder PRIVATE
+            -Wl,--enable-stdcall-fixup
+        )
+    endif()
     
     # Try to find MediaInfo library in the MediaInfoDLL directory
     find_library(MEDIAINFO_LIB 
