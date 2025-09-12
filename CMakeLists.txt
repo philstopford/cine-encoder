@@ -127,13 +127,25 @@ if(WIN32)
     
     # Fix MinGW linking issue with Qt6EntryPoint
     if(MINGW)
-        # Add explicit linking to Windows CRT and MinGW runtime libraries to resolve __imp___argc
+        # The __imp___argc symbol issue occurs because Qt6EntryPoint expects MSVC CRT symbols
+        # but MinGW uses its own runtime. We'll provide the missing symbol manually.
+        
+        # Create a simple source file to provide the missing symbol
+        set(MINGW_FIX_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/mingw_argc_fix.c)
+        file(WRITE ${MINGW_FIX_SOURCE} "
+// Fix for MinGW Qt6EntryPoint linking issue
+// Provides the __imp___argc symbol that Qt6EntryPoint expects
+extern int __argc;
+int* __imp___argc = &__argc;
+")
+        target_sources(cine_encoder PRIVATE ${MINGW_FIX_SOURCE})
+        
+        # Add standard MinGW runtime linking
         target_link_libraries(cine_encoder PRIVATE
             -static-libgcc
             -static-libstdc++
-            msvcrt
         )
-        # Ensure proper entry point linkage and handle CRT imports
+        # Standard linker options for MinGW
         target_link_options(cine_encoder PRIVATE
             -Wl,--enable-stdcall-fixup
             -Wl,--enable-auto-import
