@@ -3202,6 +3202,7 @@ void MainWindow::setDefaultPresets() // Set default presets
 
 void MainWindow::onApplyPreset()  // Apply preset
 {
+    // Apply preset to selected files, or to all files if none are selected
     if (ui->treeWidget->currentIndex().row() < 0) {
         showPopup(tr("Select preset first!\n"));
         return;
@@ -3212,12 +3213,20 @@ void MainWindow::onApplyPreset()  // Apply preset
     QModelIndexList selectedIndexes = ui->tableWidget->selectionModel()->selectedRows();
     
     if (selectedIndexes.isEmpty()) {
-        showPopup(tr("Select files first!\n"));
-        return;
-    }
-    
-    for (const QModelIndex &index : selectedIndexes) {
-        selectedRows.append(index.row());
+        // If no files are selected, apply to all files in the task list
+        for (int i = 0; i < ui->tableWidget->rowCount(); i++) {
+            selectedRows.append(i);
+        }
+        
+        if (selectedRows.isEmpty()) {
+            showPopup(tr("No files in task list!\n"));
+            return;
+        }
+    } else {
+        // If files are selected, apply only to selected files
+        for (const QModelIndex &index : selectedIndexes) {
+            selectedRows.append(index.row());
+        }
     }
     
     QTreeWidgetItem *item = ui->treeWidget->currentItem();
