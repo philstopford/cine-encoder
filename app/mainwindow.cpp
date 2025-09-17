@@ -4005,7 +4005,7 @@ void MainWindow::onToggleColumnVisibility()
 
 void MainWindow::loadColumnVisibilitySettings()
 {
-    for (int i = 0; i < 31; ++i) {
+    for (int i = 0; i < 32; ++i) {
         bool visible = CONFIG.getBool(QString("table/column_visible_%1").arg(i), 
                                     i < 9); // First 9 columns visible by default
         ui->tableWidget->setColumnHidden(i, !visible);
@@ -4019,7 +4019,7 @@ void MainWindow::loadColumnVisibilitySettings()
 
 void MainWindow::saveColumnVisibilitySettings()
 {
-    for (int i = 0; i < 31; ++i) {
+    for (int i = 0; i < 32; ++i) {
         bool visible = !ui->tableWidget->isColumnHidden(i);
         CONFIG.setBool(QString("table/column_visible_%1").arg(i), visible);
     }
@@ -4039,21 +4039,21 @@ void MainWindow::updateColumnVisibilityMenus()
 
 void MainWindow::loadColumnOrderSettings()
 {
-    QList<int> visualOrder(31);
+    QList<int> visualOrder(32);
     
     // Load saved order, defaulting to natural order (0,1,2,3...)
-    for (int i = 0; i < 31; ++i) {
+    for (int i = 0; i < 32; ++i) {
         visualOrder[i] = CONFIG.getInt(QString("table/column_order_%1").arg(i), i);
     }
     
-    // Validate and fix any invalid order (ensure each position 0-30 appears exactly once)
-    QList<bool> usedPositions(31, false);
+    // Validate and fix any invalid order (ensure each position 0-31 appears exactly once)
+    QList<bool> usedPositions(32, false);
     QList<int> invalidColumns;
     
     // Mark used positions and identify invalid ones
-    for (int i = 0; i < 31; ++i) {
+    for (int i = 0; i < 32; ++i) {
         int pos = visualOrder[i];
-        if (pos >= 0 && pos < 31 && !usedPositions[pos]) {
+        if (pos >= 0 && pos < 32 && !usedPositions[pos]) {
             usedPositions[pos] = true;
         } else {
             invalidColumns.append(i);
@@ -4063,10 +4063,10 @@ void MainWindow::loadColumnOrderSettings()
     // Assign unused positions to invalid columns
     int nextAvailablePos = 0;
     for (int col : invalidColumns) {
-        while (nextAvailablePos < 31 && usedPositions[nextAvailablePos]) {
+        while (nextAvailablePos < 32 && usedPositions[nextAvailablePos]) {
             nextAvailablePos++;
         }
-        if (nextAvailablePos < 31) {
+        if (nextAvailablePos < 32) {
             visualOrder[col] = nextAvailablePos;
             usedPositions[nextAvailablePos] = true;
         }
@@ -4074,7 +4074,7 @@ void MainWindow::loadColumnOrderSettings()
     
     // Apply the column order to the table header
     QHeaderView *header = ui->tableWidget->horizontalHeader();
-    for (int logical = 0; logical < 31; ++logical) {
+    for (int logical = 0; logical < 32; ++logical) {
         int visual = visualOrder[logical];
         header->moveSection(header->visualIndex(logical), visual);
     }
@@ -4083,7 +4083,7 @@ void MainWindow::loadColumnOrderSettings()
 void MainWindow::saveColumnOrderSettings()
 {
     QHeaderView *header = ui->tableWidget->horizontalHeader();
-    for (int logical = 0; logical < 31; ++logical) {
+    for (int logical = 0; logical < 32; ++logical) {
         int visual = header->visualIndex(logical);
         CONFIG.setInt(QString("table/column_order_%1").arg(logical), visual);
     }

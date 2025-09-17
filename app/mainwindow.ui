@@ -2619,7 +2619,7 @@
                   <number>12</number>
                  </property>
                  <property name="columnCount">
-                  <number>31</number>
+                  <number>32</number>
                  </property>
                  <attribute name="horizontalHeaderVisible">
                   <bool>true</bool>
@@ -2675,6 +2675,11 @@
                  <row/>
                  <row/>
                  <row/>
+                 <column>
+                  <property name="text">
+                   <string>Warning</string>
+                  </property>
+                 </column>
                  <column>
                   <property name="text">
                    <string>File path</string>
