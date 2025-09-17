@@ -2042,6 +2042,53 @@ void MainWindow::initEncoding()
     const QString globalTitle = ui->lineEditGlobalTitle->text();
     const int streamCutting = ui->switchCutting->currentIndex();
 
+    // Ensure current file's preset parameters are loaded into m_curParams before encoding
+    // This is critical for batch mode where each file may have different preset parameters
+    if (m_row >= 0 && m_row < m_data.size()) {
+        if (!m_data[m_row].presetParams.isEmpty()) {
+            // Load this file's specific preset parameters
+            for (int k = 0; k < PARAMETERS_COUNT && k < m_data[m_row].presetParams.size(); k++) {
+                m_curParams[k] = m_data[m_row].presetParams[k];
+            }
+        } else {
+            // If no preset parameters but there's a preset name, try to reload from the preset
+            if (!m_data[m_row].presetName.isEmpty() && m_data[m_row].presetName != tr("Default")) {
+                // Try to find and reload the preset parameters
+                bool presetFound = false;
+                for (int i = 0; i < ui->treeWidget->topLevelItemCount() && !presetFound; i++) {
+                    QTreeWidgetItem *parentItem = ui->treeWidget->topLevelItem(i);
+                    for (int j = 0; j < parentItem->childCount(); j++) {
+                        QTreeWidgetItem *childItem = parentItem->child(j);
+                        if (childItem && childItem->text(0) == m_data[m_row].presetName) {
+                            // Found the preset, reload its parameters
+                            QVector<QString> reloadedParams(PARAMETERS_COUNT);
+                            for (int k = 0; k < PARAMETERS_COUNT; k++) {
+                                reloadedParams[k] = childItem->text(k + 7);
+                                m_curParams[k] = reloadedParams[k];
+                            }
+                            // Restore the parameters to the file data for future use
+                            m_data[m_row].presetParams = reloadedParams;
+                            presetFound = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!presetFound) {
+                    // Preset not found, use defaults as fallback
+                    for (int k = 0; k < PARAMETERS_COUNT && k < default_preset.size(); k++) {
+                        m_curParams[k] = default_preset[k];
+                    }
+                }
+            } else {
+                // No preset name or it's default, use default parameters
+                for (int k = 0; k < PARAMETERS_COUNT && k < default_preset.size(); k++) {
+                    m_curParams[k] = default_preset[k];
+                }
+            }
+        }
+    }
+
     // Avoid touching our defined colors.
     // Shim the alpha values here because the color picker clobbers them and we need reliable values.
     QColor subtitles_color = m_subtitles_color;
@@ -3212,12 +3259,20 @@ void MainWindow::onApplyPreset()  // Apply preset
     QModelIndexList selectedIndexes = ui->tableWidget->selectionModel()->selectedRows();
     
     if (selectedIndexes.isEmpty()) {
-        showPopup(tr("Select files first!\n"));
-        return;
-    }
-    
-    for (const QModelIndex &index : selectedIndexes) {
-        selectedRows.append(index.row());
+        // If no files are selected, apply to all files in the task list
+        for (int i = 0; i < ui->tableWidget->rowCount(); i++) {
+            selectedRows.append(i);
+        }
+        
+        if (selectedRows.isEmpty()) {
+            showPopup(tr("No files in task list!\n"));
+            return;
+        }
+    } else {
+        // If files are selected, apply only to selected files (original behavior)
+        for (const QModelIndex &index : selectedIndexes) {
+            selectedRows.append(index.row());
+        }
     }
     
     QTreeWidgetItem *item = ui->treeWidget->currentItem();
