@@ -2051,10 +2051,40 @@ void MainWindow::initEncoding()
                 m_curParams[k] = m_data[m_row].presetParams[k];
             }
         } else {
-            // If no preset parameters, ensure we have reasonable defaults
-            // This prevents using stale parameters from previous files
-            for (int k = 0; k < PARAMETERS_COUNT && k < default_preset.size(); k++) {
-                m_curParams[k] = default_preset[k];
+            // If no preset parameters but there's a preset name, try to reload from the preset
+            if (!m_data[m_row].presetName.isEmpty() && m_data[m_row].presetName != tr("Default")) {
+                // Try to find and reload the preset parameters
+                bool presetFound = false;
+                for (int i = 0; i < ui->treeWidget->topLevelItemCount() && !presetFound; i++) {
+                    QTreeWidgetItem *parentItem = ui->treeWidget->topLevelItem(i);
+                    for (int j = 0; j < parentItem->childCount(); j++) {
+                        QTreeWidgetItem *childItem = parentItem->child(j);
+                        if (childItem && childItem->text(0) == m_data[m_row].presetName) {
+                            // Found the preset, reload its parameters
+                            QVector<QString> reloadedParams(PARAMETERS_COUNT);
+                            for (int k = 0; k < PARAMETERS_COUNT; k++) {
+                                reloadedParams[k] = childItem->text(k + 7);
+                                m_curParams[k] = reloadedParams[k];
+                            }
+                            // Restore the parameters to the file data for future use
+                            m_data[m_row].presetParams = reloadedParams;
+                            presetFound = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!presetFound) {
+                    // Preset not found, use defaults as fallback
+                    for (int k = 0; k < PARAMETERS_COUNT && k < default_preset.size(); k++) {
+                        m_curParams[k] = default_preset[k];
+                    }
+                }
+            } else {
+                // No preset name or it's default, use default parameters
+                for (int k = 0; k < PARAMETERS_COUNT && k < default_preset.size(); k++) {
+                    m_curParams[k] = default_preset[k];
+                }
             }
         }
     }
