@@ -2042,13 +2042,6 @@ void MainWindow::initEncoding()
     const QString globalTitle = ui->lineEditGlobalTitle->text();
     const int streamCutting = ui->switchCutting->currentIndex();
 
-    // Ensure current file's preset parameters are loaded into m_curParams before encoding
-    if (m_row >= 0 && m_row < m_data.size() && !m_data[m_row].presetParams.isEmpty()) {
-        for (int k = 0; k < PARAMETERS_COUNT && k < m_data[m_row].presetParams.size(); k++) {
-            m_curParams[k] = m_data[m_row].presetParams[k];
-        }
-    }
-
     // Avoid touching our defined colors.
     // Shim the alpha values here because the color picker clobbers them and we need reliable values.
     QColor subtitles_color = m_subtitles_color;
@@ -3209,7 +3202,6 @@ void MainWindow::setDefaultPresets() // Set default presets
 
 void MainWindow::onApplyPreset()  // Apply preset
 {
-    // Apply preset to selected files, or to all files if none are selected
     if (ui->treeWidget->currentIndex().row() < 0) {
         showPopup(tr("Select preset first!\n"));
         return;
@@ -3230,7 +3222,7 @@ void MainWindow::onApplyPreset()  // Apply preset
             return;
         }
     } else {
-        // If files are selected, apply only to selected files
+        // If files are selected, apply only to selected files (original behavior)
         for (const QModelIndex &index : selectedIndexes) {
             selectedRows.append(index.row());
         }
@@ -3270,11 +3262,9 @@ void MainWindow::onApplyPreset()  // Apply preset
             }
         }
         
-        // Update current global parameters from the preset only if current file received the preset
-        if (selectedRows.contains(m_row)) {
-            for (int k = 0; k < PARAMETERS_COUNT; k++)
-                m_curParams[k] = presetParams[k];
-        }
+        // Update current global parameters from the preset for UI consistency
+        for (int k = 0; k < PARAMETERS_COUNT; k++)
+            m_curParams[k] = presetParams[k];
             
         m_pos_top = ui->treeWidget->indexOfTopLevelItem(parentItem);
         m_pos_cld = parentItem->indexOfChild(item);
