@@ -115,8 +115,67 @@ void QStreamView::clearList()
 
 void QStreamView::setList(QString extension, Data &data, const QString& targetAudioCodec, bool usePresetSubtitleSettings)
 {
+    // Save current audio selection state before clearing
+    QVector<bool> savedAudioChecks;
+    QVector<bool> savedExternAudioChecks;
+    QVector<bool> savedAudioDef;
+    QVector<bool> savedExternAudioDef;
+    QVector<bool> savedSubtChecks;
+    QVector<bool> savedExternSubtChecks;
+    QVector<bool> savedSubtDef;
+    QVector<bool> savedExternSubtDef;
+    QVector<bool> savedSubtBurn;
+    QVector<bool> savedExternSubtBurn;
+    
+    if (m_pData != nullptr) {
+        // Save audio states
+        savedAudioChecks = m_pData->checks[Data::audioChecks];
+        savedExternAudioChecks = m_pData->checks[Data::externAudioChecks];
+        savedAudioDef = m_pData->checks[Data::audioDef];
+        savedExternAudioDef = m_pData->checks[Data::externAudioDef];
+        // Save subtitle states
+        savedSubtChecks = m_pData->checks[Data::subtChecks];
+        savedExternSubtChecks = m_pData->checks[Data::externSubtChecks];
+        savedSubtDef = m_pData->checks[Data::subtDef];
+        savedExternSubtDef = m_pData->checks[Data::externSubtDef];
+        savedSubtBurn = m_pData->checks[Data::subtBurn];
+        savedExternSubtBurn = m_pData->checks[Data::externSubtBurn];
+    }
+    
     clearList();
     m_pData = &data;
+    
+    // Restore saved selection state if data is the same
+    if (!savedAudioChecks.isEmpty() && savedAudioChecks.size() == data.checks[Data::audioChecks].size()) {
+        data.checks[Data::audioChecks] = savedAudioChecks;
+    }
+    if (!savedExternAudioChecks.isEmpty() && savedExternAudioChecks.size() == data.checks[Data::externAudioChecks].size()) {
+        data.checks[Data::externAudioChecks] = savedExternAudioChecks;
+    }
+    if (!savedAudioDef.isEmpty() && savedAudioDef.size() == data.checks[Data::audioDef].size()) {
+        data.checks[Data::audioDef] = savedAudioDef;
+    }
+    if (!savedExternAudioDef.isEmpty() && savedExternAudioDef.size() == data.checks[Data::externAudioDef].size()) {
+        data.checks[Data::externAudioDef] = savedExternAudioDef;
+    }
+    if (!savedSubtChecks.isEmpty() && savedSubtChecks.size() == data.checks[Data::subtChecks].size()) {
+        data.checks[Data::subtChecks] = savedSubtChecks;
+    }
+    if (!savedExternSubtChecks.isEmpty() && savedExternSubtChecks.size() == data.checks[Data::externSubtChecks].size()) {
+        data.checks[Data::externSubtChecks] = savedExternSubtChecks;
+    }
+    if (!savedSubtDef.isEmpty() && savedSubtDef.size() == data.checks[Data::subtDef].size()) {
+        data.checks[Data::subtDef] = savedSubtDef;
+    }
+    if (!savedExternSubtDef.isEmpty() && savedExternSubtDef.size() == data.checks[Data::externSubtDef].size()) {
+        data.checks[Data::externSubtDef] = savedExternSubtDef;
+    }
+    if (!savedSubtBurn.isEmpty() && savedSubtBurn.size() == data.checks[Data::subtBurn].size()) {
+        data.checks[Data::subtBurn] = savedSubtBurn;
+    }
+    if (!savedExternSubtBurn.isEmpty() && savedExternSubtBurn.size() == data.checks[Data::externSubtBurn].size()) {
+        data.checks[Data::externSubtBurn] = savedExternSubtBurn;
+    }
     m_targetAudioCodec = targetAudioCodec;
     m_usePresetSubtitleSettings = usePresetSubtitleSettings;
     const QString columns[] = {
