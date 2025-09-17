@@ -347,7 +347,7 @@ private slots:
     void onAddToTask();
     void onExtract(QStreamView::Content type, int num);
     void updateFileIncompatibilityStatus(int fileRow);
-    void updateBitDepthWarning(int fileRow);
+    void updateFileWarnings(int fileRow);
     
     // ============== Column Visibility ==============
     void provideHeaderContextMenu(const QPoint& pos);

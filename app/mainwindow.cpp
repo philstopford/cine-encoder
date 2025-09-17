@@ -579,10 +579,10 @@ void MainWindow::createConnections()
     
     // Stream selection change notifications for incompatibility highlighting
     connect(ui->streamAudio, &QStreamView::streamSelectionChanged, this, [this]() {
-        updateFileIncompatibilityStatus(ui->tableWidget->currentRow());
+        updateFileWarnings(ui->tableWidget->currentRow());
     });
     connect(ui->streamSubtitle, &QStreamView::streamSelectionChanged, this, [this]() {
-        updateFileIncompatibilityStatus(ui->tableWidget->currentRow());
+        updateFileWarnings(ui->tableWidget->currentRow());
     });
 
     // Table and UI controls
@@ -950,6 +950,7 @@ void MainWindow::setParameters()    // Set parameters
     ui->tableWidget->setColumnWidth(ColumnIndex::AR, 60);
     ui->tableWidget->setColumnWidth(ColumnIndex::STATUS, 80);
     ui->tableWidget->setColumnWidth(ColumnIndex::PRESET_COL, 120);
+    ui->tableWidget->setColumnWidth(ColumnIndex::WARNING, 60); // Warning column, visible by default
     ui->tableWidget->setIconSize(QSize(16, 16) * Helper::scaling());
 
     for (int i = ColumnIndex::COLORRANGE; i <= ColumnIndex::MAXFALL; i++)
@@ -2542,6 +2543,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                 VINFO(0, "DisplayAspectRatio"),
                 status,
                 "", // PRESET column - will be set after determining current preset
+                "", // WARNING column - will be set when warnings are detected
                 numToStr(bitrate_int),
                 VINFO(0, "ChromaSubsampling"),
                 VINFO(0, "BitDepth"),
@@ -2572,7 +2574,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
 
             m_data.resize(numRows + 1);
             m_data[numRows].clear();
-            for (int j = 28; j < 34; j++)
+            for (int j = 29; j < 35; j++)
                 m_data[numRows].videoMetadata.push_back(arr_items[j]);
             
             // Initialize with current selected preset parameters
@@ -2668,9 +2670,8 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             prg.setPercent(50);
             ui->tableWidget->selectRow(ui->tableWidget->rowCount() - 1);
             
-            // Update file-level incompatibility status and bit depth warnings
-            updateFileIncompatibilityStatus(numRows);
-            updateBitDepthWarning(numRows);
+            // Update file-level warnings (includes bit depth and incompatibility warnings)
+            updateFileWarnings(numRows);
             
             Helper::nonBlockDelay(50);
             prg.setPercent(100);
@@ -3327,10 +3328,9 @@ void MainWindow::onApplyPreset()  // Apply preset
         return;
     }
     
-    // Update incompatibility status and bit depth warnings for all files since container format may have changed
+    // Update all warnings for all files since container format may have changed
     for (int i = 0; i < ui->tableWidget->rowCount(); i++) {
-        updateFileIncompatibilityStatus(i);
-        updateBitDepthWarning(i);
+        updateFileWarnings(i);
     }
 }
 
@@ -3780,73 +3780,100 @@ void MainWindow::updateFileIncompatibilityStatus(int fileRow)
         }
     }
     
-    // Apply styling to the filename cell
-    QTableWidgetItem* filenameItem = ui->tableWidget->item(fileRow, ColumnIndex::FILENAME);
-    if (filenameItem) {
-        if (hasSelectedIncompatibleStreams) {
-            // Yellow background and warning icon for files with selected incompatible streams
-            filenameItem->setBackground(QColor("#fff3cd"));
-            filenameItem->setIcon(style()->standardIcon(QStyle::SP_MessageBoxWarning));
-            filenameItem->setToolTip(tr("WARNING: This file has incompatible streams selected for output. This will cause encoding issues!"));
-        } else {
-            // Reset styling for files without selected incompatible streams
-            filenameItem->setBackground(QColor());
-            filenameItem->setIcon(QIcon());
-            filenameItem->setToolTip("");
-        }
-    }
+    // Note: Warning display is now handled by updateFileWarnings() function
+    // which consolidates all warnings into the dedicated WARNING column
 }
 
-void MainWindow::updateBitDepthWarning(int fileRow)
+void MainWindow::updateFileWarnings(int fileRow)
 {
     if (fileRow < 0 || fileRow >= ui->tableWidget->rowCount() || fileRow >= m_data.size())
         return;
 
-    QTableWidgetItem* presetItem = ui->tableWidget->item(fileRow, ColumnIndex::PRESET_COL);
-    QTableWidgetItem* bitDepthItem = ui->tableWidget->item(fileRow, ColumnIndex::BITDEPTH);
-    
-    if (!presetItem || !bitDepthItem)
-        return;
-
-    // Get source bit depth from the file metadata
-    QString sourceBitDepthStr = bitDepthItem->text();
-    int sourceBitDepth = sourceBitDepthStr.toInt();
-    
-    // Skip warning if source bit depth is unknown or invalid
-    if (sourceBitDepth <= 0 || sourceBitDepth > 16) {
-        // Reset any existing warning styling
-        presetItem->setIcon(QIcon());
-        QString tooltipText = presetItem->toolTip();
-        if (tooltipText.contains(tr("WARNING: Bit depth reduction"))) {
-            // Remove bit depth warning from tooltip but keep other warnings
-            QStringList tooltipLines = tooltipText.split('\n');
-            QStringList filteredLines;
-            for (const QString &line : tooltipLines) {
-                if (!line.contains(tr("WARNING: Bit depth reduction"))) {
-                    filteredLines.append(line);
-                }
-            }
-            presetItem->setToolTip(filteredLines.join('\n'));
-        }
-        return;
+    QTableWidgetItem* warningItem = ui->tableWidget->item(fileRow, ColumnIndex::WARNING);
+    if (!warningItem) {
+        warningItem = new QTableWidgetItem("");
+        warningItem->setTextAlignment(Qt::AlignCenter);
+        ui->tableWidget->setItem(fileRow, ColumnIndex::WARNING, warningItem);
     }
 
+    // Collect all warnings for this file
+    QStringList warnings;
+    
+    // Check for bit depth reduction warning
+    QTableWidgetItem* bitDepthItem = ui->tableWidget->item(fileRow, ColumnIndex::BITDEPTH);
+    if (bitDepthItem) {
+        QString sourceBitDepthStr = bitDepthItem->text();
+        int sourceBitDepth = sourceBitDepthStr.toInt();
+        
+        if (sourceBitDepth > 0 && sourceBitDepth <= 16) {
+            // Get preset parameters for this specific file, fallback to global if not set
+            QVector<QString> *params = &m_curParams;
+            if (fileRow < m_data.size() && !m_data[fileRow].presetParams.isEmpty()) {
+                params = &m_data[fileRow].presetParams;
+            }
+
+            // Get target bit depth from the preset
+            Tables t;
+            int codecIndex = (*params)[CurParamIndex::CODEC].toInt();
+            int targetBitDepth = t.getCodecBitDepth(codecIndex);
+
+            // Check if we're reducing bit depth
+            if (sourceBitDepth > targetBitDepth) {
+                warnings.append(tr("Bit depth reduction from %1-bit to %2-bit").arg(sourceBitDepth).arg(targetBitDepth));
+            }
+        }
+    }
+    
+    // Check for stream incompatibility warnings (from existing function)
     // Get preset parameters for this specific file, fallback to global if not set
     QVector<QString> *params = &m_curParams;
     if (fileRow < m_data.size() && !m_data[fileRow].presetParams.isEmpty()) {
         params = &m_data[fileRow].presetParams;
     }
-
-    // Get target bit depth from the preset
+    
+    // Get current container extension and preset parameters
     Tables t;
+    QString extension = t.arr_container[(*params)[CurParamIndex::CODEC].toInt()][(*params)[CurParamIndex::CONTAINER].toInt()].toLower();
     int codecIndex = (*params)[CurParamIndex::CODEC].toInt();
-    int targetBitDepth = t.getCodecBitDepth(codecIndex);
+    int audioCodecIndex = (*params)[CurParamIndex::AUDIO_CODEC].toInt();
+    QString targetAudioCodec = t.arr_acodec[codecIndex][audioCodecIndex];
+    bool usePresetSubtitleSettings = (*params)[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
+    
+    bool hasSelectedIncompatibleStreams = false;
+    
+    // Check audio streams
+    for (int i = 0; i < m_data[fileRow].fields[Data::audioFormats].size(); i++) {
+        const QString& audioFormat = m_data[fileRow].fields[Data::audioFormats][i];
+        if (Helper::isAudioIncompatible(extension, audioFormat, targetAudioCodec)) {
+            if (i < m_data[fileRow].checks[Data::audioChecks].size() && 
+                m_data[fileRow].checks[Data::audioChecks][i]) {
+                hasSelectedIncompatibleStreams = true;
+                break;
+            }
+        }
+    }
+    
+    // Check subtitle streams if no selected incompatible audio streams yet
+    if (!hasSelectedIncompatibleStreams) {
+        for (int i = 0; i < m_data[fileRow].fields[Data::subtFormats].size(); i++) {
+            const QString& subtitleFormat = m_data[fileRow].fields[Data::subtFormats][i];
+            if (Helper::isSubtitleIncompatible(extension, subtitleFormat, usePresetSubtitleSettings)) {
+                if (i < m_data[fileRow].checks[Data::subtChecks].size() && 
+                    m_data[fileRow].checks[Data::subtChecks][i]) {
+                    hasSelectedIncompatibleStreams = true;
+                    break;
+                }
+            }
+        }
+    }
+    
+    if (hasSelectedIncompatibleStreams) {
+        warnings.append(tr("Incompatible streams selected"));
+    }
 
-    // Check if we're reducing bit depth
-    bool isBitDepthReduction = sourceBitDepth > targetBitDepth;
-
-    if (isBitDepthReduction) {
-        // Add warning icon to preset column
+    // Update warning column based on collected warnings
+    if (!warnings.isEmpty()) {
+        // Show warning icon
         QIcon warningIcon;
         if (QFile::exists(":/resources/icons/svg/warning.svg")) {
             warningIcon = QIcon(":/resources/icons/svg/warning.svg");
@@ -3855,39 +3882,16 @@ void MainWindow::updateBitDepthWarning(int fileRow)
         }
         
         if (!warningIcon.isNull()) {
-            presetItem->setIcon(warningIcon);
+            warningItem->setIcon(warningIcon);
         }
 
-        // Add bit depth warning to tooltip
-        QString warningText = tr("WARNING: Bit depth reduction from %1-bit to %2-bit - may result in quality loss")
-                             .arg(sourceBitDepth).arg(targetBitDepth);
-        
-        QString currentTooltip = presetItem->toolTip();
-        if (!currentTooltip.contains(tr("WARNING: Bit depth reduction"))) {
-            if (!currentTooltip.isEmpty()) {
-                currentTooltip += "\n" + warningText;
-            } else {
-                currentTooltip = warningText;
-            }
-            presetItem->setToolTip(currentTooltip);
-        }
+        // Create comprehensive tooltip
+        QString tooltip = tr("WARNING:\n") + warnings.join("\n");
+        warningItem->setToolTip(tooltip);
     } else {
-        // Reset warning icon if no bit depth reduction
-        presetItem->setIcon(QIcon());
-        
-        // Remove bit depth warning from tooltip but keep other warnings
-        QString tooltipText = presetItem->toolTip();
-        if (tooltipText.contains(tr("WARNING: Bit depth reduction"))) {
-            QStringList tooltipLines = tooltipText.split('\n');
-            QStringList filteredLines;
-            for (const QString &line : tooltipLines) {
-                if (!line.contains(tr("WARNING: Bit depth reduction"))) {
-                    filteredLines.append(line);
-                }
-            }
-            QString newTooltip = filteredLines.join('\n').trimmed();
-            presetItem->setToolTip(newTooltip);
-        }
+        // Clear warning if no issues
+        warningItem->setIcon(QIcon());
+        warningItem->setToolTip("");
     }
 }
 
@@ -3901,7 +3905,7 @@ void MainWindow::setupColumnVisibilityMenus()
     // Initialize column names array
     m_columnNames = {
         tr("File path"), tr("Format"), tr("Resolution"), tr("Duration"), tr("FPS"), tr("AR"), tr("Status"), tr("Preset"),
-        tr("Bitrate"), tr("Subsampling"), tr("Bit depth"), tr("Color space"), tr("Color range"), tr("Color prim"),
+        tr("Warning"), tr("Bitrate"), tr("Subsampling"), tr("Bit depth"), tr("Color space"), tr("Color range"), tr("Color prim"),
         tr("Color mtrx"), tr("Transfer"), tr("Max lum"), tr("Min lum"), tr("Max CLL"), tr("Max Fall"), tr("Master display"),
         tr("Path"), tr("Duration (technical)"), tr("Chroma coord"), tr("White coord"), tr("Stream size"), 
         tr("Width (technical)"), tr("Height (technical)"), tr("Start Time"), tr("End Time"), tr("ID")
