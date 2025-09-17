@@ -2605,7 +2605,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             m_data[numRows].presetParams = currentPresetParams;
             m_data[numRows].presetName = currentPresetName;
 
-            for (int column = ColumnIndex::FILENAME; column <= ColumnIndex::T_HEIGHT; column++) {
+            for (int column = ColumnIndex::WARNING; column <= ColumnIndex::T_HEIGHT; column++) {
                 auto *item = new QTableWidgetItem(arr_items[column]);
                 if (column >= ColumnIndex::FORMAT && column <= ColumnIndex::MASTERDISPLAY)
                     item->setTextAlignment(Qt::AlignCenter);
