@@ -63,12 +63,12 @@ namespace Constants {
 
     // ***************** Table Widget Columns *********************//
     enum ColumnIndex {
-        FILENAME,   FORMAT,     RESOLUTION,    DURATION,     FPS,
-        AR,         STATUS,     PRESET_COL,    WARNING,      BITRATE,      
-        SUBSAMPLING,BITDEPTH,   COLORSPACE,    COLORRANGE,   COLORPRIM,    
-        COLORMATRIX,TRANSFER,   MAXLUM,        MINLUM,       MAXCLL,       
-        MAXFALL,    MASTERDISPLAY, PATH,       T_DUR,        T_CHROMACOORD, 
-        T_WHITECOORD,T_STREAMSIZE,  T_WIDTH,   T_HEIGHT,     T_STARTTIME,  
+        WARNING,    FILENAME,   FORMAT,     RESOLUTION,    DURATION,     
+        FPS,        AR,         STATUS,     PRESET_COL,    BITRATE,      
+        SUBSAMPLING,BITDEPTH,   COLORSPACE, COLORRANGE,    COLORPRIM,    
+        COLORMATRIX,TRANSFER,   MAXLUM,     MINLUM,        MAXCLL,       
+        MAXFALL,    MASTERDISPLAY, PATH,    T_DUR,         T_CHROMACOORD, 
+        T_WHITECOORD,T_STREAMSIZE,  T_WIDTH, T_HEIGHT,     T_STARTTIME,  
         T_ENDTIME,  T_ID
     };
 

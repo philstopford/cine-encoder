@@ -942,6 +942,7 @@ void MainWindow::setParameters()    // Set parameters
     ui->tableWidget->setDragDropOverwriteMode(true);
     ui->tableWidget->setDragDropMode(QAbstractItemView::DragDrop);
     ui->tableWidget->setDefaultDropAction(Qt::TargetMoveAction);
+    ui->tableWidget->setColumnWidth(ColumnIndex::WARNING, 60); // Warning column, visible by default
     ui->tableWidget->setColumnWidth(ColumnIndex::FILENAME, 350); // Make wider to accommodate path + filename
     ui->tableWidget->setColumnWidth(ColumnIndex::FORMAT, 80);
     ui->tableWidget->setColumnWidth(ColumnIndex::RESOLUTION, 85);
@@ -950,7 +951,6 @@ void MainWindow::setParameters()    // Set parameters
     ui->tableWidget->setColumnWidth(ColumnIndex::AR, 60);
     ui->tableWidget->setColumnWidth(ColumnIndex::STATUS, 80);
     ui->tableWidget->setColumnWidth(ColumnIndex::PRESET_COL, 120);
-    ui->tableWidget->setColumnWidth(ColumnIndex::WARNING, 60); // Warning column, visible by default
     ui->tableWidget->setIconSize(QSize(16, 16) * Helper::scaling());
 
     for (int i = ColumnIndex::COLORRANGE; i <= ColumnIndex::MAXFALL; i++)
@@ -2535,6 +2535,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             }
 
             const QString arr_items[] = {
+                "", // WARNING column - will be set when warnings are detected
                 inputFolder + "/" + inputFile, // Combine path and filename for display
                 fmt_qstr,
                 size,
@@ -2543,7 +2544,6 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                 VINFO(0, "DisplayAspectRatio"),
                 status,
                 "", // PRESET column - will be set after determining current preset
-                "", // WARNING column - will be set when warnings are detected
                 numToStr(bitrate_int),
                 VINFO(0, "ChromaSubsampling"),
                 VINFO(0, "BitDepth"),
@@ -2574,7 +2574,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
 
             m_data.resize(numRows + 1);
             m_data[numRows].clear();
-            for (int j = 29; j < 35; j++)
+            for (int j = 30; j < 36; j++)
                 m_data[numRows].videoMetadata.push_back(arr_items[j]);
             
             // Initialize with current selected preset parameters
@@ -3904,8 +3904,8 @@ void MainWindow::setupColumnVisibilityMenus()
 {
     // Initialize column names array
     m_columnNames = {
-        tr("File path"), tr("Format"), tr("Resolution"), tr("Duration"), tr("FPS"), tr("AR"), tr("Status"), tr("Preset"),
-        tr("Warning"), tr("Bitrate"), tr("Subsampling"), tr("Bit depth"), tr("Color space"), tr("Color range"), tr("Color prim"),
+        tr("Warning"), tr("File path"), tr("Format"), tr("Resolution"), tr("Duration"), tr("FPS"), tr("AR"), tr("Status"), tr("Preset"),
+        tr("Bitrate"), tr("Subsampling"), tr("Bit depth"), tr("Color space"), tr("Color range"), tr("Color prim"),
         tr("Color mtrx"), tr("Transfer"), tr("Max lum"), tr("Min lum"), tr("Max CLL"), tr("Max Fall"), tr("Master display"),
         tr("Path"), tr("Duration (technical)"), tr("Chroma coord"), tr("White coord"), tr("Stream size"), 
         tr("Width (technical)"), tr("Height (technical)"), tr("Start Time"), tr("End Time"), tr("ID")
