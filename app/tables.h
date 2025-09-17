@@ -460,6 +460,19 @@ public:
         return {};
     }  
 
+    /** Get Bit Depth **/
+    
+    [[nodiscard]] int getCodecBitDepth(int codecIndex) const
+    {
+        if (codecIndex >= 0 && codecIndex < NUMBER_PRESETS) {
+            QString codecDesc = arr_codec[codecIndex][1]; // "YUV, 4:2:0, X bit"
+            if (codecDesc.contains("12 bit")) return 12;
+            if (codecDesc.contains("10 bit")) return 10;
+            if (codecDesc.contains("8 bit")) return 8;
+        }
+        return 8; // Default to 8-bit if unknown
+    }
+
     /** Get List **/
 
     [[nodiscard]] QStringList getModesListByRow(int row) const

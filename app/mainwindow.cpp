@@ -2668,8 +2668,9 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             prg.setPercent(50);
             ui->tableWidget->selectRow(ui->tableWidget->rowCount() - 1);
             
-            // Update file-level incompatibility status
+            // Update file-level incompatibility status and bit depth warnings
             updateFileIncompatibilityStatus(numRows);
+            updateBitDepthWarning(numRows);
             
             Helper::nonBlockDelay(50);
             prg.setPercent(100);
@@ -3326,9 +3327,10 @@ void MainWindow::onApplyPreset()  // Apply preset
         return;
     }
     
-    // Update incompatibility status for all files since container format may have changed
+    // Update incompatibility status and bit depth warnings for all files since container format may have changed
     for (int i = 0; i < ui->tableWidget->rowCount(); i++) {
         updateFileIncompatibilityStatus(i);
+        updateBitDepthWarning(i);
     }
 }
 
@@ -3791,6 +3793,100 @@ void MainWindow::updateFileIncompatibilityStatus(int fileRow)
             filenameItem->setBackground(QColor());
             filenameItem->setIcon(QIcon());
             filenameItem->setToolTip("");
+        }
+    }
+}
+
+void MainWindow::updateBitDepthWarning(int fileRow)
+{
+    if (fileRow < 0 || fileRow >= ui->tableWidget->rowCount() || fileRow >= m_data.size())
+        return;
+
+    QTableWidgetItem* presetItem = ui->tableWidget->item(fileRow, ColumnIndex::PRESET_COL);
+    QTableWidgetItem* bitDepthItem = ui->tableWidget->item(fileRow, ColumnIndex::BITDEPTH);
+    
+    if (!presetItem || !bitDepthItem)
+        return;
+
+    // Get source bit depth from the file metadata
+    QString sourceBitDepthStr = bitDepthItem->text();
+    int sourceBitDepth = sourceBitDepthStr.toInt();
+    
+    // Skip warning if source bit depth is unknown or invalid
+    if (sourceBitDepth <= 0 || sourceBitDepth > 16) {
+        // Reset any existing warning styling
+        presetItem->setIcon(QIcon());
+        QString tooltipText = presetItem->toolTip();
+        if (tooltipText.contains(tr("WARNING: Bit depth reduction"))) {
+            // Remove bit depth warning from tooltip but keep other warnings
+            QStringList tooltipLines = tooltipText.split('\n');
+            QStringList filteredLines;
+            for (const QString &line : tooltipLines) {
+                if (!line.contains(tr("WARNING: Bit depth reduction"))) {
+                    filteredLines.append(line);
+                }
+            }
+            presetItem->setToolTip(filteredLines.join('\n'));
+        }
+        return;
+    }
+
+    // Get preset parameters for this specific file, fallback to global if not set
+    QVector<QString> *params = &m_curParams;
+    if (fileRow < m_data.size() && !m_data[fileRow].presetParams.isEmpty()) {
+        params = &m_data[fileRow].presetParams;
+    }
+
+    // Get target bit depth from the preset
+    Tables t;
+    int codecIndex = (*params)[CurParamIndex::CODEC].toInt();
+    int targetBitDepth = t.getCodecBitDepth(codecIndex);
+
+    // Check if we're reducing bit depth
+    bool isBitDepthReduction = sourceBitDepth > targetBitDepth;
+
+    if (isBitDepthReduction) {
+        // Add warning icon to preset column
+        QIcon warningIcon;
+        if (QFile::exists(":/resources/icons/svg/warning.svg")) {
+            warningIcon = QIcon(":/resources/icons/svg/warning.svg");
+        } else {
+            warningIcon = style()->standardIcon(QStyle::SP_MessageBoxWarning);
+        }
+        
+        if (!warningIcon.isNull()) {
+            presetItem->setIcon(warningIcon);
+        }
+
+        // Add bit depth warning to tooltip
+        QString warningText = tr("WARNING: Bit depth reduction from %1-bit to %2-bit - may result in quality loss")
+                             .arg(sourceBitDepth).arg(targetBitDepth);
+        
+        QString currentTooltip = presetItem->toolTip();
+        if (!currentTooltip.contains(tr("WARNING: Bit depth reduction"))) {
+            if (!currentTooltip.isEmpty()) {
+                currentTooltip += "\n" + warningText;
+            } else {
+                currentTooltip = warningText;
+            }
+            presetItem->setToolTip(currentTooltip);
+        }
+    } else {
+        // Reset warning icon if no bit depth reduction
+        presetItem->setIcon(QIcon());
+        
+        // Remove bit depth warning from tooltip but keep other warnings
+        QString tooltipText = presetItem->toolTip();
+        if (tooltipText.contains(tr("WARNING: Bit depth reduction"))) {
+            QStringList tooltipLines = tooltipText.split('\n');
+            QStringList filteredLines;
+            for (const QString &line : tooltipLines) {
+                if (!line.contains(tr("WARNING: Bit depth reduction"))) {
+                    filteredLines.append(line);
+                }
+            }
+            QString newTooltip = filteredLines.join('\n').trimmed();
+            presetItem->setToolTip(newTooltip);
         }
     }
 }
