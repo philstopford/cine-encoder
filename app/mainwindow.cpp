@@ -2042,6 +2042,23 @@ void MainWindow::initEncoding()
     const QString globalTitle = ui->lineEditGlobalTitle->text();
     const int streamCutting = ui->switchCutting->currentIndex();
 
+    // Ensure current file's preset parameters are loaded into m_curParams before encoding
+    // This is critical for batch mode where each file may have different preset parameters
+    if (m_row >= 0 && m_row < m_data.size()) {
+        if (!m_data[m_row].presetParams.isEmpty()) {
+            // Load this file's specific preset parameters
+            for (int k = 0; k < PARAMETERS_COUNT && k < m_data[m_row].presetParams.size(); k++) {
+                m_curParams[k] = m_data[m_row].presetParams[k];
+            }
+        } else {
+            // If no preset parameters, ensure we have reasonable defaults
+            // This prevents using stale parameters from previous files
+            for (int k = 0; k < PARAMETERS_COUNT && k < default_preset.size(); k++) {
+                m_curParams[k] = default_preset[k];
+            }
+        }
+    }
+
     // Avoid touching our defined colors.
     // Shim the alpha values here because the color picker clobbers them and we need reliable values.
     QColor subtitles_color = m_subtitles_color;
