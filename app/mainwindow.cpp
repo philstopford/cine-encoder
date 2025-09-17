@@ -2574,7 +2574,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
 
             m_data.resize(numRows + 1);
             m_data[numRows].clear();
-            for (int j = 30; j < 36; j++)
+            for (int j = 29; j < 35; j++)
                 m_data[numRows].videoMetadata.push_back(arr_items[j]);
             
             // Initialize with current selected preset parameters
