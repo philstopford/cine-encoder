@@ -115,7 +115,8 @@ void QStreamView::clearList()
 
 void QStreamView::setList(QString extension, Data &data, const QString& targetAudioCodec, bool usePresetSubtitleSettings)
 {
-    // Early return if data is being initialized - check if basic data structures are ready
+    // Ultra-aggressive early return strategy for race condition prevention
+    // During multiple file addition, avoid any processing that could cause race conditions
     if (data.videoMetadata.isEmpty()) {
         // Data is still being initialized, clear the list and return early
         clearList();
@@ -133,6 +134,19 @@ void QStreamView::setList(QString extension, Data &data, const QString& targetAu
         m_pData = &data;
         return;
     }
+    
+    // Ultra-defensive check: If we have previous data that might be in an unstable state, skip state preservation
+    bool skipStateSaving = false;
+    if (m_pData != nullptr) {
+        // Check if any of the critical vectors appear to be in an unstable state
+        for (int i = 0; i < Data::CHECKS_COUNT; ++i) {
+            if (m_pData->checks[i].capacity() != m_pData->checks[i].size() && !m_pData->checks[i].isEmpty()) {
+                // Vector might be in an unstable state during reallocation
+                skipStateSaving = true;
+                break;
+            }
+        }
+    }
 
     // Save current audio selection state before clearing
     QVector<bool> savedAudioChecks;
@@ -146,8 +160,8 @@ void QStreamView::setList(QString extension, Data &data, const QString& targetAu
     QVector<bool> savedSubtBurn;
     QVector<bool> savedExternSubtBurn;
     
-    if (m_pData != nullptr) {
-        // Save states only if the previous data was fully initialized
+    if (m_pData != nullptr && !skipStateSaving) {
+        // Save states only if the previous data was fully initialized and stable
         if (!m_pData->videoMetadata.isEmpty() && 
             Data::audioChecks < Data::CHECKS_COUNT &&
             Data::externAudioChecks < Data::CHECKS_COUNT &&
@@ -156,35 +170,56 @@ void QStreamView::setList(QString extension, Data &data, const QString& targetAu
             // Save audio states - use try-catch to handle potential atomic operation failures
             try {
                 if (Data::audioChecks < Data::CHECKS_COUNT && !m_pData->checks[Data::audioChecks].isEmpty()) {
-                    savedAudioChecks = m_pData->checks[Data::audioChecks];
+                    // Additional safety check before copying
+                    if (m_pData->checks[Data::audioChecks].capacity() >= m_pData->checks[Data::audioChecks].size()) {
+                        savedAudioChecks = m_pData->checks[Data::audioChecks];
+                    }
                 }
                 if (Data::externAudioChecks < Data::CHECKS_COUNT && !m_pData->checks[Data::externAudioChecks].isEmpty()) {
-                    savedExternAudioChecks = m_pData->checks[Data::externAudioChecks];
+                    if (m_pData->checks[Data::externAudioChecks].capacity() >= m_pData->checks[Data::externAudioChecks].size()) {
+                        savedExternAudioChecks = m_pData->checks[Data::externAudioChecks];
+                    }
                 }
                 if (Data::audioDef < Data::CHECKS_COUNT && !m_pData->checks[Data::audioDef].isEmpty()) {
-                    savedAudioDef = m_pData->checks[Data::audioDef];
+                    if (m_pData->checks[Data::audioDef].capacity() >= m_pData->checks[Data::audioDef].size()) {
+                        savedAudioDef = m_pData->checks[Data::audioDef];
+                    }
                 }
                 if (Data::externAudioDef < Data::CHECKS_COUNT && !m_pData->checks[Data::externAudioDef].isEmpty()) {
-                    savedExternAudioDef = m_pData->checks[Data::externAudioDef];
+                    if (m_pData->checks[Data::externAudioDef].capacity() >= m_pData->checks[Data::externAudioDef].size()) {
+                        savedExternAudioDef = m_pData->checks[Data::externAudioDef];
+                    }
                 }
                 // Save subtitle states
                 if (Data::subtChecks < Data::CHECKS_COUNT && !m_pData->checks[Data::subtChecks].isEmpty()) {
-                    savedSubtChecks = m_pData->checks[Data::subtChecks];
+                    if (m_pData->checks[Data::subtChecks].capacity() >= m_pData->checks[Data::subtChecks].size()) {
+                        savedSubtChecks = m_pData->checks[Data::subtChecks];
+                    }
                 }
                 if (Data::externSubtChecks < Data::CHECKS_COUNT && !m_pData->checks[Data::externSubtChecks].isEmpty()) {
-                    savedExternSubtChecks = m_pData->checks[Data::externSubtChecks];
+                    if (m_pData->checks[Data::externSubtChecks].capacity() >= m_pData->checks[Data::externSubtChecks].size()) {
+                        savedExternSubtChecks = m_pData->checks[Data::externSubtChecks];
+                    }
                 }
                 if (Data::subtDef < Data::CHECKS_COUNT && !m_pData->checks[Data::subtDef].isEmpty()) {
-                    savedSubtDef = m_pData->checks[Data::subtDef];
+                    if (m_pData->checks[Data::subtDef].capacity() >= m_pData->checks[Data::subtDef].size()) {
+                        savedSubtDef = m_pData->checks[Data::subtDef];
+                    }
                 }
                 if (Data::externSubtDef < Data::CHECKS_COUNT && !m_pData->checks[Data::externSubtDef].isEmpty()) {
-                    savedExternSubtDef = m_pData->checks[Data::externSubtDef];
+                    if (m_pData->checks[Data::externSubtDef].capacity() >= m_pData->checks[Data::externSubtDef].size()) {
+                        savedExternSubtDef = m_pData->checks[Data::externSubtDef];
+                    }
                 }
                 if (Data::subtBurn < Data::CHECKS_COUNT && !m_pData->checks[Data::subtBurn].isEmpty()) {
-                    savedSubtBurn = m_pData->checks[Data::subtBurn];
+                    if (m_pData->checks[Data::subtBurn].capacity() >= m_pData->checks[Data::subtBurn].size()) {
+                        savedSubtBurn = m_pData->checks[Data::subtBurn];
+                    }
                 }
                 if (Data::externSubtBurn < Data::CHECKS_COUNT && !m_pData->checks[Data::externSubtBurn].isEmpty()) {
-                    savedExternSubtBurn = m_pData->checks[Data::externSubtBurn];
+                    if (m_pData->checks[Data::externSubtBurn].capacity() >= m_pData->checks[Data::externSubtBurn].size()) {
+                        savedExternSubtBurn = m_pData->checks[Data::externSubtBurn];
+                    }
                 }
             } catch (...) {
                 // If any exception occurs during vector copying, continue with empty saved vectors
