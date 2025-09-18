@@ -2627,7 +2627,12 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                 const QString smplrt = (smplrt_int != 0) ? numToStr(smplrt_int) : "";
                 if (!audioFormat.isEmpty()) {
                     audioFormat += QString("  %1 kHz").arg(smplrt);
-                    m_data[numRows].checks[Data::audioChecks].push_back(Helper::isAudioSupported(extension, audioFormat));
+                    
+                    // Use target container from preset parameters instead of global extension
+                    Tables t;
+                    QString targetExtension = t.arr_container[currentPresetParams[CurParamIndex::CODEC].toInt()][currentPresetParams[CurParamIndex::CONTAINER].toInt()].toLower();
+                    
+                    m_data[numRows].checks[Data::audioChecks].push_back(Helper::isAudioSupported(targetExtension, audioFormat));
                     m_data[numRows].fields[Data::audioFormats].push_back(audioFormat);
                     m_data[numRows].fields[Data::audioChannels].push_back(AINFO(size_t(j), "Channels"));
                     m_data[numRows].fields[Data::audioChLayouts].push_back(AINFO(size_t(j), "ChannelLayout"));
@@ -2650,7 +2655,11 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                     }
                     else
                     {
-                        select = Helper::isSubtitleSupported(extension, subtitleFormat);
+                        // Use target container from preset parameters instead of global extension
+                        Tables t;
+                        QString targetExtension = t.arr_container[currentPresetParams[CurParamIndex::CODEC].toInt()][currentPresetParams[CurParamIndex::CONTAINER].toInt()].toLower();
+                        
+                        select = Helper::isSubtitleSupported(targetExtension, subtitleFormat);
                     }
                     m_data[numRows].checks[Data::subtChecks].push_back(select);
                     m_data[numRows].fields[Data::subtFormats].push_back(subtitleFormat);
