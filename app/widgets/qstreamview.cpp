@@ -128,18 +128,22 @@ void QStreamView::setList(QString extension, Data &data, const QString& targetAu
     QVector<bool> savedExternSubtBurn;
     
     if (m_pData != nullptr) {
-        // Save audio states
-        savedAudioChecks = m_pData->checks[Data::audioChecks];
-        savedExternAudioChecks = m_pData->checks[Data::externAudioChecks];
-        savedAudioDef = m_pData->checks[Data::audioDef];
-        savedExternAudioDef = m_pData->checks[Data::externAudioDef];
-        // Save subtitle states
-        savedSubtChecks = m_pData->checks[Data::subtChecks];
-        savedExternSubtChecks = m_pData->checks[Data::externSubtChecks];
-        savedSubtDef = m_pData->checks[Data::subtDef];
-        savedExternSubtDef = m_pData->checks[Data::externSubtDef];
-        savedSubtBurn = m_pData->checks[Data::subtBurn];
-        savedExternSubtBurn = m_pData->checks[Data::externSubtBurn];
+        // Save audio states - only if they exist to avoid accessing uninitialized data
+        if (Data::audioChecks < Data::CHECKS_COUNT) {
+            savedAudioChecks = m_pData->checks[Data::audioChecks];
+            savedExternAudioChecks = m_pData->checks[Data::externAudioChecks];
+            savedAudioDef = m_pData->checks[Data::audioDef];
+            savedExternAudioDef = m_pData->checks[Data::externAudioDef];
+        }
+        // Save subtitle states - only if they exist to avoid accessing uninitialized data
+        if (Data::subtChecks < Data::CHECKS_COUNT) {
+            savedSubtChecks = m_pData->checks[Data::subtChecks];
+            savedExternSubtChecks = m_pData->checks[Data::externSubtChecks];
+            savedSubtDef = m_pData->checks[Data::subtDef];
+            savedExternSubtDef = m_pData->checks[Data::externSubtDef];
+            savedSubtBurn = m_pData->checks[Data::subtBurn];
+            savedExternSubtBurn = m_pData->checks[Data::externSubtBurn];
+        }
     }
     
     clearList();

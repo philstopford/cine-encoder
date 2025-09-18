@@ -2666,10 +2666,12 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             }
             MI.Close();
             prg.setPercent(50);
-            ui->tableWidget->selectRow(ui->tableWidget->rowCount() - 1);
             
             // Update file-level incompatibility status
             updateFileIncompatibilityStatus(numRows);
+            
+            // Select the row after all data has been populated to avoid race condition
+            ui->tableWidget->selectRow(ui->tableWidget->rowCount() - 1);
             
             Helper::nonBlockDelay(50);
             prg.setPercent(100);
