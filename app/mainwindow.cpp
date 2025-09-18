@@ -2570,9 +2570,6 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                 GETINFO(Stream_General, 0, "Description")
             };
 
-            // Block table signals during data initialization to prevent race conditions
-            ui->tableWidget->blockSignals(true);
-            
             m_data.resize(numRows + 1);
             m_data[numRows].clear();
             for (int j = 28; j < 34; j++)
@@ -2673,8 +2670,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             // Update file-level incompatibility status
             updateFileIncompatibilityStatus(numRows);
             
-            // Unblock table signals and select the row after all data has been populated
-            ui->tableWidget->blockSignals(false);
+            // Select the row after all data has been populated to avoid race condition
             ui->tableWidget->selectRow(ui->tableWidget->rowCount() - 1);
             
             Helper::nonBlockDelay(50);
