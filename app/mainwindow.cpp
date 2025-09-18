@@ -942,7 +942,7 @@ void MainWindow::setParameters()    // Set parameters
     ui->tableWidget->setDragDropOverwriteMode(true);
     ui->tableWidget->setDragDropMode(QAbstractItemView::DragDrop);
     ui->tableWidget->setDefaultDropAction(Qt::TargetMoveAction);
-    ui->tableWidget->setColumnWidth(ColumnIndex::WARNING, 60); // Warning column, visible by default
+    ui->tableWidget->setColumnWidth(ColumnIndex::WARNING, 35); // Warning column, minimal width for icon only
     ui->tableWidget->setColumnWidth(ColumnIndex::FILENAME, 350); // Make wider to accommodate path + filename
     ui->tableWidget->setColumnWidth(ColumnIndex::FORMAT, 80);
     ui->tableWidget->setColumnWidth(ColumnIndex::RESOLUTION, 85);
