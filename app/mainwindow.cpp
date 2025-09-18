@@ -2628,9 +2628,16 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                 if (!audioFormat.isEmpty()) {
                     audioFormat += QString("  %1 kHz").arg(smplrt);
                     
-                    // Audio streams should always be checked by default regardless of container compatibility
-                    // since they can be transcoded if needed
-                    m_data[numRows].checks[Data::audioChecks].push_back(true);
+                    // Get target audio codec from preset to determine if stream will be transcoded or copied
+                    Tables t;
+                    QString targetExtension = t.arr_container[currentPresetParams[CurParamIndex::CODEC].toInt()][currentPresetParams[CurParamIndex::CONTAINER].toInt()].toLower();
+                    int codecIndex = currentPresetParams[CurParamIndex::CODEC].toInt();
+                    int audioCodecIndex = currentPresetParams[CurParamIndex::AUDIO_CODEC].toInt();
+                    QString targetAudioCodec = t.arr_acodec[codecIndex][audioCodecIndex];
+                    
+                    // Audio streams are checked by default unless they're set to "Source" (copy) and incompatible
+                    bool shouldCheck = !Helper::isAudioIncompatible(targetExtension, audioFormat, targetAudioCodec);
+                    m_data[numRows].checks[Data::audioChecks].push_back(shouldCheck);
                     m_data[numRows].fields[Data::audioFormats].push_back(audioFormat);
                     m_data[numRows].fields[Data::audioChannels].push_back(AINFO(size_t(j), "Channels"));
                     m_data[numRows].fields[Data::audioChLayouts].push_back(AINFO(size_t(j), "ChannelLayout"));
@@ -3086,9 +3093,16 @@ void MainWindow::onAddExtStream()
                             const QString smplrt = (smplrt_int != 0) ? numToStr(smplrt_int) : "";
                             if (!audioFormat.isEmpty()) {
                                 audioFormat += QString("  %1 kHz").arg(smplrt);
-                                // External audio streams should always be checked by default regardless of container compatibility
-                                // since they can be transcoded if needed
-                                m_data[m_row].checks[Data::externAudioChecks].push_back(true);
+                                // Get target audio codec from preset to determine if stream will be transcoded or copied
+                                Tables t;
+                                QString targetExtension = t.arr_container[m_curParams[CurParamIndex::CODEC].toInt()][m_curParams[CurParamIndex::CONTAINER].toInt()].toLower();
+                                int codecIndex = m_curParams[CurParamIndex::CODEC].toInt();
+                                int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+                                QString targetAudioCodec = t.arr_acodec[codecIndex][audioCodecIndex];
+                                
+                                // External audio streams are checked by default unless they're set to "Source" (copy) and incompatible
+                                bool shouldCheck = !Helper::isAudioIncompatible(targetExtension, audioFormat, targetAudioCodec);
+                                m_data[m_row].checks[Data::externAudioChecks].push_back(shouldCheck);
                                 m_data[m_row].fields[Data::externAudioFormats].push_back(audioFormat);
                                 m_data[m_row].fields[Data::externAudioChannels].push_back(AINFO(0, "Channels"));
                                 m_data[m_row].fields[Data::externAudioChLayouts].push_back(AINFO(0, "ChannelsLayouts"));
