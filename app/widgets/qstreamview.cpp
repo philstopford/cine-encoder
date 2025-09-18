@@ -143,41 +143,47 @@ void QStreamView::setList(QString extension, Data &data, const QString& targetAu
     }
     
     clearList();
+    
+    // Only restore saved selection state if we're refreshing the same file's data
+    // This preserves user choices within the same file while preventing cross-file pollution
+    bool isSameFile = (m_pData == &data);
     m_pData = &data;
     
-    // Restore saved selection state to preserve user choices within the same UI session
-    // Note: This may cause issues if files have the same number of streams but different content
-    // However, it's needed to preserve the default "all streams enabled" behavior
-    if (!savedAudioChecks.isEmpty() && savedAudioChecks.size() == data.checks[Data::audioChecks].size()) {
-        data.checks[Data::audioChecks] = savedAudioChecks;
+    if (isSameFile) {
+        // Same file being refreshed - restore user selections
+        if (!savedAudioChecks.isEmpty() && savedAudioChecks.size() == data.checks[Data::audioChecks].size()) {
+            data.checks[Data::audioChecks] = savedAudioChecks;
+        }
+        if (!savedExternAudioChecks.isEmpty() && savedExternAudioChecks.size() == data.checks[Data::externAudioChecks].size()) {
+            data.checks[Data::externAudioChecks] = savedExternAudioChecks;
+        }
+        if (!savedAudioDef.isEmpty() && savedAudioDef.size() == data.checks[Data::audioDef].size()) {
+            data.checks[Data::audioDef] = savedAudioDef;
+        }
+        if (!savedExternAudioDef.isEmpty() && savedExternAudioDef.size() == data.checks[Data::externAudioDef].size()) {
+            data.checks[Data::externAudioDef] = savedExternAudioDef;
+        }
+        // Also restore subtitle selections for the same file
+        if (!savedSubtChecks.isEmpty() && savedSubtChecks.size() == data.checks[Data::subtChecks].size()) {
+            data.checks[Data::subtChecks] = savedSubtChecks;
+        }
+        if (!savedExternSubtChecks.isEmpty() && savedExternSubtChecks.size() == data.checks[Data::externSubtChecks].size()) {
+            data.checks[Data::externSubtChecks] = savedExternSubtChecks;
+        }
+        if (!savedSubtDef.isEmpty() && savedSubtDef.size() == data.checks[Data::subtDef].size()) {
+            data.checks[Data::subtDef] = savedSubtDef;
+        }
+        if (!savedExternSubtDef.isEmpty() && savedExternSubtDef.size() == data.checks[Data::externSubtDef].size()) {
+            data.checks[Data::externSubtDef] = savedExternSubtDef;
+        }
+        if (!savedSubtBurn.isEmpty() && savedSubtBurn.size() == data.checks[Data::subtBurn].size()) {
+            data.checks[Data::subtBurn] = savedSubtBurn;
+        }
+        if (!savedExternSubtBurn.isEmpty() && savedExternSubtBurn.size() == data.checks[Data::externSubtBurn].size()) {
+            data.checks[Data::externSubtBurn] = savedExternSubtBurn;
+        }
     }
-    if (!savedExternAudioChecks.isEmpty() && savedExternAudioChecks.size() == data.checks[Data::externAudioChecks].size()) {
-        data.checks[Data::externAudioChecks] = savedExternAudioChecks;
-    }
-    if (!savedAudioDef.isEmpty() && savedAudioDef.size() == data.checks[Data::audioDef].size()) {
-        data.checks[Data::audioDef] = savedAudioDef;
-    }
-    if (!savedExternAudioDef.isEmpty() && savedExternAudioDef.size() == data.checks[Data::externAudioDef].size()) {
-        data.checks[Data::externAudioDef] = savedExternAudioDef;
-    }
-    if (!savedSubtChecks.isEmpty() && savedSubtChecks.size() == data.checks[Data::subtChecks].size()) {
-        data.checks[Data::subtChecks] = savedSubtChecks;
-    }
-    if (!savedExternSubtChecks.isEmpty() && savedExternSubtChecks.size() == data.checks[Data::externSubtChecks].size()) {
-        data.checks[Data::externSubtChecks] = savedExternSubtChecks;
-    }
-    if (!savedSubtDef.isEmpty() && savedSubtDef.size() == data.checks[Data::subtDef].size()) {
-        data.checks[Data::subtDef] = savedSubtDef;
-    }
-    if (!savedExternSubtDef.isEmpty() && savedExternSubtDef.size() == data.checks[Data::externSubtDef].size()) {
-        data.checks[Data::externSubtDef] = savedExternSubtDef;
-    }
-    if (!savedSubtBurn.isEmpty() && savedSubtBurn.size() == data.checks[Data::subtBurn].size()) {
-        data.checks[Data::subtBurn] = savedSubtBurn;
-    }
-    if (!savedExternSubtBurn.isEmpty() && savedExternSubtBurn.size() == data.checks[Data::externSubtBurn].size()) {
-        data.checks[Data::externSubtBurn] = savedExternSubtBurn;
-    }
+    // Note: For different files, we preserve each file's own defaults as set by Helper::isAudioSupported() and Helper::isSubtitleSupported()
     m_targetAudioCodec = targetAudioCodec;
     m_usePresetSubtitleSettings = usePresetSubtitleSettings;
     const QString columns[] = {
