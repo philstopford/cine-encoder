@@ -135,13 +135,14 @@ void QStreamView::setList(QString extension, Data &data, const QString& targetAu
         return;
     }
     
-    // Ultra-defensive check: If we have previous data that might be in an unstable state, skip state preservation
+    // Conservative approach: only skip state saving in extreme cases to avoid losing user data
     bool skipStateSaving = false;
     if (m_pData != nullptr) {
-        // Check if any of the critical vectors appear to be in an unstable state
+        // Only skip if vectors appear to be in a truly problematic state
+        // Check for empty vectors with non-zero capacity (sign of interrupted reallocation)
         for (int i = 0; i < Data::CHECKS_COUNT; ++i) {
-            if (m_pData->checks[i].capacity() != m_pData->checks[i].size() && !m_pData->checks[i].isEmpty()) {
-                // Vector might be in an unstable state during reallocation
+            if (m_pData->checks[i].isEmpty() && m_pData->checks[i].capacity() > 0) {
+                // This pattern suggests interrupted reallocation - safer to skip
                 skipStateSaving = true;
                 break;
             }
@@ -170,56 +171,35 @@ void QStreamView::setList(QString extension, Data &data, const QString& targetAu
             // Save audio states - use try-catch to handle potential atomic operation failures
             try {
                 if (Data::audioChecks < Data::CHECKS_COUNT && !m_pData->checks[Data::audioChecks].isEmpty()) {
-                    // Additional safety check before copying
-                    if (m_pData->checks[Data::audioChecks].capacity() >= m_pData->checks[Data::audioChecks].size()) {
-                        savedAudioChecks = m_pData->checks[Data::audioChecks];
-                    }
+                    savedAudioChecks = m_pData->checks[Data::audioChecks];
                 }
                 if (Data::externAudioChecks < Data::CHECKS_COUNT && !m_pData->checks[Data::externAudioChecks].isEmpty()) {
-                    if (m_pData->checks[Data::externAudioChecks].capacity() >= m_pData->checks[Data::externAudioChecks].size()) {
-                        savedExternAudioChecks = m_pData->checks[Data::externAudioChecks];
-                    }
+                    savedExternAudioChecks = m_pData->checks[Data::externAudioChecks];
                 }
                 if (Data::audioDef < Data::CHECKS_COUNT && !m_pData->checks[Data::audioDef].isEmpty()) {
-                    if (m_pData->checks[Data::audioDef].capacity() >= m_pData->checks[Data::audioDef].size()) {
-                        savedAudioDef = m_pData->checks[Data::audioDef];
-                    }
+                    savedAudioDef = m_pData->checks[Data::audioDef];
                 }
                 if (Data::externAudioDef < Data::CHECKS_COUNT && !m_pData->checks[Data::externAudioDef].isEmpty()) {
-                    if (m_pData->checks[Data::externAudioDef].capacity() >= m_pData->checks[Data::externAudioDef].size()) {
-                        savedExternAudioDef = m_pData->checks[Data::externAudioDef];
-                    }
+                    savedExternAudioDef = m_pData->checks[Data::externAudioDef];
                 }
                 // Save subtitle states
                 if (Data::subtChecks < Data::CHECKS_COUNT && !m_pData->checks[Data::subtChecks].isEmpty()) {
-                    if (m_pData->checks[Data::subtChecks].capacity() >= m_pData->checks[Data::subtChecks].size()) {
-                        savedSubtChecks = m_pData->checks[Data::subtChecks];
-                    }
+                    savedSubtChecks = m_pData->checks[Data::subtChecks];
                 }
                 if (Data::externSubtChecks < Data::CHECKS_COUNT && !m_pData->checks[Data::externSubtChecks].isEmpty()) {
-                    if (m_pData->checks[Data::externSubtChecks].capacity() >= m_pData->checks[Data::externSubtChecks].size()) {
-                        savedExternSubtChecks = m_pData->checks[Data::externSubtChecks];
-                    }
+                    savedExternSubtChecks = m_pData->checks[Data::externSubtChecks];
                 }
                 if (Data::subtDef < Data::CHECKS_COUNT && !m_pData->checks[Data::subtDef].isEmpty()) {
-                    if (m_pData->checks[Data::subtDef].capacity() >= m_pData->checks[Data::subtDef].size()) {
-                        savedSubtDef = m_pData->checks[Data::subtDef];
-                    }
+                    savedSubtDef = m_pData->checks[Data::subtDef];
                 }
                 if (Data::externSubtDef < Data::CHECKS_COUNT && !m_pData->checks[Data::externSubtDef].isEmpty()) {
-                    if (m_pData->checks[Data::externSubtDef].capacity() >= m_pData->checks[Data::externSubtDef].size()) {
-                        savedExternSubtDef = m_pData->checks[Data::externSubtDef];
-                    }
+                    savedExternSubtDef = m_pData->checks[Data::externSubtDef];
                 }
                 if (Data::subtBurn < Data::CHECKS_COUNT && !m_pData->checks[Data::subtBurn].isEmpty()) {
-                    if (m_pData->checks[Data::subtBurn].capacity() >= m_pData->checks[Data::subtBurn].size()) {
-                        savedSubtBurn = m_pData->checks[Data::subtBurn];
-                    }
+                    savedSubtBurn = m_pData->checks[Data::subtBurn];
                 }
                 if (Data::externSubtBurn < Data::CHECKS_COUNT && !m_pData->checks[Data::externSubtBurn].isEmpty()) {
-                    if (m_pData->checks[Data::externSubtBurn].capacity() >= m_pData->checks[Data::externSubtBurn].size()) {
-                        savedExternSubtBurn = m_pData->checks[Data::externSubtBurn];
-                    }
+                    savedExternSubtBurn = m_pData->checks[Data::externSubtBurn];
                 }
             } catch (...) {
                 // If any exception occurs during vector copying, continue with empty saved vectors
