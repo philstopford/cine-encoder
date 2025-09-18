@@ -122,6 +122,17 @@ void QStreamView::setList(QString extension, Data &data, const QString& targetAu
         m_pData = &data;
         return;
     }
+    
+    // Additional safety check - ensure critical check arrays exist and are properly sized
+    if (Data::audioChecks >= Data::CHECKS_COUNT || 
+        Data::externAudioChecks >= Data::CHECKS_COUNT ||
+        Data::subtChecks >= Data::CHECKS_COUNT ||
+        Data::externSubtChecks >= Data::CHECKS_COUNT) {
+        // Check array indices are invalid
+        clearList();
+        m_pData = &data;
+        return;
+    }
 
     // Save current audio selection state before clearing
     QVector<bool> savedAudioChecks;
@@ -137,7 +148,11 @@ void QStreamView::setList(QString extension, Data &data, const QString& targetAu
     
     if (m_pData != nullptr) {
         // Save states only if the previous data was fully initialized
-        if (!m_pData->videoMetadata.isEmpty()) {
+        if (!m_pData->videoMetadata.isEmpty() && 
+            Data::audioChecks < Data::CHECKS_COUNT &&
+            Data::externAudioChecks < Data::CHECKS_COUNT &&
+            Data::subtChecks < Data::CHECKS_COUNT &&
+            Data::externSubtChecks < Data::CHECKS_COUNT) {
             // Save audio states - use try-catch to handle potential atomic operation failures
             try {
                 if (Data::audioChecks < Data::CHECKS_COUNT && !m_pData->checks[Data::audioChecks].isEmpty()) {
