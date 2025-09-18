@@ -122,6 +122,9 @@ private slots:
 #if defined(Q_OS_WIN64)
     void set_process_prio_win();
 #endif
+#if defined(Q_OS_MACOS)
+    void set_process_prio_macos();
+#endif
 
     static void
     resizeVF(QString &_width, QString &_height, int CE_CODEC, int CE_WIDTH, int CE_HEIGHT, Tables &t,

@@ -72,6 +72,12 @@ using namespace MediaInfoLib;
     using namespace MediaInfoDLL;
 #endif
 
+// Include process priority management headers for macOS
+#if defined(Q_OS_MACOS)
+    #include <sys/resource.h>
+    #include <unistd.h>
+#endif
+
 #define WINDOW_SIZE (QSize(1500, 920) * Helper::scaling())
 #define ROWHEIGHT 25
 #define ROWHEIGHTDFLT 45
@@ -2379,9 +2385,14 @@ void MainWindow::changePriority(int new_prio)
             set_process_prio_win(pid, new_prio);
 #endif
         }
+        else if (ostype.type() == QOperatingSystemVersion::MacOS) {
+#if defined(Q_OS_MACOS)
+            set_process_prio_macos(pid, new_prio);
+#endif
+        }
         else
         {
-            // Linux...
+            // Linux and other Unix-like systems
             QString nicelevel;
             switch (new_prio)
             {
@@ -2425,18 +2436,19 @@ void MainWindow::changePriority(int new_prio)
     }
 }
 
-// Completely untested.
+// Windows process priority implementation
 #if defined(Q_OS_WIN64)
 void MainWindow::set_process_prio_win(long long pid, int _prio)
 {
     // Get the process handle
-    HANDLE hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, pid);
+    HANDLE hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, static_cast<DWORD>(pid));
     if (hProcess == nullptr) {
-        qWarning("Failed to open process");
+        DWORD error = GetLastError();
+        qWarning("Failed to open process. Error code: %lu", error);
         return;
     }
 
-    auto nicelevel = NORMAL_PRIORITY_CLASS;
+    DWORD nicelevel = NORMAL_PRIORITY_CLASS;
     switch (_prio)
     {
         case Constants::lowest:
@@ -2459,11 +2471,50 @@ void MainWindow::set_process_prio_win(long long pid, int _prio)
 
     // Set the priority class
     if (!SetPriorityClass(hProcess, nicelevel)) {
-        qWarning("Failed to set process priority");
+        DWORD error = GetLastError();
+        qWarning("Failed to set process priority. Error code: %lu", error);
     }
 
     // Close the process handle
     CloseHandle(hProcess);
+}
+#endif
+
+// macOS process priority implementation
+#if defined(Q_OS_MACOS)
+void MainWindow::set_process_prio_macos(long long pid, int _prio)
+{
+    QString nicelevel;
+    switch (_prio)
+    {
+        case Constants::lowest:
+            nicelevel = "19";
+            break;
+        case Constants::low:
+            nicelevel = "9";
+            break;
+        case Constants::normal:
+        default:
+            nicelevel = "0";
+            break;
+        case Constants::high:
+            nicelevel = "-9";
+            break;
+        case Constants::highest:
+            nicelevel = "-19";
+            break;
+    }
+    
+    // Use renice command which handles thread priority properly on macOS
+    auto program = "renice";
+    auto arguments = QStringList{"-n", nicelevel, "-p", QString::number(pid)};
+    
+    try {
+        QProcess::startDetached(program, arguments);
+    }
+    catch (...) {
+        Print("renice command not found on macOS!!!");
+    }
 }
 #endif
 

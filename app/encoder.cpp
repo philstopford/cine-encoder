@@ -25,6 +25,10 @@
 #include <windows.h>
 #include <tlhelp32.h>
 #endif
+#if defined(Q_OS_MACOS)
+#include <sys/resource.h>
+#include <unistd.h>
+#endif
 
 
 #define rnd(num) static_cast<int>(round(num))
@@ -1440,9 +1444,38 @@ void Encoder::encode()   // Encode
     {
         program = "ffmpeg";
     }
+    else if (ostype.type() == QOperatingSystemVersion::MacOS)
+    {
+        // macOS - use nice command to set initial priority
+        QString nicelevel;
+        switch (_prio)
+        {
+            case Constants::lowest:
+                nicelevel = "19";
+                break;
+            case Constants::low:
+                nicelevel = "9";
+                break;
+            case Constants::normal:
+            default:
+                nicelevel = "0";
+                break;
+            case Constants::high:
+                nicelevel = "-9";
+                break;
+            case Constants::highest:
+                nicelevel = "-19";
+                break;
+        }
+        program = "nice";
+        QStringList new_args;
+        new_args << "-n" << nicelevel << "ffmpeg";
+        new_args.append(arguments);
+        arguments = new_args;
+    }
     else
     {
-        // Assume Linux - Qt doesn't report Linux directly.
+        // Linux and other Unix-like systems
         QString nicelevel;
         switch (_prio)
         {
@@ -1479,21 +1512,24 @@ void Encoder::encode()   // Encode
     }
 #if defined(Q_OS_WIN64)
     set_process_prio_win();
+#elif defined(Q_OS_MACOS)
+    set_process_prio_macos();
 #endif
 }
 
-// Completely untested.
+// Windows process priority implementation
 #if defined(Q_OS_WIN64)
 void Encoder::set_process_prio_win()
 {
     // Get the process handle
-    HANDLE hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, processEncoding->processId());
+    HANDLE hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, static_cast<DWORD>(processEncoding->processId()));
     if (hProcess == nullptr) {
-        qWarning("Failed to open process");
+        DWORD error = GetLastError();
+        qWarning("Failed to open process. Error code: %lu", error);
         return;
     }
 
-    auto nicelevel = NORMAL_PRIORITY_CLASS;
+    DWORD nicelevel = NORMAL_PRIORITY_CLASS;
     switch (_prio)
     {
         case Constants::lowest:
@@ -1516,11 +1552,50 @@ void Encoder::set_process_prio_win()
 
     // Set the priority class
     if (!SetPriorityClass(hProcess, nicelevel)) {
-        qWarning("Failed to set process priority");
+        DWORD error = GetLastError();
+        qWarning("Failed to set process priority. Error code: %lu", error);
     }
 
     // Close the process handle
     CloseHandle(hProcess);
+}
+#endif
+
+// macOS process priority implementation
+#if defined(Q_OS_MACOS)
+void Encoder::set_process_prio_macos()
+{
+    QString nicelevel;
+    switch (_prio)
+    {
+        case Constants::lowest:
+            nicelevel = "19";
+            break;
+        case Constants::low:
+            nicelevel = "9";
+            break;
+        case Constants::normal:
+        default:
+            nicelevel = "0";
+            break;
+        case Constants::high:
+            nicelevel = "-9";
+            break;
+        case Constants::highest:
+            nicelevel = "-19";
+            break;
+    }
+    
+    // Use renice command to set priority after process has started
+    auto program = "renice";
+    auto arguments = QStringList{"-n", nicelevel, "-p", QString::number(processEncoding->processId())};
+    
+    try {
+        QProcess::startDetached(program, arguments);
+    }
+    catch (...) {
+        Print("renice command not found on macOS!!!");
+    }
 }
 #endif
 
