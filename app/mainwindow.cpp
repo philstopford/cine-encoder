@@ -3124,7 +3124,11 @@ void MainWindow::onAddExtStream()
                         if (vcnt == 0 && scnt == 1) {
                             const QString subtitleFormat = SINFO(0, "Format");
                             if (!subtitleFormat.isEmpty()) {
-                                m_data[m_row].checks[Data::externSubtChecks].push_back(Helper::isSubtitleSupported(m_curParams[CurParamIndex::CONTAINER], subtitleFormat));
+                                // Use target container from preset parameters for better compatibility checking
+                                Tables t;
+                                QString targetExtension = t.arr_container[m_curParams[CurParamIndex::CODEC].toInt()][m_curParams[CurParamIndex::CONTAINER].toInt()].toLower();
+                                
+                                m_data[m_row].checks[Data::externSubtChecks].push_back(Helper::isSubtitleSupported(targetExtension, subtitleFormat));
                                 m_data[m_row].fields[Data::externSubtFormats].push_back(subtitleFormat);
                                 m_data[m_row].fields[Data::externSubtDuration].push_back(SINFO(0, "Duration"));
                                 m_data[m_row].fields[Data::externSubtLangs].push_back(SINFO(0, "Language"));
