@@ -579,10 +579,10 @@ void MainWindow::createConnections()
     
     // Stream selection change notifications for incompatibility highlighting
     connect(ui->streamAudio, &QStreamView::streamSelectionChanged, this, [this]() {
-        updateFileIncompatibilityStatus(ui->tableWidget->currentRow());
+        updateFileWarnings(ui->tableWidget->currentRow());
     });
     connect(ui->streamSubtitle, &QStreamView::streamSelectionChanged, this, [this]() {
-        updateFileIncompatibilityStatus(ui->tableWidget->currentRow());
+        updateFileWarnings(ui->tableWidget->currentRow());
     });
 
     // Table and UI controls
@@ -942,6 +942,7 @@ void MainWindow::setParameters()    // Set parameters
     ui->tableWidget->setDragDropOverwriteMode(true);
     ui->tableWidget->setDragDropMode(QAbstractItemView::DragDrop);
     ui->tableWidget->setDefaultDropAction(Qt::TargetMoveAction);
+    ui->tableWidget->setColumnWidth(ColumnIndex::WARNING, 45); // Warning column, minimal width for icon only
     ui->tableWidget->setColumnWidth(ColumnIndex::FILENAME, 350); // Make wider to accommodate path + filename
     ui->tableWidget->setColumnWidth(ColumnIndex::FORMAT, 80);
     ui->tableWidget->setColumnWidth(ColumnIndex::RESOLUTION, 85);
@@ -2534,6 +2535,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             }
 
             const QString arr_items[] = {
+                "", // WARNING column - will be set when warnings are detected
                 inputFolder + "/" + inputFile, // Combine path and filename for display
                 fmt_qstr,
                 size,
@@ -2572,7 +2574,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
 
             m_data.resize(numRows + 1);
             m_data[numRows].clear();
-            for (int j = 28; j < 34; j++)
+            for (int j = 29; j < 35; j++)
                 m_data[numRows].videoMetadata.push_back(arr_items[j]);
             
             // Initialize with current selected preset parameters
@@ -2603,7 +2605,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             m_data[numRows].presetParams = currentPresetParams;
             m_data[numRows].presetName = currentPresetName;
 
-            for (int column = ColumnIndex::FILENAME; column <= ColumnIndex::T_HEIGHT; column++) {
+            for (int column = ColumnIndex::WARNING; column <= ColumnIndex::T_HEIGHT; column++) {
                 auto *item = new QTableWidgetItem(arr_items[column]);
                 if (column >= ColumnIndex::FORMAT && column <= ColumnIndex::MASTERDISPLAY)
                     item->setTextAlignment(Qt::AlignCenter);
@@ -2627,7 +2629,17 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                 const QString smplrt = (smplrt_int != 0) ? numToStr(smplrt_int) : "";
                 if (!audioFormat.isEmpty()) {
                     audioFormat += QString("  %1 kHz").arg(smplrt);
-                    m_data[numRows].checks[Data::audioChecks].push_back(Helper::isAudioSupported(extension, audioFormat));
+                    
+                    // Get target audio codec from preset to determine if stream will be transcoded or copied
+                    Tables t;
+                    QString targetExtension = t.arr_container[currentPresetParams[CurParamIndex::CODEC].toInt()][currentPresetParams[CurParamIndex::CONTAINER].toInt()].toLower();
+                    int codecIndex = currentPresetParams[CurParamIndex::CODEC].toInt();
+                    int audioCodecIndex = currentPresetParams[CurParamIndex::AUDIO_CODEC].toInt();
+                    QString targetAudioCodec = t.arr_acodec[codecIndex][audioCodecIndex];
+                    
+                    // Audio streams are checked by default unless they're set to "Source" (copy) and incompatible
+                    bool shouldCheck = !Helper::isAudioIncompatible(targetExtension, audioFormat, targetAudioCodec);
+                    m_data[numRows].checks[Data::audioChecks].push_back(shouldCheck);
                     m_data[numRows].fields[Data::audioFormats].push_back(audioFormat);
                     m_data[numRows].fields[Data::audioChannels].push_back(AINFO(size_t(j), "Channels"));
                     m_data[numRows].fields[Data::audioChLayouts].push_back(AINFO(size_t(j), "ChannelLayout"));
@@ -2650,7 +2662,11 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                     }
                     else
                     {
-                        select = Helper::isSubtitleSupported(extension, subtitleFormat);
+                        // Use target container from preset parameters instead of global extension
+                        Tables t;
+                        QString targetExtension = t.arr_container[currentPresetParams[CurParamIndex::CODEC].toInt()][currentPresetParams[CurParamIndex::CONTAINER].toInt()].toLower();
+                        
+                        select = Helper::isSubtitleSupported(targetExtension, subtitleFormat);
                     }
                     m_data[numRows].checks[Data::subtChecks].push_back(select);
                     m_data[numRows].fields[Data::subtFormats].push_back(subtitleFormat);
@@ -2666,10 +2682,12 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             }
             MI.Close();
             prg.setPercent(50);
-            ui->tableWidget->selectRow(ui->tableWidget->rowCount() - 1);
             
-            // Update file-level incompatibility status
-            updateFileIncompatibilityStatus(numRows);
+            // Update file-level warnings (includes bit depth and incompatibility warnings)
+            updateFileWarnings(numRows);
+            
+            // Select the row after all data has been populated to avoid race condition
+            ui->tableWidget->selectRow(ui->tableWidget->rowCount() - 1);
             
             Helper::nonBlockDelay(50);
             prg.setPercent(100);
@@ -3079,7 +3097,16 @@ void MainWindow::onAddExtStream()
                             const QString smplrt = (smplrt_int != 0) ? numToStr(smplrt_int) : "";
                             if (!audioFormat.isEmpty()) {
                                 audioFormat += QString("  %1 kHz").arg(smplrt);
-                                m_data[m_row].checks[Data::externAudioChecks].push_back(Helper::isAudioSupported(m_curParams[CurParamIndex::CONTAINER], audioFormat));
+                                // Get target audio codec from preset to determine if stream will be transcoded or copied
+                                Tables t;
+                                QString targetExtension = t.arr_container[m_curParams[CurParamIndex::CODEC].toInt()][m_curParams[CurParamIndex::CONTAINER].toInt()].toLower();
+                                int codecIndex = m_curParams[CurParamIndex::CODEC].toInt();
+                                int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+                                QString targetAudioCodec = t.arr_acodec[codecIndex][audioCodecIndex];
+                                
+                                // External audio streams are checked by default unless they're set to "Source" (copy) and incompatible
+                                bool shouldCheck = !Helper::isAudioIncompatible(targetExtension, audioFormat, targetAudioCodec);
+                                m_data[m_row].checks[Data::externAudioChecks].push_back(shouldCheck);
                                 m_data[m_row].fields[Data::externAudioFormats].push_back(audioFormat);
                                 m_data[m_row].fields[Data::externAudioChannels].push_back(AINFO(0, "Channels"));
                                 m_data[m_row].fields[Data::externAudioChLayouts].push_back(AINFO(0, "ChannelsLayouts"));
@@ -3097,7 +3124,11 @@ void MainWindow::onAddExtStream()
                         if (vcnt == 0 && scnt == 1) {
                             const QString subtitleFormat = SINFO(0, "Format");
                             if (!subtitleFormat.isEmpty()) {
-                                m_data[m_row].checks[Data::externSubtChecks].push_back(Helper::isSubtitleSupported(m_curParams[CurParamIndex::CONTAINER], subtitleFormat));
+                                // Use target container from preset parameters for better compatibility checking
+                                Tables t;
+                                QString targetExtension = t.arr_container[m_curParams[CurParamIndex::CODEC].toInt()][m_curParams[CurParamIndex::CONTAINER].toInt()].toLower();
+                                
+                                m_data[m_row].checks[Data::externSubtChecks].push_back(Helper::isSubtitleSupported(targetExtension, subtitleFormat));
                                 m_data[m_row].fields[Data::externSubtFormats].push_back(subtitleFormat);
                                 m_data[m_row].fields[Data::externSubtDuration].push_back(SINFO(0, "Duration"));
                                 m_data[m_row].fields[Data::externSubtLangs].push_back(SINFO(0, "Language"));
@@ -3326,9 +3357,9 @@ void MainWindow::onApplyPreset()  // Apply preset
         return;
     }
     
-    // Update incompatibility status for all files since container format may have changed
+    // Update all warnings for all files since container format may have changed
     for (int i = 0; i < ui->tableWidget->rowCount(); i++) {
-        updateFileIncompatibilityStatus(i);
+        updateFileWarnings(i);
     }
 }
 
@@ -3778,20 +3809,118 @@ void MainWindow::updateFileIncompatibilityStatus(int fileRow)
         }
     }
     
-    // Apply styling to the filename cell
-    QTableWidgetItem* filenameItem = ui->tableWidget->item(fileRow, ColumnIndex::FILENAME);
-    if (filenameItem) {
-        if (hasSelectedIncompatibleStreams) {
-            // Yellow background and warning icon for files with selected incompatible streams
-            filenameItem->setBackground(QColor("#fff3cd"));
-            filenameItem->setIcon(style()->standardIcon(QStyle::SP_MessageBoxWarning));
-            filenameItem->setToolTip(tr("WARNING: This file has incompatible streams selected for output. This will cause encoding issues!"));
-        } else {
-            // Reset styling for files without selected incompatible streams
-            filenameItem->setBackground(QColor());
-            filenameItem->setIcon(QIcon());
-            filenameItem->setToolTip("");
+    // Note: Warning display is now handled by updateFileWarnings() function
+    // which consolidates all warnings into the dedicated WARNING column
+}
+
+void MainWindow::updateFileWarnings(int fileRow)
+{
+    if (fileRow < 0 || fileRow >= ui->tableWidget->rowCount() || fileRow >= m_data.size())
+        return;
+
+    QTableWidgetItem* warningItem = ui->tableWidget->item(fileRow, ColumnIndex::WARNING);
+    if (!warningItem) {
+        warningItem = new QTableWidgetItem("");
+        warningItem->setTextAlignment(Qt::AlignCenter);
+        ui->tableWidget->setItem(fileRow, ColumnIndex::WARNING, warningItem);
+    }
+
+    // Collect all warnings for this file
+    QStringList warnings;
+    
+    // Check for bit depth reduction warning
+    QTableWidgetItem* bitDepthItem = ui->tableWidget->item(fileRow, ColumnIndex::BITDEPTH);
+    if (bitDepthItem) {
+        QString sourceBitDepthStr = bitDepthItem->text();
+        int sourceBitDepth = sourceBitDepthStr.toInt();
+        
+        if (sourceBitDepth > 0 && sourceBitDepth <= 16) {
+            // Get preset parameters for this specific file, fallback to global if not set
+            QVector<QString> *params = &m_curParams;
+            if (fileRow < m_data.size() && !m_data[fileRow].presetParams.isEmpty()) {
+                params = &m_data[fileRow].presetParams;
+            }
+
+            // Get target bit depth from the preset
+            Tables t;
+            int codecIndex = (*params)[CurParamIndex::CODEC].toInt();
+            int targetBitDepth = t.getCodecBitDepth(codecIndex);
+
+            // Check if we're reducing bit depth
+            if (sourceBitDepth > targetBitDepth) {
+                warnings.append(tr("Bit depth reduction from %1-bit to %2-bit").arg(sourceBitDepth).arg(targetBitDepth));
+            }
         }
+    }
+    
+    // Check for stream incompatibility warnings (from existing function)
+    // Get preset parameters for this specific file, fallback to global if not set
+    QVector<QString> *params = &m_curParams;
+    if (fileRow < m_data.size() && !m_data[fileRow].presetParams.isEmpty()) {
+        params = &m_data[fileRow].presetParams;
+    }
+    
+    // Get current container extension and preset parameters
+    Tables t;
+    QString extension = t.arr_container[(*params)[CurParamIndex::CODEC].toInt()][(*params)[CurParamIndex::CONTAINER].toInt()].toLower();
+    int codecIndex = (*params)[CurParamIndex::CODEC].toInt();
+    int audioCodecIndex = (*params)[CurParamIndex::AUDIO_CODEC].toInt();
+    QString targetAudioCodec = t.arr_acodec[codecIndex][audioCodecIndex];
+    bool usePresetSubtitleSettings = (*params)[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
+    
+    bool hasSelectedIncompatibleStreams = false;
+    
+    // Check audio streams
+    for (int i = 0; i < m_data[fileRow].fields[Data::audioFormats].size(); i++) {
+        const QString& audioFormat = m_data[fileRow].fields[Data::audioFormats][i];
+        if (Helper::isAudioIncompatible(extension, audioFormat, targetAudioCodec)) {
+            if (i < m_data[fileRow].checks[Data::audioChecks].size() && 
+                m_data[fileRow].checks[Data::audioChecks][i]) {
+                hasSelectedIncompatibleStreams = true;
+                break;
+            }
+        }
+    }
+    
+    // Check subtitle streams if no selected incompatible audio streams yet
+    if (!hasSelectedIncompatibleStreams) {
+        for (int i = 0; i < m_data[fileRow].fields[Data::subtFormats].size(); i++) {
+            const QString& subtitleFormat = m_data[fileRow].fields[Data::subtFormats][i];
+            if (Helper::isSubtitleIncompatible(extension, subtitleFormat, usePresetSubtitleSettings)) {
+                if (i < m_data[fileRow].checks[Data::subtChecks].size() && 
+                    m_data[fileRow].checks[Data::subtChecks][i]) {
+                    hasSelectedIncompatibleStreams = true;
+                    break;
+                }
+            }
+        }
+    }
+    
+    if (hasSelectedIncompatibleStreams) {
+        warnings.append(tr("Incompatible streams selected"));
+    }
+
+    // Update warning column based on collected warnings
+    if (!warnings.isEmpty()) {
+        // Show warning icon
+        QIcon warningIcon;
+        if (QFile::exists(":/resources/icons/svg/warning.svg")) {
+            warningIcon = QIcon(":/resources/icons/svg/warning.svg");
+        } else {
+            warningIcon = style()->standardIcon(QStyle::SP_MessageBoxWarning);
+        }
+        
+        if (!warningIcon.isNull()) {
+            warningItem->setIcon(warningIcon);
+        }
+
+        // Create comprehensive tooltip
+        QString tooltip = tr("WARNING:\n") + warnings.join("\n");
+        warningItem->setToolTip(tooltip);
+    } else {
+        // Clear warning if no issues
+        warningItem->setIcon(QIcon());
+        warningItem->setToolTip("");
     }
 }
 
@@ -3804,7 +3933,7 @@ void MainWindow::setupColumnVisibilityMenus()
 {
     // Initialize column names array
     m_columnNames = {
-        tr("File path"), tr("Format"), tr("Resolution"), tr("Duration"), tr("FPS"), tr("AR"), tr("Status"), tr("Preset"),
+        tr("Warning"), tr("File path"), tr("Format"), tr("Resolution"), tr("Duration"), tr("FPS"), tr("AR"), tr("Status"), tr("Preset"),
         tr("Bitrate"), tr("Subsampling"), tr("Bit depth"), tr("Color space"), tr("Color range"), tr("Color prim"),
         tr("Color mtrx"), tr("Transfer"), tr("Max lum"), tr("Min lum"), tr("Max CLL"), tr("Max Fall"), tr("Master display"),
         tr("Path"), tr("Duration (technical)"), tr("Chroma coord"), tr("White coord"), tr("Stream size"), 
@@ -3905,7 +4034,7 @@ void MainWindow::onToggleColumnVisibility()
 
 void MainWindow::loadColumnVisibilitySettings()
 {
-    for (int i = 0; i < 31; ++i) {
+    for (int i = 0; i < 32; ++i) {
         bool visible = CONFIG.getBool(QString("table/column_visible_%1").arg(i), 
                                     i < 9); // First 9 columns visible by default
         ui->tableWidget->setColumnHidden(i, !visible);
@@ -3919,7 +4048,7 @@ void MainWindow::loadColumnVisibilitySettings()
 
 void MainWindow::saveColumnVisibilitySettings()
 {
-    for (int i = 0; i < 31; ++i) {
+    for (int i = 0; i < 32; ++i) {
         bool visible = !ui->tableWidget->isColumnHidden(i);
         CONFIG.setBool(QString("table/column_visible_%1").arg(i), visible);
     }
@@ -3939,21 +4068,21 @@ void MainWindow::updateColumnVisibilityMenus()
 
 void MainWindow::loadColumnOrderSettings()
 {
-    QList<int> visualOrder(31);
+    QList<int> visualOrder(32);
     
     // Load saved order, defaulting to natural order (0,1,2,3...)
-    for (int i = 0; i < 31; ++i) {
+    for (int i = 0; i < 32; ++i) {
         visualOrder[i] = CONFIG.getInt(QString("table/column_order_%1").arg(i), i);
     }
     
-    // Validate and fix any invalid order (ensure each position 0-30 appears exactly once)
-    QList<bool> usedPositions(31, false);
+    // Validate and fix any invalid order (ensure each position 0-31 appears exactly once)
+    QList<bool> usedPositions(32, false);
     QList<int> invalidColumns;
     
     // Mark used positions and identify invalid ones
-    for (int i = 0; i < 31; ++i) {
+    for (int i = 0; i < 32; ++i) {
         int pos = visualOrder[i];
-        if (pos >= 0 && pos < 31 && !usedPositions[pos]) {
+        if (pos >= 0 && pos < 32 && !usedPositions[pos]) {
             usedPositions[pos] = true;
         } else {
             invalidColumns.append(i);
@@ -3963,10 +4092,10 @@ void MainWindow::loadColumnOrderSettings()
     // Assign unused positions to invalid columns
     int nextAvailablePos = 0;
     for (int col : invalidColumns) {
-        while (nextAvailablePos < 31 && usedPositions[nextAvailablePos]) {
+        while (nextAvailablePos < 32 && usedPositions[nextAvailablePos]) {
             nextAvailablePos++;
         }
-        if (nextAvailablePos < 31) {
+        if (nextAvailablePos < 32) {
             visualOrder[col] = nextAvailablePos;
             usedPositions[nextAvailablePos] = true;
         }
@@ -3974,7 +4103,7 @@ void MainWindow::loadColumnOrderSettings()
     
     // Apply the column order to the table header
     QHeaderView *header = ui->tableWidget->horizontalHeader();
-    for (int logical = 0; logical < 31; ++logical) {
+    for (int logical = 0; logical < 32; ++logical) {
         int visual = visualOrder[logical];
         header->moveSection(header->visualIndex(logical), visual);
     }
@@ -3983,7 +4112,7 @@ void MainWindow::loadColumnOrderSettings()
 void MainWindow::saveColumnOrderSettings()
 {
     QHeaderView *header = ui->tableWidget->horizontalHeader();
-    for (int logical = 0; logical < 31; ++logical) {
+    for (int logical = 0; logical < 32; ++logical) {
         int visual = header->visualIndex(logical);
         CONFIG.setInt(QString("table/column_order_%1").arg(logical), visual);
     }

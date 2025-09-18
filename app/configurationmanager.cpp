@@ -180,11 +180,13 @@ void ConfigurationManager::initializeKeys()
                 "End Time column visible");
     registerKey("table/column_visible_30", false, ValueType::Bool, Category::Interface,
                 "ID column visible");
+    registerKey("table/column_visible_31", false, ValueType::Bool, Category::Interface,
+                "Extra column visible (for 32 column support)");
 
     // Table column order settings (stores visual index for each logical index)
-    for (int i = 0; i < 31; ++i) {
+    for (int i = 0; i < 32; ++i) {
         registerKey(QString("table/column_order_%1").arg(i), i, ValueType::Int, Category::Interface,
-                    QString("Column %1 visual order position").arg(i), 0, 30);
+                    QString("Column %1 visual order position").arg(i), 0, 31);
     }
 
     LOG_DEBUG(QString("Registered %1 configuration keys").arg(m_keys.size()));
