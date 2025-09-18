@@ -103,7 +103,7 @@ void QStreamView::setContentType(Content type)
 
 void QStreamView::clearList()
 {
-    //m_pData = nullptr;
+    m_pData = nullptr;
     QLayoutItem *item;
     while ((item = m_pLayout->takeAt(0)) != nullptr) {
         if (item->widget()) {
