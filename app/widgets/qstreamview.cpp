@@ -286,22 +286,8 @@ void QStreamView::deselectTitles()
     foreach (auto line, lines3) {
         line->setChecked(false);
     }
-    if (m_type == Content::Audio) {
-        if (m_pData != nullptr) {
-            m_pData->checks[Data::audioChecks].fill(false);
-            m_pData->checks[Data::externAudioChecks].fill(false);
-            m_pData->checks[Data::audioDef].fill(false);
-        }
-    } else
-    if (m_type == Content::Subtitle) {
-        if (m_pData != nullptr) {
-            m_pData->checks[Data::subtChecks].fill(false);
-            m_pData->checks[Data::externSubtChecks].fill(false);
-            m_pData->checks[Data::subtDef].fill(false);
-            m_pData->checks[Data::externSubtDef].fill(false);
-            m_pData->checks[Data::externSubtBurn].fill(false);
-        }
-    }
+    // Note: Removed direct data clearing to preserve default stream selection behavior
+    // The UI changes above will propagate to the underlying data through signal handlers
     setFocus();
 }
 
@@ -430,15 +416,7 @@ void QStreamView::resetCheckFlags(const int ind)
             }
         }
     }
-
-    if (m_type == Content::Audio) {
-        m_pData->checks[Data::audioChecks].fill(false);
-        m_pData->checks[Data::externAudioChecks].fill(false);
-    } else
-    if (m_type == Content::Subtitle) {
-        m_pData->checks[Data::subtChecks].fill(false);
-        m_pData->checks[Data::externSubtChecks].fill(false);
-    }
+    // Note: Removed bulk data clearing - let UI changes propagate through signal handlers
 }
 
 void QStreamView::resetDefFlags(const int ind)
@@ -453,15 +431,7 @@ void QStreamView::resetDefFlags(const int ind)
             }
         }
     }
-
-    if (m_type == Content::Audio) {
-        m_pData->checks[Data::audioDef].fill(false);
-        m_pData->checks[Data::externAudioDef].fill(false);
-    } else
-    if (m_type == Content::Subtitle) {
-        m_pData->checks[Data::subtDef].fill(false);
-        m_pData->checks[Data::externSubtDef].fill(false);
-    }
+    // Note: Removed bulk data clearing - let UI changes propagate through signal handlers
 }
 
 void QStreamView::resetBurnFlags(const int ind)
@@ -476,9 +446,7 @@ void QStreamView::resetBurnFlags(const int ind)
             }
         }
     }
-
-    m_pData->checks[Data::subtBurn].fill(false);
-    m_pData->checks[Data::externSubtBurn].fill(false);
+    // Note: Removed bulk data clearing - let UI changes propagate through signal handlers
 }
 
 QWidget *QStreamView::createCell(bool &state,
