@@ -2628,11 +2628,9 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                 if (!audioFormat.isEmpty()) {
                     audioFormat += QString("  %1 kHz").arg(smplrt);
                     
-                    // Use target container from preset parameters instead of global extension
-                    Tables t;
-                    QString targetExtension = t.arr_container[currentPresetParams[CurParamIndex::CODEC].toInt()][currentPresetParams[CurParamIndex::CONTAINER].toInt()].toLower();
-                    
-                    m_data[numRows].checks[Data::audioChecks].push_back(Helper::isAudioSupported(targetExtension, audioFormat));
+                    // Audio streams should always be checked by default regardless of container compatibility
+                    // since they can be transcoded if needed
+                    m_data[numRows].checks[Data::audioChecks].push_back(true);
                     m_data[numRows].fields[Data::audioFormats].push_back(audioFormat);
                     m_data[numRows].fields[Data::audioChannels].push_back(AINFO(size_t(j), "Channels"));
                     m_data[numRows].fields[Data::audioChLayouts].push_back(AINFO(size_t(j), "ChannelLayout"));
@@ -3088,7 +3086,9 @@ void MainWindow::onAddExtStream()
                             const QString smplrt = (smplrt_int != 0) ? numToStr(smplrt_int) : "";
                             if (!audioFormat.isEmpty()) {
                                 audioFormat += QString("  %1 kHz").arg(smplrt);
-                                m_data[m_row].checks[Data::externAudioChecks].push_back(Helper::isAudioSupported(m_curParams[CurParamIndex::CONTAINER], audioFormat));
+                                // External audio streams should always be checked by default regardless of container compatibility
+                                // since they can be transcoded if needed
+                                m_data[m_row].checks[Data::externAudioChecks].push_back(true);
                                 m_data[m_row].fields[Data::externAudioFormats].push_back(audioFormat);
                                 m_data[m_row].fields[Data::externAudioChannels].push_back(AINFO(0, "Channels"));
                                 m_data[m_row].fields[Data::externAudioChLayouts].push_back(AINFO(0, "ChannelsLayouts"));
