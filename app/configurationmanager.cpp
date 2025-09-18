@@ -119,25 +119,23 @@ void ConfigurationManager::initializeKeys()
 
     // Table column visibility settings
     registerKey("table/column_visible_0", true, ValueType::Bool, Category::Interface,
-                "Warning column visible");
-    registerKey("table/column_visible_1", true, ValueType::Bool, Category::Interface,
                 "File path column visible");
-    registerKey("table/column_visible_2", true, ValueType::Bool, Category::Interface,
+    registerKey("table/column_visible_1", true, ValueType::Bool, Category::Interface,
                 "Format column visible");
-    registerKey("table/column_visible_3", true, ValueType::Bool, Category::Interface,
+    registerKey("table/column_visible_2", true, ValueType::Bool, Category::Interface,
                 "Resolution column visible");
-    registerKey("table/column_visible_4", true, ValueType::Bool, Category::Interface,
+    registerKey("table/column_visible_3", true, ValueType::Bool, Category::Interface,
                 "Duration column visible");
-    registerKey("table/column_visible_5", true, ValueType::Bool, Category::Interface,
+    registerKey("table/column_visible_4", true, ValueType::Bool, Category::Interface,
                 "FPS column visible");
-    registerKey("table/column_visible_6", true, ValueType::Bool, Category::Interface,
+    registerKey("table/column_visible_5", true, ValueType::Bool, Category::Interface,
                 "AR column visible");
-    registerKey("table/column_visible_7", true, ValueType::Bool, Category::Interface,
+    registerKey("table/column_visible_6", true, ValueType::Bool, Category::Interface,
                 "Status column visible");
+    registerKey("table/column_visible_7", true, ValueType::Bool, Category::Interface,
+                "Preset column visible");
     registerKey("table/column_visible_8", true, ValueType::Bool, Category::Interface,
                 "Preset column visible");
-    registerKey("table/column_visible_9", false, ValueType::Bool, Category::Interface,
-                "Bitrate column visible");
     registerKey("table/column_visible_9", false, ValueType::Bool, Category::Interface,
                 "Subsampling column visible");
     registerKey("table/column_visible_10", false, ValueType::Bool, Category::Interface,
