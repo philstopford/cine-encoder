@@ -4035,8 +4035,15 @@ void MainWindow::onToggleColumnVisibility()
 void MainWindow::loadColumnVisibilitySettings()
 {
     for (int i = 0; i < 32; ++i) {
+        // Default visibility: first 9 columns (0-8) including preset column
+        bool defaultVisible = (i < 9);
+        // Ensure preset column (index 8) is always visible by default
+        if (i == ColumnIndex::PRESET_COL) {
+            defaultVisible = true;
+        }
+        
         bool visible = CONFIG.getBool(QString("table/column_visible_%1").arg(i), 
-                                    i < 9); // First 9 columns visible by default
+                                    defaultVisible);
         ui->tableWidget->setColumnHidden(i, !visible);
     }
     
