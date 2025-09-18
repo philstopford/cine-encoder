@@ -115,6 +115,14 @@ void QStreamView::clearList()
 
 void QStreamView::setList(QString extension, Data &data, const QString& targetAudioCodec, bool usePresetSubtitleSettings)
 {
+    // Early return if data is being initialized - check if basic data structures are ready
+    if (data.videoMetadata.isEmpty()) {
+        // Data is still being initialized, clear the list and return early
+        clearList();
+        m_pData = &data;
+        return;
+    }
+
     // Save current audio selection state before clearing
     QVector<bool> savedAudioChecks;
     QVector<bool> savedExternAudioChecks;
@@ -128,21 +136,45 @@ void QStreamView::setList(QString extension, Data &data, const QString& targetAu
     QVector<bool> savedExternSubtBurn;
     
     if (m_pData != nullptr) {
-        // Save audio states - only if they exist to avoid accessing uninitialized data
-        if (Data::audioChecks < Data::CHECKS_COUNT) {
-            savedAudioChecks = m_pData->checks[Data::audioChecks];
-            savedExternAudioChecks = m_pData->checks[Data::externAudioChecks];
-            savedAudioDef = m_pData->checks[Data::audioDef];
-            savedExternAudioDef = m_pData->checks[Data::externAudioDef];
-        }
-        // Save subtitle states - only if they exist to avoid accessing uninitialized data
-        if (Data::subtChecks < Data::CHECKS_COUNT) {
-            savedSubtChecks = m_pData->checks[Data::subtChecks];
-            savedExternSubtChecks = m_pData->checks[Data::externSubtChecks];
-            savedSubtDef = m_pData->checks[Data::subtDef];
-            savedExternSubtDef = m_pData->checks[Data::externSubtDef];
-            savedSubtBurn = m_pData->checks[Data::subtBurn];
-            savedExternSubtBurn = m_pData->checks[Data::externSubtBurn];
+        // Save states only if the previous data was fully initialized
+        if (!m_pData->videoMetadata.isEmpty()) {
+            // Save audio states - use try-catch to handle potential atomic operation failures
+            try {
+                if (Data::audioChecks < Data::CHECKS_COUNT && !m_pData->checks[Data::audioChecks].isEmpty()) {
+                    savedAudioChecks = m_pData->checks[Data::audioChecks];
+                }
+                if (Data::externAudioChecks < Data::CHECKS_COUNT && !m_pData->checks[Data::externAudioChecks].isEmpty()) {
+                    savedExternAudioChecks = m_pData->checks[Data::externAudioChecks];
+                }
+                if (Data::audioDef < Data::CHECKS_COUNT && !m_pData->checks[Data::audioDef].isEmpty()) {
+                    savedAudioDef = m_pData->checks[Data::audioDef];
+                }
+                if (Data::externAudioDef < Data::CHECKS_COUNT && !m_pData->checks[Data::externAudioDef].isEmpty()) {
+                    savedExternAudioDef = m_pData->checks[Data::externAudioDef];
+                }
+                // Save subtitle states
+                if (Data::subtChecks < Data::CHECKS_COUNT && !m_pData->checks[Data::subtChecks].isEmpty()) {
+                    savedSubtChecks = m_pData->checks[Data::subtChecks];
+                }
+                if (Data::externSubtChecks < Data::CHECKS_COUNT && !m_pData->checks[Data::externSubtChecks].isEmpty()) {
+                    savedExternSubtChecks = m_pData->checks[Data::externSubtChecks];
+                }
+                if (Data::subtDef < Data::CHECKS_COUNT && !m_pData->checks[Data::subtDef].isEmpty()) {
+                    savedSubtDef = m_pData->checks[Data::subtDef];
+                }
+                if (Data::externSubtDef < Data::CHECKS_COUNT && !m_pData->checks[Data::externSubtDef].isEmpty()) {
+                    savedExternSubtDef = m_pData->checks[Data::externSubtDef];
+                }
+                if (Data::subtBurn < Data::CHECKS_COUNT && !m_pData->checks[Data::subtBurn].isEmpty()) {
+                    savedSubtBurn = m_pData->checks[Data::subtBurn];
+                }
+                if (Data::externSubtBurn < Data::CHECKS_COUNT && !m_pData->checks[Data::externSubtBurn].isEmpty()) {
+                    savedExternSubtBurn = m_pData->checks[Data::externSubtBurn];
+                }
+            } catch (...) {
+                // If any exception occurs during vector copying, continue with empty saved vectors
+                // This handles race conditions during data initialization
+            }
         }
     }
     
