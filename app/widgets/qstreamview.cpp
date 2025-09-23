@@ -414,6 +414,11 @@ bool QStreamView::eventFilter(QObject *obj, QEvent *event)
     case QEvent::MouseButtonPress: {
         auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
         if (mouse_event->buttons() & Qt::RightButton) {
+            // Prevent context menu during encoding when widget is disabled
+            if (!this->isEnabled()) {
+                return QWidget::eventFilter(obj, event);
+            }
+            
             QWidget *cell = qobject_cast<QWidget*>(obj);
             
             // If the event came from a child widget (like burn radio button), find the parent cell
