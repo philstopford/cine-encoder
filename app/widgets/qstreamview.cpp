@@ -381,6 +381,18 @@ bool QStreamView::eventFilter(QObject *obj, QEvent *event)
         auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
         if (mouse_event->buttons() & Qt::LeftButton) {
             QWidget *cell = qobject_cast<QWidget*>(obj);
+            
+            // If the event came from a child widget, find the parent cell
+            if (!cell || cell->objectName() != "Cell") {
+                QWidget *parent = qobject_cast<QWidget*>(obj);
+                while (parent && parent->objectName() != "Cell") {
+                    parent = parent->parentWidget();
+                }
+                cell = parent;
+            }
+            
+            if (!cell) return QWidget::eventFilter(obj, event);
+            
             auto *btn = cell->findChild<QPushButton*>("expandBtn");
             if (btn)
                 btn->click();
@@ -391,6 +403,18 @@ bool QStreamView::eventFilter(QObject *obj, QEvent *event)
         auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
         if (mouse_event->buttons() & Qt::RightButton) {
             QWidget *cell = qobject_cast<QWidget*>(obj);
+            
+            // If the event came from a child widget (like burn radio button), find the parent cell
+            if (!cell || cell->objectName() != "Cell") {
+                QWidget *parent = qobject_cast<QWidget*>(obj);
+                while (parent && parent->objectName() != "Cell") {
+                    parent = parent->parentWidget();
+                }
+                cell = parent;
+            }
+            
+            if (!cell) return QWidget::eventFilter(obj, event);
+            
             auto *btn = cell->findChild<QPushButton*>("expandBtn");
             bool expanded = false;
             if (btn)
@@ -566,6 +590,8 @@ QWidget *QStreamView::createCell(bool &state,
     QRadioButton *rbtn = QStreamViewPrivate::createRadio(cell, "defaultStream", "", deflt);
     rbtn->setFixedSize(QSize(12,12) * Helper::scaling());
     rbtn->setToolTip(tr("Default"));
+    // Install event filter on default radio button to forward context menu events to parent cell
+    rbtn->installEventFilter(this);
     connect(rbtn, &QRadioButton::clicked, this, [this, cell, &burn, &deflt, &state](bool checked) {
         resetBurnFlags(m_pLayout->indexOf(cell));
         resetDefFlags(m_pLayout->indexOf(cell));
@@ -661,6 +687,8 @@ QWidget *QStreamView::createCell(bool &state,
         if (burn_only) {
             brn_rbtn->setChecked(true);
         }
+        // Install event filter on burn radio button to forward context menu events to parent cell
+        brn_rbtn->installEventFilter(this);
         connect(brn_rbtn, &QRadioButton::clicked, this, [this, cell, &burn, &deflt, &state, &burn_only](bool checked) {
             resetBurnFlags(m_pLayout->indexOf(cell));
             resetDefFlags(m_pLayout->indexOf(cell));
@@ -736,6 +764,8 @@ QWidget *QStreamView::createCell(bool &state,
     chkBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     chkBox->setFixedWidth(100 * Helper::scaling());
     chkBox->setText(format);
+    // Install event filter on checkbox to forward context menu events to parent cell
+    chkBox->installEventFilter(this);
     if (burn_only && (m_type == Content::Subtitle)) {
         chkBox->setEnabled(false);
         chkBox->setChecked(false);
