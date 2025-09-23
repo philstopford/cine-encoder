@@ -372,11 +372,23 @@ bool QStreamView::eventFilter(QObject *obj, QEvent *event)
 {
     switch (event->type()) {
     case QEvent::HoverEnter:
-        QStreamViewPrivate::onRowHovered(obj, true);
+    case QEvent::HoverLeave: {
+        // For hover events, find the parent cell if the event came from a child widget
+        QWidget *cell = qobject_cast<QWidget*>(obj);
+        if (!cell || cell->objectName() != "Cell") {
+            QWidget *parent = qobject_cast<QWidget*>(obj);
+            while (parent && parent->objectName() != "Cell") {
+                parent = parent->parentWidget();
+            }
+            if (parent) {
+                // Forward hover event to parent cell
+                QStreamViewPrivate::onRowHovered(parent, event->type() == QEvent::HoverEnter);
+                break;
+            }
+        }
+        QStreamViewPrivate::onRowHovered(obj, event->type() == QEvent::HoverEnter);
         break;
-    case QEvent::HoverLeave:
-        QStreamViewPrivate::onRowHovered(obj, false);
-        break;
+    }
     case QEvent::MouseButtonDblClick: {
         auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
         if (mouse_event->buttons() & Qt::LeftButton) {
