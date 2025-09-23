@@ -299,6 +299,9 @@ private slots:
 #if defined(Q_OS_WIN64)
     void set_process_prio_win(long long pid, int _prio);
 #endif
+#if defined(Q_OS_MACOS)
+    void set_process_prio_macos(long long pid, int _prio);
+#endif
 
     // ============= Video Metadata ================
     void onClearMetadata();
