@@ -466,8 +466,8 @@ bool QStreamView::eventFilter(QObject *obj, QEvent *event)
                 deselectTitles();
             });
             QAction *pActExtract = nullptr;
-            const bool external = obj->property("External").toBool();
-            const int num = obj->property("Number").toInt();
+            const bool external = cell->property("External").toBool();
+            const int num = cell->property("Number").toInt();
             if (!external) {
                 pActExtract = new QAction(tr("Extract track"), streamMenu);
                 connect(pActExtract, &QAction::triggered, this, [this, num]() {
