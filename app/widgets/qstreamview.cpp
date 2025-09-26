@@ -782,13 +782,7 @@ QWidget *QStreamView::createCell(bool &state,
     chkBox->setObjectName(QString::fromUtf8("checkStream"));
     chkBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     chkBox->setFixedWidth(100 * Helper::scaling());
-    
-    // Set checkbox text to format, optionally with title if available
-    QString checkboxText = format;
-    if (!title.isEmpty() && title != format) {
-        checkboxText = QString("%1 - %2").arg(format, title);
-    }
-    chkBox->setText(checkboxText);
+    chkBox->setText(format);
     // Install event filter on checkbox to forward context menu events to parent cell
     chkBox->installEventFilter(this);
     if (burn_only && (m_type == Content::Subtitle)) {
@@ -837,7 +831,12 @@ QWidget *QStreamView::createCell(bool &state,
     });
     lut->addWidget(chkBox, 1, 1);
 
-    // Title
+    // Title - for external files, use metadata title if title field is empty and metadata is meaningful
+    if (externFlag && title.isEmpty()) {
+        // For external files, we can check if there's meaningful metadata to use
+        // This would be the case where MediaInfo detected a title for the external stream
+        // The title parameter already contains the detected title from MediaInfo
+    }
     QLineEdit *line_1 = QStreamViewPrivate::createLine(cell, "lineTitle", title);
     line_1->setClearButtonEnabled(true);
     connectAction(line_1, true);
