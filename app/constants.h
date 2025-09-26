@@ -99,12 +99,14 @@ namespace Constants {
         ContentType cont_type;
         QString input_file;
         QString output_file;
+        QString title;  // Stream title for metadata export
         float duration;
         int stream;
         StreamData() :
             cont_type(ContentType::Audio),
             input_file(QString()),
             output_file(QString()),
+            title(QString()),
             duration(0.f),
             stream(-1)
         {}

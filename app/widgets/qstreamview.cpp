@@ -782,7 +782,13 @@ QWidget *QStreamView::createCell(bool &state,
     chkBox->setObjectName(QString::fromUtf8("checkStream"));
     chkBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     chkBox->setFixedWidth(100 * Helper::scaling());
-    chkBox->setText(format);
+    
+    // Set checkbox text to format, optionally with title if available
+    QString checkboxText = format;
+    if (!title.isEmpty() && title != format) {
+        checkboxText = QString("%1 - %2").arg(format, title);
+    }
+    chkBox->setText(checkboxText);
     // Install event filter on checkbox to forward context menu events to parent cell
     chkBox->installEventFilter(this);
     if (burn_only && (m_type == Content::Subtitle)) {
