@@ -219,17 +219,11 @@ void EncoderStream::initEncoding(StreamData *data,
         // Export stream title as metadata for supported formats
         m_preset.append("-metadata");
         m_preset.append(QString("title=%1").arg(Helper::makeFileStringFFMPEGReady(m_pData->title)));
-        
-        // Copy relevant stream metadata based on content type
-        if (data->cont_type == ContentType::Audio) {
-            m_preset.append("-map_metadata:s");
-            m_preset.append(QString("0:a:%1").arg(numToStr(m_pData->stream)));
-        } else {
-            m_preset.append("-map_metadata:s");
-            m_preset.append(QString("0:s:%1").arg(numToStr(m_pData->stream)));
-        }
+        // For stream extraction, we generally want to disable global metadata but keep our custom title
+        m_preset.append("-map_metadata");
+        m_preset.append("-1");
     } else {
-        // No title available, try to preserve stream metadata if possible
+        // No title available, disable all metadata
         m_preset.append("-map_metadata");
         m_preset.append("-1");
     }
