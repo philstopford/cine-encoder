@@ -470,7 +470,9 @@ bool QStreamView::eventFilter(QObject *obj, QEvent *event)
             const int num = cell->property("Number").toInt();
             if (!external) {
                 pActExtract = new QAction(tr("Extract track"), streamMenu);
-                connect(pActExtract, &QAction::triggered, this, [this, num]() {
+                connect(pActExtract, &QAction::triggered, this, [this, streamMenu, num]() {
+                    // Close the menu immediately to prevent it from reappearing after modal dialog
+                    streamMenu->close();
                     emit onExtractTrack(m_type, num);
                 });
             }
