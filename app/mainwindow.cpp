@@ -3794,10 +3794,24 @@ void MainWindow::onExtract(QStreamView::Content type, int num)
     const float duration = (type == QStreamView::Content::Audio) ?
                            m_data[m_row].fields[Data::audioDuration].at(num).toFloat() :
                            m_data[m_row].fields[Data::subtDuration].at(num).toFloat();
+    
+    // Get stream title for metadata export
+    QString streamTitle;
+    if (type == QStreamView::Content::Audio) {
+        if (num < m_data[m_row].fields[Data::audioTitles].size()) {
+            streamTitle = m_data[m_row].fields[Data::audioTitles].at(num);
+        }
+    } else {
+        if (num < m_data[m_row].fields[Data::subtTitles].size()) {
+            streamTitle = m_data[m_row].fields[Data::subtTitles].at(num);
+        }
+    }
+    
     StreamData data;
     data.cont_type = ContentType(type);
     data.input_file = m_input_file;
     data.output_file = m_output_file;
+    data.title = streamTitle;  // Include stream title for metadata
     data.duration = 0.001f * duration;
     data.stream = num;
     StreamConverter ext(this,

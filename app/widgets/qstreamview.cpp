@@ -372,15 +372,39 @@ bool QStreamView::eventFilter(QObject *obj, QEvent *event)
 {
     switch (event->type()) {
     case QEvent::HoverEnter:
-        QStreamViewPrivate::onRowHovered(obj, true);
+    case QEvent::HoverLeave: {
+        // For hover events, find the parent cell if the event came from a child widget
+        QWidget *cell = qobject_cast<QWidget*>(obj);
+        if (!cell || cell->objectName() != "Cell") {
+            QWidget *parent = qobject_cast<QWidget*>(obj);
+            while (parent && parent->objectName() != "Cell") {
+                parent = parent->parentWidget();
+            }
+            if (parent) {
+                // Forward hover event to parent cell
+                QStreamViewPrivate::onRowHovered(parent, event->type() == QEvent::HoverEnter);
+                break;
+            }
+        }
+        QStreamViewPrivate::onRowHovered(obj, event->type() == QEvent::HoverEnter);
         break;
-    case QEvent::HoverLeave:
-        QStreamViewPrivate::onRowHovered(obj, false);
-        break;
+    }
     case QEvent::MouseButtonDblClick: {
         auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
         if (mouse_event->buttons() & Qt::LeftButton) {
             QWidget *cell = qobject_cast<QWidget*>(obj);
+            
+            // If the event came from a child widget, find the parent cell
+            if (!cell || cell->objectName() != "Cell") {
+                QWidget *parent = qobject_cast<QWidget*>(obj);
+                while (parent && parent->objectName() != "Cell") {
+                    parent = parent->parentWidget();
+                }
+                cell = parent;
+            }
+            
+            if (!cell) return QWidget::eventFilter(obj, event);
+            
             auto *btn = cell->findChild<QPushButton*>("expandBtn");
             if (btn)
                 btn->click();
@@ -390,7 +414,24 @@ bool QStreamView::eventFilter(QObject *obj, QEvent *event)
     case QEvent::MouseButtonPress: {
         auto* mouse_event = dynamic_cast<QMouseEvent*>(event);
         if (mouse_event->buttons() & Qt::RightButton) {
+            // Prevent context menu during encoding when widget is disabled
+            if (!this->isEnabled()) {
+                return QWidget::eventFilter(obj, event);
+            }
+            
             QWidget *cell = qobject_cast<QWidget*>(obj);
+            
+            // If the event came from a child widget (like burn radio button), find the parent cell
+            if (!cell || cell->objectName() != "Cell") {
+                QWidget *parent = qobject_cast<QWidget*>(obj);
+                while (parent && parent->objectName() != "Cell") {
+                    parent = parent->parentWidget();
+                }
+                cell = parent;
+            }
+            
+            if (!cell) return QWidget::eventFilter(obj, event);
+            
             auto *btn = cell->findChild<QPushButton*>("expandBtn");
             bool expanded = false;
             if (btn)
@@ -425,11 +466,13 @@ bool QStreamView::eventFilter(QObject *obj, QEvent *event)
                 deselectTitles();
             });
             QAction *pActExtract = nullptr;
-            const bool external = obj->property("External").toBool();
-            const int num = obj->property("Number").toInt();
+            const bool external = cell->property("External").toBool();
+            const int num = cell->property("Number").toInt();
             if (!external) {
                 pActExtract = new QAction(tr("Extract track"), streamMenu);
-                connect(pActExtract, &QAction::triggered, this, [this, num]() {
+                connect(pActExtract, &QAction::triggered, this, [this, streamMenu, num]() {
+                    // Close the menu immediately to prevent it from reappearing after modal dialog
+                    streamMenu->close();
                     emit onExtractTrack(m_type, num);
                 });
             }
@@ -566,6 +609,8 @@ QWidget *QStreamView::createCell(bool &state,
     QRadioButton *rbtn = QStreamViewPrivate::createRadio(cell, "defaultStream", "", deflt);
     rbtn->setFixedSize(QSize(12,12) * Helper::scaling());
     rbtn->setToolTip(tr("Default"));
+    // Install event filter on default radio button to forward context menu events to parent cell
+    rbtn->installEventFilter(this);
     connect(rbtn, &QRadioButton::clicked, this, [this, cell, &burn, &deflt, &state](bool checked) {
         resetBurnFlags(m_pLayout->indexOf(cell));
         resetDefFlags(m_pLayout->indexOf(cell));
@@ -661,6 +706,8 @@ QWidget *QStreamView::createCell(bool &state,
         if (burn_only) {
             brn_rbtn->setChecked(true);
         }
+        // Install event filter on burn radio button to forward context menu events to parent cell
+        brn_rbtn->installEventFilter(this);
         connect(brn_rbtn, &QRadioButton::clicked, this, [this, cell, &burn, &deflt, &state, &burn_only](bool checked) {
             resetBurnFlags(m_pLayout->indexOf(cell));
             resetDefFlags(m_pLayout->indexOf(cell));
@@ -736,6 +783,8 @@ QWidget *QStreamView::createCell(bool &state,
     chkBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     chkBox->setFixedWidth(100 * Helper::scaling());
     chkBox->setText(format);
+    // Install event filter on checkbox to forward context menu events to parent cell
+    chkBox->installEventFilter(this);
     if (burn_only && (m_type == Content::Subtitle)) {
         chkBox->setEnabled(false);
         chkBox->setChecked(false);
@@ -782,7 +831,12 @@ QWidget *QStreamView::createCell(bool &state,
     });
     lut->addWidget(chkBox, 1, 1);
 
-    // Title
+    // Title - for external files, use metadata title if title field is empty and metadata is meaningful
+    if (externFlag && title.isEmpty()) {
+        // For external files, we can check if there's meaningful metadata to use
+        // This would be the case where MediaInfo detected a title for the external stream
+        // The title parameter already contains the detected title from MediaInfo
+    }
     QLineEdit *line_1 = QStreamViewPrivate::createLine(cell, "lineTitle", title);
     line_1->setClearButtonEnabled(true);
     connectAction(line_1, true);

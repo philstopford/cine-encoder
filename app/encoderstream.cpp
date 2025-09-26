@@ -213,8 +213,30 @@ void EncoderStream::initEncoding(StreamData *data,
     m_preset_0.append("-analyzeduration");
     m_preset_0.append("50M");
     m_preset.append("-vn");
-    m_preset.append("-map_metadata");
-    m_preset.append("-1");
+    
+    // Handle metadata - include stream title if available
+    if (!m_pData->title.isEmpty()) {
+        // Export stream title as metadata for supported formats
+        // Use stream-specific metadata which is more reliable for extraction
+        if (data->cont_type == ContentType::Audio) {
+            m_preset.append("-metadata:s:a:0");
+            m_preset.append(QString("title=%1").arg(Helper::makeFileStringFFMPEGReady(m_pData->title)));
+        } else {
+            m_preset.append("-metadata:s:s:0");
+            m_preset.append(QString("title=%1").arg(Helper::makeFileStringFFMPEGReady(m_pData->title)));
+        }
+        // Also set global title metadata as fallback
+        m_preset.append("-metadata");
+        m_preset.append(QString("title=%1").arg(Helper::makeFileStringFFMPEGReady(m_pData->title)));
+        // Disable other global metadata but keep our custom metadata
+        m_preset.append("-map_metadata");
+        m_preset.append("-1");
+    } else {
+        // No title available, disable all metadata
+        m_preset.append("-map_metadata");
+        m_preset.append("-1");
+    }
+    
     m_preset.append("-map_chapters");
     m_preset.append("-1");
     m_preset.append(mapParam);
