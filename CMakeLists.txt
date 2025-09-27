@@ -173,3 +173,10 @@ install(TARGETS cine_encoder
 # Consider using qt_generate_deploy_app_script() for app deployment if
 # the project can use Qt 6.3. In that case rerun qmake2cmake with
 # --min-qt-version=6.3.
+
+# Add testing support
+option(BUILD_TESTING "Build tests" ON)
+if(BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
