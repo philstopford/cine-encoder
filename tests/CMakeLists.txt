@@ -16,6 +16,7 @@ set(CORE_TESTABLE_SOURCES
     ../app/inputvalidator.cpp
     ../app/logger.cpp
     ../app/settingsdata.cpp
+    ../app/servicecontainer.cpp
 )
 
 # Function to create a test executable with minimal dependencies
@@ -47,13 +48,14 @@ endfunction()
 
 # Add test executables with specific sources
 add_cine_test(configuration test_configuration.cpp "${CORE_TESTABLE_SOURCES}")
-add_cine_test(input_validator test_input_validator.cpp "../app/inputvalidator.cpp")
+add_cine_test(input_validator test_input_validator.cpp "../app/inputvalidator.cpp;../app/logger.cpp")
 add_cine_test(logger test_logger.cpp "../app/logger.cpp")
 add_cine_test(settings_data test_settings_data.cpp "../app/settingsdata.cpp")
+add_cine_test(service_container test_service_container.cpp "../app/servicecontainer.cpp")
 
 # Test runner script
 add_custom_target(run_tests
     COMMAND ${CMAKE_CTEST_COMMAND} --verbose
-    DEPENDS test_configuration test_input_validator test_logger test_settings_data
+    DEPENDS test_configuration test_input_validator test_logger test_settings_data test_service_container
     COMMENT "Running all tests"
 )
