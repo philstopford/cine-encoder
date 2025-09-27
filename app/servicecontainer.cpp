@@ -37,13 +37,13 @@ void ServiceContainer::clear()
 
 void ServiceContainer::registerDefaultServices()
 {
-    // For now, register simple factory functions
-    // We'll implement full adapters once the base classes are confirmed to work
+    // TODO: Implement proper service adapters when ready
+    // This would register real implementations:
+    // registerSingleton<ILogger, LoggerAdapter>();
+    // registerSingleton<IConfigurationManager, ConfigurationManagerAdapter>();
+    // registerSingleton<IInputValidator, InputValidatorAdapter>();
+    // registerSingleton<IEncodingManager, EncodingManagerAdapter>();
+    // registerSingleton<IErrorHandler, ErrorHandlerAdapter>();
     
-    registerFactory<ILogger>([]() -> std::shared_ptr<ILogger> {
-        // Return a mock logger for now
-        return nullptr; // TODO: Implement proper adapter
-    });
-    
-    // TODO: Add other service registrations once interfaces are tested
+    // For now, this method is a placeholder for future implementation
 }
