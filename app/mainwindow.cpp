@@ -258,10 +258,15 @@ void MainWindow::showEvent(QShowEvent *event)
     BaseWindow::showEvent(event);
     if (!m_windowActivated) {
         m_windowActivated = true;
-        setParameters();
         
-        // Install event filters after UI is fully ready
-        m_pTableLabel->installEventFilter(this);
+        // Defer heavy UI operations until after Qt's initialization is complete
+        // This prevents race conditions with XKB compose table creation
+        QTimer::singleShot(0, this, [this]() {
+            setParameters();
+            
+            // Install event filters after UI is fully ready
+            m_pTableLabel->installEventFilter(this);
+        });
     }
 }
 
