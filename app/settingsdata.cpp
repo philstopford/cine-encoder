@@ -16,7 +16,9 @@
 using namespace Constants;
 
 SettingsData::SettingsData()
-    : m_protectFlag(false)
+    : m_outputFolder("")  // Initialize to empty string instead of null
+    , m_tempFolder("")    // Initialize to empty string instead of null
+    , m_protectFlag(false)
     , m_multiInstances(false)
     , m_showHdrFlag(false)
     , m_timerInterval(DEFAULTTIMER)

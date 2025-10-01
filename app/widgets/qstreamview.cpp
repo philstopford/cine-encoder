@@ -16,6 +16,7 @@
 #include <QRadioButton>
 #include <QIcon>
 #include <QFile>
+#include <QTimer>
 #include <iostream>
 
 #define ROW_HEIGHT 22
@@ -470,10 +471,12 @@ bool QStreamView::eventFilter(QObject *obj, QEvent *event)
             const int num = cell->property("Number").toInt();
             if (!external) {
                 pActExtract = new QAction(tr("Extract track"), streamMenu);
-                connect(pActExtract, &QAction::triggered, this, [this, streamMenu, num]() {
-                    // Close the menu immediately to prevent it from reappearing after modal dialog
-                    streamMenu->close();
-                    emit onExtractTrack(m_type, num);
+                connect(pActExtract, &QAction::triggered, this, [this, num]() {
+                    // Defer the extraction until after the menu is completely closed
+                    // This prevents the context menu from reappearing after the modal dialog
+                    QTimer::singleShot(0, this, [this, num]() {
+                        emit onExtractTrack(m_type, num);
+                    });
                 });
             }
             streamMenu->addAction(pActExpand);

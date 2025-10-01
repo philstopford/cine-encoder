@@ -54,6 +54,7 @@ add_executable(cine_encoder WIN32 MACOSX_BUNDLE
     app/helper.cpp app/helper.h
     app/main.cpp
     app/mainwindow.cpp app/mainwindow.h app/mainwindow.ui
+    app/mainwindowcontroller.cpp app/mainwindowcontroller.h
     app/message.cpp app/message.h app/message.ui
     app/notification.cpp app/notification.h app/notification.ui
     app/popupmessage.cpp app/popupmessage.h app/popupmessage.ui
@@ -71,6 +72,8 @@ add_executable(cine_encoder WIN32 MACOSX_BUNDLE
     app/errorhandler.cpp app/errorhandler.h
     app/encodingmanager.cpp app/encodingmanager.h
     app/configurationmanager.cpp app/configurationmanager.h
+    app/interfaces.h
+    app/servicecontainer.cpp app/servicecontainer.h
     app/widgets/qanimatedsvg.cpp app/widgets/qanimatedsvg.h
     app/widgets/qdoublebutton.cpp app/widgets/qdoublebutton.h
     app/widgets/qstreamview.cpp app/widgets/qstreamview.h
@@ -173,3 +176,10 @@ install(TARGETS cine_encoder
 # Consider using qt_generate_deploy_app_script() for app deployment if
 # the project can use Qt 6.3. In that case rerun qmake2cmake with
 # --min-qt-version=6.3.
+
+# Add testing support
+option(BUILD_TESTING "Build tests" ON)
+if(BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(tests)
+endif()

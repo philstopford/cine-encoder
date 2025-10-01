@@ -56,7 +56,7 @@
         #define UNICODE
     #endif
     #include <MediaInfo/MediaInfo.h>
-#include <QOperatingSystemVersion>
+    #include <QOperatingSystemVersion>
 
 using namespace MediaInfoLib;
 #elif defined(Q_OS_WIN64)
@@ -91,9 +91,6 @@ using namespace MediaInfoLib;
 #define AINFO(a, b) QString::fromStdWString(MI.Get(Stream_Audio, a, __T(b)))
 #define SINFO(a, b) QString::fromStdWString(MI.Get(Stream_Text, a, __T(b)))
 #define GETTEXT(row, col) ui->tableWidget->item(row, ColumnIndex::col)->text()
-// #define SLT(method) &MainWindow::method
-// #define _CHECKS(row, chk) m_data[row].checks[Data::chk]
-// #define _FIELDS(row, fld) m_data[row].fields[Data::fld]
 
 typedef void(MainWindow::*FnVoidVoid)();
 typedef void(MainWindow::*FnVoidInt)(int);
@@ -261,10 +258,15 @@ void MainWindow::showEvent(QShowEvent *event)
     BaseWindow::showEvent(event);
     if (!m_windowActivated) {
         m_windowActivated = true;
-        setParameters();
         
-        // Install event filters after UI is fully ready
-        m_pTableLabel->installEventFilter(this);
+        // Defer heavy UI operations until after Qt's initialization is complete
+        // This prevents race conditions with XKB compose table creation
+        QTimer::singleShot(0, this, [this]() {
+            setParameters();
+            
+            // Install event filters after UI is fully ready
+            m_pTableLabel->installEventFilter(this);
+        });
     }
 }
 
