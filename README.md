@@ -147,6 +147,20 @@ Next release version: 3.5.5. Estimated release date: Dec 15 2022.
 To tracking the development of the project see [Project page](https://github.com/CineEncoder/cine-encoder/projects/1?fullscreen=true)
 
 
+### Code Quality & Architecture
+
+This project follows modern C++ best practices and Qt coding standards. Recent improvements include:
+
+- **Namespace Hygiene**: Removed `using namespace` directives from header files to prevent namespace pollution
+- **Type Safety**: Replaced preprocessor macros with `constexpr` variables and inline functions for better type checking
+- **Documentation**: Comprehensive Doxygen-style documentation for all public APIs
+- **Architecture**: Separation of concerns with dedicated service layers (see [ARCHITECTURE_IMPROVEMENTS.md](ARCHITECTURE_IMPROVEMENTS.md))
+- **Testing**: Unit test infrastructure with Qt Test framework
+- **Error Handling**: Centralized error handling and logging systems
+
+For detailed information about architectural improvements, see [ARCHITECTURE_IMPROVEMENTS.md](ARCHITECTURE_IMPROVEMENTS.md).
+
+
 ### Licence
 
 GNU GPL v.3
