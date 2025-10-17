@@ -78,6 +78,8 @@ using namespace MediaInfoLib;
     #include <unistd.h>
 #endif
 
+using namespace Constants;
+
 #define WINDOW_SIZE (QSize(1500, 920) * Helper::scaling())
 #define ROWHEIGHT 25
 #define ROWHEIGHTDFLT 45

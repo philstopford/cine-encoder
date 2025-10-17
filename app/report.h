@@ -5,8 +5,6 @@
 #include "constants.h"
 #include <QTableWidgetItem>
 
-using namespace Constants;
-
 namespace Ui
 {
     class Report;
@@ -16,7 +14,7 @@ class Report : public BaseDialog
 {
     Q_OBJECT
 public:
-    explicit Report(QWidget *parent, const QVector<ReportLog> &reportLog);
+    explicit Report(QWidget *parent, const QVector<Constants::ReportLog> &reportLog);
     ~Report();
 
 private:

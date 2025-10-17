@@ -8,6 +8,8 @@
 #include <QHeaderView>
 #include <iostream>
 
+using namespace Constants;
+
 #define OFFSET (QPoint(530, -30) * Helper::scaling())
 
 
