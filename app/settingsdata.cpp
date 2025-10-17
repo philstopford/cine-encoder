@@ -29,9 +29,9 @@ SettingsData::SettingsData()
     , m_fontSize(10)
     , m_hideInTrayFlag(false)
     , m_prefixType(0)
-    , m_prefixName(DEFAULTPREFIX)
+    , m_prefixName(defaultPrefix())
     , m_suffixType(0)
-    , m_suffixName(DEFAULTSUFFIX)
+    , m_suffixName(defaultSuffix())
     , m_subtitlesDeselectAll(false)
     , m_subtitlesBackground(false)
     , m_subtitlesColor(Qt::white)
@@ -343,9 +343,9 @@ void SettingsData::resetToDefaults()
     m_fontSize = 8;
     m_hideInTrayFlag = false;
     m_prefixType = 0;
-    m_prefixName = DEFAULTPREFIX;
+    m_prefixName = defaultPrefix();
     m_suffixType = 0;
-    m_suffixName = DEFAULTSUFFIX;
+    m_suffixName = defaultSuffix();
     m_subtitlesDeselectAll = false;
     m_subtitlesBackground = false;
     m_subtitlesColor = Qt::white;

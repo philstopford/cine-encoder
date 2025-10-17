@@ -148,8 +148,8 @@ void Preset::showEvent(QShowEvent *event)
         setMinimumSize(QSize(500, 600) * Helper::scaling());
         SETTINGS(stn);
 
-        m_pPresetSubtitlesColor_temp = QColor(stn.value("Settings/subtitles_color", DEFAULTSUBTITLECOLOR).toString());
-        m_pPresetSubtitlesBackgroundColor_temp = QColor(stn.value("Settings/subtitles_background_color", DEFAULTSUBTITLEBACKGROUNDCOLOR).toString());
+        m_pPresetSubtitlesColor_temp = QColor(stn.value("Settings/subtitles_color", defaultSubtitleColor()).toString());
+        m_pPresetSubtitlesBackgroundColor_temp = QColor(stn.value("Settings/subtitles_background_color", defaultSubtitleBackgroundColor()).toString());
 
         if (stn.childGroups().contains("PresetWidget")) {
             stn.beginGroup("PresetWidget");

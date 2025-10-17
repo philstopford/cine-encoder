@@ -231,8 +231,8 @@ void SettingsController::resetSettings()
         m_ui->comboBox_lang->setCurrentIndex(0);
         m_ui->comboBoxPrefixType->setCurrentIndex(0);
         m_ui->comboBoxSuffixType->setCurrentIndex(0);
-        m_ui->lineEditPrefix->setText(DEFAULTPREFIX);
-        m_ui->lineEditSuffix->setText(DEFAULTSUFFIX);
+        m_ui->lineEditPrefix->setText(defaultPrefix());
+        m_ui->lineEditSuffix->setText(defaultSuffix());
         m_ui->comboBox_fontsize->setCurrentIndex(0);
     }
 }
