@@ -21,6 +21,9 @@
 #include <ctime>
 #include <algorithm>
 #include <QColor>
+
+using namespace Constants;
+
 #if defined(Q_OS_WIN64)
 #include <windows.h>
 #include <tlhelp32.h>

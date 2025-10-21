@@ -27,8 +27,6 @@
     #include <windows.h>
 #endif
 
-using namespace Constants;
-
 class Encoder : public QObject
 {
     Q_OBJECT
@@ -49,7 +47,7 @@ public:
                       QString        globalTitle,
                       QVector<QString>  _cur_param,
                       const QString  _hdr[],
-                      Data           data,
+                      Constants::Data           data,
                       int            *_fr_count,
                       int            streamCutting,
                       const QString  &subtitle_font,

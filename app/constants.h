@@ -18,11 +18,16 @@
 #include <QVector>
 #include <iostream>
 
+// Logging utility - prefer using Logger class for production code
 #define Print(a) std::cout << a << std::endl
-#define numToStr(num) QString::number(num)
-// #define Q_LOOP(i, start, end) for(int i = start; i < end; i++)
-// #define CHECKS(chk) data.checks[Data::chk]
-// #define FIELDS(fld) data.fields[Data::fld]
+
+// Convert number to QString - using inline function for type safety
+inline QString numToStr(int num) { return QString::number(num); }
+inline QString numToStr(double num) { return QString::number(num); }
+inline QString numToStr(float num) { return QString::number(num); }
+inline QString numToStr(long num) { return QString::number(num); }
+
+// Settings paths - consider using ConfigurationManager for better encapsulation
 #define SETTINGSPATH QDir::homePath() + QString("/CineEncoder")
 #define SETTINGSFILE (SETTINGSPATH + QString("/settings.ini"))
 #define XMLSETTINGSFILE (SETTINGSPATH + QString("/settings.xml"))
@@ -30,32 +35,33 @@
                             QSettings::IniFormat);
 
 // ******************* Constants *****************************//
-#define PRESETS_VERSION 355
-#define SETTINGS_VERSION 355
+constexpr int PRESETS_VERSION = 355;
+constexpr int SETTINGS_VERSION = 355;
 
-#define PARAMETERS_COUNT 42
-#define NUMBER_PRESETS 31
+constexpr int PARAMETERS_COUNT = 42;
+constexpr int NUMBER_PRESETS = 31;
 
-#define CODEC_QSV_FIRST 6
-#define CODEC_QSV_LAST 11
-#define CODEC_VAAPI_FIRST 12
-#define CODEC_VAAPI_LAST 12
+constexpr int CODEC_QSV_FIRST = 6;
+constexpr int CODEC_QSV_LAST = 11;
+constexpr int CODEC_VAAPI_FIRST = 12;
+constexpr int CODEC_VAAPI_LAST = 12;
 
-#define DEFAULTPREFIX QString("output")
-#define DEFAULTSUFFIX QString("_encoded_")
-#define DEFAULTSUBTITLECOLOR QString("#00FFFFFF")
-#define DEFAULTSUBTITLEBACKGROUNDCOLOR QString("#96000000")
-#define DEFAULTTIMER 30
+// Default values - using inline functions for QString construction
+inline QString defaultPrefix() { return QString("output"); }
+inline QString defaultSuffix() { return QString("_encoded_"); }
+inline QString defaultSubtitleColor() { return QString("#00FFFFFF"); }
+inline QString defaultSubtitleBackgroundColor() { return QString("#96000000"); }
 
-#define DOCKS_COUNT 8
+constexpr int DEFAULTTIMER = 30;
+constexpr int DOCKS_COUNT = 8;
 
-#define AMOUNT_HDR_PARAMS 11
-#define AMOUNT_VIDEO_METADATA 6
-#define MAX_AUDIO_STREAMS 100
-#define MAX_SUBTITLES 100
+constexpr int AMOUNT_HDR_PARAMS = 11;
+constexpr int AMOUNT_VIDEO_METADATA = 6;
+constexpr int MAX_AUDIO_STREAMS = 100;
+constexpr int MAX_SUBTITLES = 100;
 
-#define MAXIMUM_ALLOWED_TIME 359999.0f
-#define FONTSIZE 8
+constexpr float MAXIMUM_ALLOWED_TIME = 359999.0f;
+constexpr int FONTSIZE = 8;
 
 
 namespace Constants {
@@ -231,8 +237,8 @@ namespace Constants {
             "0", "0", "0",
             "ProRes HQ", "0", "0",
             "0",
-            "0", "Arial", numToStr(FONTSIZE), DEFAULTSUBTITLECOLOR,
-            "0", DEFAULTSUBTITLEBACKGROUNDCOLOR, "150", "0"
+            "0", "Arial", numToStr(FONTSIZE), defaultSubtitleColor(),
+            "0", defaultSubtitleBackgroundColor(), "150", "0"
     };
 
     struct EncoderAudioParam {

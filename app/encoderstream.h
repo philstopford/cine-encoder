@@ -26,8 +26,6 @@
     #include <windows.h>
 #endif
 
-using namespace Constants;
-
 class EncoderStream : public QObject
 {
     Q_OBJECT
@@ -35,9 +33,9 @@ public:
     explicit EncoderStream(QObject *parent = nullptr);
     ~EncoderStream() override;
 
-    void initEncoding(StreamData *data,
-                      EncoderAudioParam *aParam,
-                      EncoderSubtParam *sParam,
+    void initEncoding(Constants::StreamData *data,
+                      Constants::EncoderAudioParam *aParam,
+                      Constants::EncoderSubtParam *sParam,
                       int prio);
 
     QProcess::ProcessState getEncodingState();
@@ -66,7 +64,7 @@ private:
             m_error_message;
     QStringList m_error_lines;  // Accumulate error lines for better error reporting
 
-    StreamData *m_pData;
+    Constants::StreamData *m_pData;
     QProcess   *m_pProcessEncoding;
 
 private slots:

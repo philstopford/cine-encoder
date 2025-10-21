@@ -22,8 +22,6 @@
     #include "basewindow.h"
 #endif
 
-using namespace Constants;
-
 namespace Ui
 {
     class StreamConverter;
@@ -38,7 +36,7 @@ public:
     };
     explicit StreamConverter(QWidget *parent,
                              Mode mode,
-                             StreamData *data,
+                             Constants::StreamData *data,
                              int theme, int prio);
     ~StreamConverter() override;
 
@@ -61,9 +59,9 @@ private:
     bool  m_windowActivated;
     Mode  m_mode;
     EncoderStream *m_pEncoder;
-    StreamData *m_pData;
-    EncoderAudioParam m_aParam;
-    EncoderSubtParam m_sParam;
+    Constants::StreamData *m_pData;
+    Constants::EncoderAudioParam m_aParam;
+    Constants::EncoderSubtParam m_sParam;
 
 private slots:
     void onStart();

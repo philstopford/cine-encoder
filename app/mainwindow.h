@@ -39,8 +39,6 @@
 
 typedef QVector<QVector<QString>> TableString;
 
-using namespace Constants;
-
 QT_BEGIN_NAMESPACE
 namespace Ui {
     class Widget;
@@ -69,7 +67,7 @@ private:
     void showInfoMessage(const QString &message, bool timer_mode = false);
     bool showDialogMessage(const QString &message);
     void showPopup(const QString &text, PopupMessage::Icon icon = PopupMessage::Icon::Info);
-    void addReport(const QString &log, ReportLog::Icon icon = ReportLog::Icon::Info);
+    void addReport(const QString &log, Constants::ReportLog::Icon icon = Constants::ReportLog::Icon::Info);
     void setTheme(int ind_theme);
     QString setThumbnail(QString curFilename,
                          double time,
@@ -177,11 +175,11 @@ private:
     int         m_theme;
 
     // ============== Report ==============
-    QVector<ReportLog> m_reportLog;
+    QVector<Constants::ReportLog> m_reportLog;
 
     // ============= Metadata =============
     QString       m_hdr[AMOUNT_HDR_PARAMS];
-    QVector<Data> m_data;
+    QVector<Constants::Data> m_data;
 
     // ============= Encoding =============
     bool        m_batch_mode,
