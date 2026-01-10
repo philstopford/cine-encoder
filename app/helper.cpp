@@ -37,14 +37,30 @@ QStringList Helper::makeStringsFFMPEGReady(const QStringList& stringList)
 
 QString Helper::makeFileStringFFMPEGReady(const QString& fileString)
 {
+    // This function is used for file paths and metadata values.
+    // When using QProcess with QStringList arguments, Qt handles shell escaping,
+    // so we don't need to escape most special characters.
+    // We only escape characters that have special meaning to FFmpeg itself.
+    
+    // For now, return the string as-is since QProcess handles shell escaping
+    // and file paths should be passed literally.
+    return fileString;
+}
+
+QString Helper::makeFileStringFFMPEGFilterReady(const QString& fileString)
+{
     /*
      * from https://stackoverflow.com/questions/45916331/escape-special-characters-in-ffmpeg-subtitle-filename
-     * i=$(ls)
-       e=${i//\\/\\\\\\\\} # escape backslashes
+     * This escaping is specifically for filenames used inside FFmpeg filter strings,
+     * such as in the subtitles filter: subtitles='filename'
+     * 
+     * The bash reference implementation:
+       i=$(ls)
+       e=${i//\\/\\\\\\\\} # escape backslashes - replace \ with \\\\
        e=${e//:/\\\\:}     # escape : (used to pass params to filter)
        e=${e//,/\\,}       # escape , (used to separate filters)
        e=${e//;/\\;}       # escape ; (used to separate filterchains)
-       e=${e//\'/\\\\\\\'} # escape ' (parsed by filter)
+       e=${e//\'/\\\\\\\'} # escape ' (parsed by filter) - replace ' with \\\'
        e=${e//\[/\\[}      # escape [ (used to name components of filtergraph)
        e=${e//\]/\\]}      # escape ] (same as above)
      */

@@ -65,6 +65,13 @@ public:
     static QString makeFileStringFFMPEGReady(const QString& fileString);
 
     /**
+     * @brief Escape special characters in a filename/path for FFmpeg filter syntax
+     * @param fileString Original file path or name
+     * @return Escaped string safe for FFmpeg filters like subtitles='...'
+     */
+    static QString makeFileStringFFMPEGFilterReady(const QString& fileString);
+
+    /**
      * @brief Detect the current desktop environment (Linux only)
      */
     static void detectEnv();
