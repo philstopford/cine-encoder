@@ -51,26 +51,22 @@ QString Helper::makeFileStringFFMPEGFilterReady(const QString& fileString)
 {
     /*
      * This escaping is specifically for filenames used inside FFmpeg filter strings
-     * with single-quote quoting, such as: subtitles='filename'
+     * WITHOUT quoting, such as: subtitles=filename:options
      * 
-     * For single-quoted filter parameters, to include a literal single quote,
-     * we use the '\'' pattern: close quote, escaped quote, open quote.
-     * This is the POSIX-compatible way and works correctly with FFmpeg filters.
+     * FFmpeg's filter parser requires backslash escaping for special characters.
+     * The filename is NOT wrapped in quotes, so we escape directly with backslashes.
      * 
-     * Other special characters are escaped with backslashes as per FFmpeg filter syntax.
+     * Reference: https://ffmpeg.org/ffmpeg-filters.html#Notes-on-filtergraph-escaping
      */
     QString file_substitute = fileString;
     // Order matters! Backslash must be escaped first to avoid double-escaping
-    file_substitute.replace("\\", "\\\\\\\\");  // \ -> \\\\ (4 backslashes)
-    file_substitute.replace(":", "\\\\:");      // : -> \\:
+    file_substitute.replace("\\", "\\\\");      // \ -> \\
+    file_substitute.replace("'", "\\'");        // ' -> \'
+    file_substitute.replace(":", "\\:");        // : -> \:
     file_substitute.replace(",", "\\,");        // , -> \,
     file_substitute.replace(";", "\\;");        // ; -> \;
-    file_substitute.replace("'", "'\\''");      // ' -> '\'' (close quote, escaped quote, open quote)
     file_substitute.replace("[", "\\[");        // [ -> \[
     file_substitute.replace("]", "\\]");        // ] -> \]
-    file_substitute.replace("(", "\\(");        // ( -> \(
-    file_substitute.replace(")", "\\)");        // ) -> \)
-    file_substitute.replace("\"", "\\\"");      // " -> \"
     file_substitute.replace(" ", "\\ ");        // space -> \ 
 
     return file_substitute;

@@ -33,8 +33,8 @@ void TestHelper::testMakeFileStringFFMPEGFilterReady_singleQuote()
     QString input = "Don't.mkv";
     QString result = Helper::makeFileStringFFMPEGFilterReady(input);
     
-    // Single quote should be escaped as '\'' (close quote, escaped quote, open quote)
-    QString expected = "Don'\\''t.mkv";
+    // Single quote should be escaped as \' (backslash + quote, no wrapping quotes)
+    QString expected = "Don\\'t.mkv";
     QCOMPARE(result, expected);
 }
 
@@ -44,8 +44,8 @@ void TestHelper::testMakeFileStringFFMPEGFilterReady_colon()
     QString input = "Test:File.mkv";
     QString result = Helper::makeFileStringFFMPEGFilterReady(input);
     
-    // Colon should be escaped as \\:
-    QString expected = "Test\\\\:File.mkv";
+    // Colon should be escaped as \:
+    QString expected = "Test\\:File.mkv";
     QCOMPARE(result, expected);
 }
 
@@ -55,8 +55,8 @@ void TestHelper::testMakeFileStringFFMPEGFilterReady_backslash()
     QString input = "Test\\File.mkv";
     QString result = Helper::makeFileStringFFMPEGFilterReady(input);
     
-    // Backslash should be escaped as \\\\
-    QString expected = "Test\\\\\\\\\\\\\\\\File.mkv";
+    // Backslash should be escaped as \\
+    QString expected = "Test\\\\File.mkv";
     QCOMPARE(result, expected);
 }
 
@@ -89,8 +89,8 @@ void TestHelper::testMakeFileStringFFMPEGFilterReady_complex()
     QString result = Helper::makeFileStringFFMPEGFilterReady(input);
     
     // All special characters should be properly escaped
-    // Single quotes: '\''  Spaces: \  Brackets: \[ \]
-    QString expected = "Don'\\''t\\ Test\\ \\[2023\\].mkv";
+    // Single quote: \'  Space: \  Brackets: \[ \]
+    QString expected = "Don\\'t\\ Test\\ \\[2023\\].mkv";
     QCOMPARE(result, expected);
 }
 
