@@ -33,8 +33,8 @@ void TestHelper::testMakeFileStringFFMPEGFilterReady_singleQuote()
     QString input = "Don't.mkv";
     QString result = Helper::makeFileStringFFMPEGFilterReady(input);
     
-    // Single quote should be escaped as \\\' (three backslashes + quote)
-    QString expected = "Don\\\\\\\'t.mkv";
+    // Single quote should be escaped as '\'' (close quote, escaped quote, open quote)
+    QString expected = "Don'\\''t.mkv";
     QCOMPARE(result, expected);
 }
 
@@ -89,7 +89,8 @@ void TestHelper::testMakeFileStringFFMPEGFilterReady_complex()
     QString result = Helper::makeFileStringFFMPEGFilterReady(input);
     
     // All special characters should be properly escaped
-    QString expected = "Don\\\\\\\'t\\ Test\\ \\[2023\\].mkv";
+    // Single quotes: '\''  Spaces: \  Brackets: \[ \]
+    QString expected = "Don'\\''t\\ Test\\ \\[2023\\].mkv";
     QCOMPARE(result, expected);
 }
 

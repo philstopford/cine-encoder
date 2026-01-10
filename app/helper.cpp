@@ -50,19 +50,14 @@ QString Helper::makeFileStringFFMPEGReady(const QString& fileString)
 QString Helper::makeFileStringFFMPEGFilterReady(const QString& fileString)
 {
     /*
-     * from https://stackoverflow.com/questions/45916331/escape-special-characters-in-ffmpeg-subtitle-filename
-     * This escaping is specifically for filenames used inside FFmpeg filter strings,
-     * such as in the subtitles filter: subtitles='filename'
+     * This escaping is specifically for filenames used inside FFmpeg filter strings
+     * with single-quote quoting, such as: subtitles='filename'
      * 
-     * The bash reference implementation:
-       i=$(ls)
-       e=${i//\\/\\\\\\\\} # escape backslashes - replace \ with \\\\
-       e=${e//:/\\\\:}     # escape : (used to pass params to filter)
-       e=${e//,/\\,}       # escape , (used to separate filters)
-       e=${e//;/\\;}       # escape ; (used to separate filterchains)
-       e=${e//\'/\\\\\\\'} # escape ' (parsed by filter) - replace ' with \\\'
-       e=${e//\[/\\[}      # escape [ (used to name components of filtergraph)
-       e=${e//\]/\\]}      # escape ] (same as above)
+     * For single-quoted filter parameters, to include a literal single quote,
+     * we use the '\'' pattern: close quote, escaped quote, open quote.
+     * This is the POSIX-compatible way and works correctly with FFmpeg filters.
+     * 
+     * Other special characters are escaped with backslashes as per FFmpeg filter syntax.
      */
     QString file_substitute = fileString;
     // Order matters! Backslash must be escaped first to avoid double-escaping
@@ -70,7 +65,7 @@ QString Helper::makeFileStringFFMPEGFilterReady(const QString& fileString)
     file_substitute.replace(":", "\\\\:");      // : -> \\:
     file_substitute.replace(",", "\\,");        // , -> \,
     file_substitute.replace(";", "\\;");        // ; -> \;
-    file_substitute.replace("'", "\\\\\\\'");   // ' -> \\\' (3 backslashes + quote)
+    file_substitute.replace("'", "'\\''");      // ' -> '\'' (close quote, escaped quote, open quote)
     file_substitute.replace("[", "\\[");        // [ -> \[
     file_substitute.replace("]", "\\]");        // ] -> \]
     file_substitute.replace("(", "\\(");        // ( -> \(
