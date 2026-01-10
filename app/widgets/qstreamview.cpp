@@ -699,6 +699,7 @@ QWidget *QStreamView::createCell(bool &state,
         if (Helper::isSubtitleIncompatible(extension, format, m_usePresetSubtitleSettings)) {
             tit->setText(tit->text() + tr("Hard-burn only"));
             burn_only = true;
+            burn = true;  // Set burn flag when subtitle must be hard-burned
             state = false;
             isIncompatible = true;
         }

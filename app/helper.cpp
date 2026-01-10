@@ -37,32 +37,40 @@ QStringList Helper::makeStringsFFMPEGReady(const QStringList& stringList)
 
 QString Helper::makeFileStringFFMPEGReady(const QString& fileString)
 {
+    // This function is used for file paths and metadata values.
+    // When using QProcess with QStringList arguments, Qt handles shell escaping,
+    // so we don't need to escape most special characters.
+    // We only escape characters that have special meaning to FFmpeg itself.
+    
+    // For now, return the string as-is since QProcess handles shell escaping
+    // and file paths should be passed literally.
+    return fileString;
+}
+
+QString Helper::makeFileStringFFMPEGFilterReady(const QString& fileString)
+{
     /*
-     * from https://stackoverflow.com/questions/45916331/escape-special-characters-in-ffmpeg-subtitle-filename
-     * i=$(ls)
-       e=${i//\\/\\\\\\\\} # escape backslashes
-       e=${e//:/\\\\:}     # escape : (used to pass params to filter)
-       e=${e//,/\\,}       # escape , (used to separate filters)
-       e=${e//;/\\;}       # escape ; (used to separate filterchains)
-       e=${e//\'/\\\\\\\'} # escape ' (parsed by filter)
-       e=${e//\[/\\[}      # escape [ (used to name components of filtergraph)
-       e=${e//\]/\\]}      # escape ] (same as above)
+     * This escaping is specifically for filenames used inside FFmpeg filter strings
+     * WITHOUT quoting, such as: subtitles=filename:options
+     * 
+     * FFmpeg's filter parser requires backslash escaping for special characters.
+     * The filename is NOT wrapped in quotes, so we escape directly with backslashes.
+     * 
+     * Reference: https://ffmpeg.org/ffmpeg-filters.html#Notes-on-filtergraph-escaping
      */
     QString file_substitute = fileString;
-    std::string input = fileString.toStdString();
-    file_substitute.replace("\\", "\\");
-    file_substitute.replace(":", "\:");
-    file_substitute.replace(",", "\,");
-    file_substitute.replace(";", "\;");
-    file_substitute.replace("'", "\'");
-    file_substitute.replace("[", "\[");
-    file_substitute.replace("]", "\]");
-    file_substitute.replace("(", "\(");
-    file_substitute.replace(")", "\)");
-    file_substitute.replace("\"", "\"");
-    file_substitute.replace(" ", "\ ");
+    // Order matters! Backslash must be escaped first to avoid double-escaping
+    file_substitute.replace("\\", "\\\\");      // \ -> \\ (one backslash becomes two)
+    file_substitute.replace("'", "\\'");        // ' -> \' (ASCII apostrophe U+0027)
+    file_substitute.replace("'", "\\'");        // ' -> \' (Unicode right single quote U+2019)
+    file_substitute.replace("'", "\\'");        // ' -> \' (Unicode left single quote U+2018)
+    file_substitute.replace(":", "\\:");        // : -> \: (colon becomes backslash-colon)
+    file_substitute.replace(",", "\\,");        // , -> \, (comma becomes backslash-comma)
+    file_substitute.replace(";", "\\;");        // ; -> \; (semicolon becomes backslash-semicolon)
+    file_substitute.replace("[", "\\[");        // [ -> \[ (bracket becomes backslash-bracket)
+    file_substitute.replace("]", "\\]");        // ] -> \] (bracket becomes backslash-bracket)
+    file_substitute.replace(" ", "\\ ");        // space -> \  (space becomes backslash-space)
 
-    std::string debug = file_substitute.toStdString();
     return file_substitute;
 }
 
