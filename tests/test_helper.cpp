@@ -30,12 +30,16 @@ private slots:
 void TestHelper::testMakeFileStringFFMPEGFilterReady_singleQuote()
 {
     // Test filename with single quote for filter usage
-    QString input = "Don't.mkv";
-    QString result = Helper::makeFileStringFFMPEGFilterReady(input);
+    QString input1 = "Don't.mkv";  // ASCII apostrophe
+    QString result1 = Helper::makeFileStringFFMPEGFilterReady(input1);
+    QString expected1 = "Don\\'t.mkv";
+    QCOMPARE(result1, expected1);
     
-    // Single quote should be escaped as \' (backslash + quote, no wrapping quotes)
-    QString expected = "Don\\'t.mkv";
-    QCOMPARE(result, expected);
+    // Test Unicode right single quotation mark
+    QString input2 = "Don't.mkv";  // U+2019
+    QString result2 = Helper::makeFileStringFFMPEGFilterReady(input2);
+    QString expected2 = "Don\\'t.mkv";
+    QCOMPARE(result2, expected2);
 }
 
 void TestHelper::testMakeFileStringFFMPEGFilterReady_colon()
