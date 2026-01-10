@@ -50,17 +50,17 @@ QString Helper::makeFileStringFFMPEGReady(const QString& fileString)
      */
     QString file_substitute = fileString;
     // Order matters! Backslash must be escaped first to avoid double-escaping
-    file_substitute.replace("\\", "\\\\\\\\");  // \ -> \\\\ (4 backslashes for proper escaping)
-    file_substitute.replace(":", "\\\\:");      // : -> \\: (used to pass params to filter)
-    file_substitute.replace(",", "\\,");        // , -> \, (used to separate filters)
-    file_substitute.replace(";", "\\;");        // ; -> \; (used to separate filterchains)
-    file_substitute.replace("'", "\\\\\\\\'");  // ' -> \\\' (escape single quote for filter parsing)
-    file_substitute.replace("[", "\\[");        // [ -> \[ (used to name components of filtergraph)
-    file_substitute.replace("]", "\\]");        // ] -> \] (same as above)
-    file_substitute.replace("(", "\\(");        // ( -> \( (escape parentheses)
-    file_substitute.replace(")", "\\)");        // ) -> \) (escape parentheses)
-    file_substitute.replace("\"", "\\\"");      // " -> \" (escape double quotes)
-    file_substitute.replace(" ", "\\ ");        // space -> \  (escape spaces)
+    file_substitute.replace("\\", "\\\\\\\\");  // \ -> \\\\ (4 backslashes)
+    file_substitute.replace(":", "\\\\:");      // : -> \\:
+    file_substitute.replace(",", "\\,");        // , -> \,
+    file_substitute.replace(";", "\\;");        // ; -> \;
+    file_substitute.replace("'", "\\\\\\\'");   // ' -> \\\' (3 backslashes + quote)
+    file_substitute.replace("[", "\\[");        // [ -> \[
+    file_substitute.replace("]", "\\]");        // ] -> \]
+    file_substitute.replace("(", "\\(");        // ( -> \(
+    file_substitute.replace(")", "\\)");        // ) -> \)
+    file_substitute.replace("\"", "\\\"");      // " -> \"
+    file_substitute.replace(" ", "\\ ");        // space -> \ 
 
     return file_substitute;
 }

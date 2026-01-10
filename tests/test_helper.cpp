@@ -33,8 +33,7 @@ void TestHelper::testMakeFileStringFFMPEGReady_singleQuote()
     QString result = Helper::makeFileStringFFMPEGReady(input);
     
     // Single quote should be escaped as \\\' (three backslashes + quote)
-    // In C++ string literal: "\\\\\\\'" 
-    QString expected = "Don\\\\\\\\'t.mkv";
+    QString expected = "Don\\\\\\\'t.mkv";
     QCOMPARE(result, expected);
 }
 
@@ -89,7 +88,7 @@ void TestHelper::testMakeFileStringFFMPEGReady_complex()
     QString result = Helper::makeFileStringFFMPEGReady(input);
     
     // All special characters should be properly escaped
-    QString expected = "Don\\\\\\\\'t\\ Test\\ \\[2023\\].mkv";
+    QString expected = "Don\\\\\\\'t\\ Test\\ \\[2023\\].mkv";
     QCOMPARE(result, expected);
 }
 
