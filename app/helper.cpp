@@ -49,20 +49,19 @@ QString Helper::makeFileStringFFMPEGReady(const QString& fileString)
        e=${e//\]/\\]}      # escape ] (same as above)
      */
     QString file_substitute = fileString;
-    std::string input = fileString.toStdString();
-    file_substitute.replace("\\", "\\");
-    file_substitute.replace(":", "\:");
-    file_substitute.replace(",", "\,");
-    file_substitute.replace(";", "\;");
-    file_substitute.replace("'", "\'");
-    file_substitute.replace("[", "\[");
-    file_substitute.replace("]", "\]");
-    file_substitute.replace("(", "\(");
-    file_substitute.replace(")", "\)");
-    file_substitute.replace("\"", "\"");
-    file_substitute.replace(" ", "\ ");
+    // Order matters! Backslash must be escaped first to avoid double-escaping
+    file_substitute.replace("\\", "\\\\\\\\");  // \ -> \\\\ (4 backslashes for proper escaping)
+    file_substitute.replace(":", "\\\\:");      // : -> \\: (used to pass params to filter)
+    file_substitute.replace(",", "\\,");        // , -> \, (used to separate filters)
+    file_substitute.replace(";", "\\;");        // ; -> \; (used to separate filterchains)
+    file_substitute.replace("'", "\\\\\\\\'");  // ' -> \\\' (escape single quote for filter parsing)
+    file_substitute.replace("[", "\\[");        // [ -> \[ (used to name components of filtergraph)
+    file_substitute.replace("]", "\\]");        // ] -> \] (same as above)
+    file_substitute.replace("(", "\\(");        // ( -> \( (escape parentheses)
+    file_substitute.replace(")", "\\)");        // ) -> \) (escape parentheses)
+    file_substitute.replace("\"", "\\\"");      // " -> \" (escape double quotes)
+    file_substitute.replace(" ", "\\ ");        // space -> \  (escape spaces)
 
-    std::string debug = file_substitute.toStdString();
     return file_substitute;
 }
 

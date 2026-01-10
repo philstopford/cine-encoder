@@ -1295,7 +1295,7 @@ void Encoder::subtVF(const QString &input_file, const QString &subtitle_font, in
             }
             else
             {
-                burn_subt_vf.append(QString("subtitles='%1':%2:stream_index=%3").arg(input_file, burn_string, numToStr(k)));
+                burn_subt_vf.append(QString("subtitles='%1':%2:stream_index=%3").arg(Helper::makeFileStringFFMPEGReady(input_file), burn_string, numToStr(k)));
             }
             _burn_subtitle = true;
             break;
@@ -1305,7 +1305,7 @@ void Encoder::subtVF(const QString &input_file, const QString &subtitle_font, in
         if (data.checks[Data::externSubtBurn][k]) {
             std::string subtitleFormat = data.fields[Data::externSubtFormats][k].toStdString();
             _burn_subtitle = true;
-            burn_subt_vf.append(QString("subtitles='%1':%2").arg(data.fields[Data::externSubtPath][k], burn_string));
+            burn_subt_vf.append(QString("subtitles='%1':%2").arg(Helper::makeFileStringFFMPEGReady(data.fields[Data::externSubtPath][k]), burn_string));
             break;
         }
     }
