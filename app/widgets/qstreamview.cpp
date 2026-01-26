@@ -84,8 +84,7 @@ QStreamView::QStreamView(QWidget *parent) :
     QWidget(parent),
     m_pData(nullptr),
     m_targetAudioCodec(QString()),
-    m_usePresetSubtitleSettings(false),
-    m_containerExtension(QString())
+    m_usePresetSubtitleSettings(false)
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     m_pLayout = new QVBoxLayout(this);
@@ -117,9 +116,6 @@ void QStreamView::clearList()
 
 void QStreamView::setList(QString extension, Data &data, const QString& targetAudioCodec, bool usePresetSubtitleSettings)
 {
-    // Store container extension for use in compatibility checks
-    m_containerExtension = extension;
-    
     // Early return if data is being initialized - check if basic data structures are ready
     if (data.videoMetadata.isEmpty()) {
         // Data is still being initialized, clear the list and return early
@@ -341,35 +337,8 @@ void QStreamView::deselectTitles()
             m_pData->checks[Data::externSubtChecks].fill(false);
             m_pData->checks[Data::subtDef].fill(false);
             m_pData->checks[Data::externSubtDef].fill(false);
-            
-            // Clear burn flags, but preserve them for incompatible subtitles that must be burned
-            if (!m_containerExtension.isEmpty()) {
-                // Clear internal subtitle burn flags, but preserve for incompatible formats
-                for (int i = 0; i < m_pData->checks[Data::subtBurn].size(); i++) {
-                    if (i < m_pData->fields[Data::subtFormats].size() &&
-                        Helper::isSubtitleIncompatible(m_containerExtension, m_pData->fields[Data::subtFormats][i], m_usePresetSubtitleSettings)) {
-                        // Keep burn flag set for incompatible subtitles that require hard-burning
-                        m_pData->checks[Data::subtBurn][i] = true;
-                    } else {
-                        m_pData->checks[Data::subtBurn][i] = false;
-                    }
-                }
-                
-                // Clear external subtitle burn flags, but preserve for incompatible formats
-                for (int i = 0; i < m_pData->checks[Data::externSubtBurn].size(); i++) {
-                    if (i < m_pData->fields[Data::externSubtFormats].size() &&
-                        Helper::isSubtitleIncompatible(m_containerExtension, m_pData->fields[Data::externSubtFormats][i], m_usePresetSubtitleSettings)) {
-                        // Keep burn flag set for incompatible subtitles that require hard-burning
-                        m_pData->checks[Data::externSubtBurn][i] = true;
-                    } else {
-                        m_pData->checks[Data::externSubtBurn][i] = false;
-                    }
-                }
-            } else {
-                // If container extension is not set, clear all burn flags
-                m_pData->checks[Data::subtBurn].fill(false);
-                m_pData->checks[Data::externSubtBurn].fill(false);
-            }
+            m_pData->checks[Data::subtBurn].fill(false);
+            m_pData->checks[Data::externSubtBurn].fill(false);
         }
     }
     setFocus();
