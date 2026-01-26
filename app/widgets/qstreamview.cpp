@@ -559,11 +559,12 @@ void QStreamView::resetFlags(FlagType type, const int excludeIndex)
 
 void QStreamView::onDefaultStreamClicked(QWidget* cell, bool checked, bool& deflt, bool& state, bool& burn)
 {
-    resetFlags(FlagType::Burn, m_pLayout->indexOf(cell));
-    resetFlags(FlagType::Default, m_pLayout->indexOf(cell));
+    const int cellIndex = m_pLayout->indexOf(cell);
+    resetFlags(FlagType::Burn, cellIndex);
+    resetFlags(FlagType::Default, cellIndex);
     deflt = checked;
     
-    QLayoutItem *item = m_pLayout->itemAt(m_pLayout->indexOf(cell));
+    QLayoutItem *item = m_pLayout->itemAt(cellIndex);
     if (item && item->widget()) {
         if (deflt) {
             // When marking as default, ensure the stream is selected
@@ -585,16 +586,17 @@ void QStreamView::onDefaultStreamClicked(QWidget* cell, bool checked, bool& defl
 
 void QStreamView::onBurnIntoClicked(QWidget* cell, bool checked, bool& burn, bool& deflt, bool& state, bool burnOnly)
 {
-    resetFlags(FlagType::Burn, m_pLayout->indexOf(cell));
-    resetFlags(FlagType::Default, m_pLayout->indexOf(cell));
-    resetFlags(FlagType::Check, m_pLayout->indexOf(cell));
+    const int cellIndex = m_pLayout->indexOf(cell);
+    resetFlags(FlagType::Burn, cellIndex);
+    resetFlags(FlagType::Default, cellIndex);
+    resetFlags(FlagType::Check, cellIndex);
     
     // For format-incompatible subtitles, burn must always be true (burnOnly mode)
     // Otherwise, burn follows the user's selection
     burn = checked || burnOnly;
     
     if (burn) {
-        QLayoutItem *item = m_pLayout->itemAt(m_pLayout->indexOf(cell));
+        QLayoutItem *item = m_pLayout->itemAt(cellIndex);
         if (item && item->widget()) {
             // Burning and copying are mutually exclusive - cannot copy stream if burn is set
             auto *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
@@ -628,7 +630,8 @@ void QStreamView::onStreamCheckboxClicked(QWidget* cell, QCheckBox* chkBox, bool
     
     if (!state) {
         // When unchecking the stream, also clear default and burn flags
-        QLayoutItem *item = m_pLayout->itemAt(m_pLayout->indexOf(cell));
+        const int cellIndex = m_pLayout->indexOf(cell);
+        QLayoutItem *item = m_pLayout->itemAt(cellIndex);
         if (item && item->widget()) {
             auto *rbtn = item->widget()->findChild<QRadioButton*>("defaultStream", Qt::FindDirectChildrenOnly);
             if (rbtn && rbtn->isChecked()) {
