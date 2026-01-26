@@ -84,7 +84,8 @@ QStreamView::QStreamView(QWidget *parent) :
     QWidget(parent),
     m_pData(nullptr),
     m_targetAudioCodec(QString()),
-    m_usePresetSubtitleSettings(false)
+    m_usePresetSubtitleSettings(false),
+    m_containerExtension(QString())
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     m_pLayout = new QVBoxLayout(this);
@@ -342,28 +343,32 @@ void QStreamView::deselectTitles()
             m_pData->checks[Data::externSubtDef].fill(false);
             
             // Clear burn flags, but preserve them for incompatible subtitles that must be burned
-            // Clear internal subtitle burn flags, but preserve for incompatible formats
-            for (int i = 0; i < m_pData->checks[Data::subtBurn].size(); i++) {
-                if (!m_containerExtension.isEmpty() && 
-                    i < m_pData->fields[Data::subtFormats].size() &&
-                    Helper::isSubtitleIncompatible(m_containerExtension, m_pData->fields[Data::subtFormats][i], m_usePresetSubtitleSettings)) {
-                    // Keep burn flag set for incompatible subtitles that require hard-burning
-                    m_pData->checks[Data::subtBurn][i] = true;
-                } else {
-                    m_pData->checks[Data::subtBurn][i] = false;
+            if (!m_containerExtension.isEmpty()) {
+                // Clear internal subtitle burn flags, but preserve for incompatible formats
+                for (int i = 0; i < m_pData->checks[Data::subtBurn].size(); i++) {
+                    if (i < m_pData->fields[Data::subtFormats].size() &&
+                        Helper::isSubtitleIncompatible(m_containerExtension, m_pData->fields[Data::subtFormats][i], m_usePresetSubtitleSettings)) {
+                        // Keep burn flag set for incompatible subtitles that require hard-burning
+                        m_pData->checks[Data::subtBurn][i] = true;
+                    } else {
+                        m_pData->checks[Data::subtBurn][i] = false;
+                    }
                 }
-            }
-            
-            // Clear external subtitle burn flags, but preserve for incompatible formats
-            for (int i = 0; i < m_pData->checks[Data::externSubtBurn].size(); i++) {
-                if (!m_containerExtension.isEmpty() && 
-                    i < m_pData->fields[Data::externSubtFormats].size() &&
-                    Helper::isSubtitleIncompatible(m_containerExtension, m_pData->fields[Data::externSubtFormats][i], m_usePresetSubtitleSettings)) {
-                    // Keep burn flag set for incompatible subtitles that require hard-burning
-                    m_pData->checks[Data::externSubtBurn][i] = true;
-                } else {
-                    m_pData->checks[Data::externSubtBurn][i] = false;
+                
+                // Clear external subtitle burn flags, but preserve for incompatible formats
+                for (int i = 0; i < m_pData->checks[Data::externSubtBurn].size(); i++) {
+                    if (i < m_pData->fields[Data::externSubtFormats].size() &&
+                        Helper::isSubtitleIncompatible(m_containerExtension, m_pData->fields[Data::externSubtFormats][i], m_usePresetSubtitleSettings)) {
+                        // Keep burn flag set for incompatible subtitles that require hard-burning
+                        m_pData->checks[Data::externSubtBurn][i] = true;
+                    } else {
+                        m_pData->checks[Data::externSubtBurn][i] = false;
+                    }
                 }
+            } else {
+                // If container extension is not set, clear all burn flags
+                m_pData->checks[Data::subtBurn].fill(false);
+                m_pData->checks[Data::externSubtBurn].fill(false);
             }
         }
     }
