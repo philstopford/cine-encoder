@@ -55,6 +55,7 @@ private:
     Data *m_pData;
     QString m_targetAudioCodec;
     bool m_usePresetSubtitleSettings;
+    QString m_containerExtension;  // Store container extension for compatibility checks
 };
 
 #endif // QSTREAMVIEW_H
