@@ -337,6 +337,7 @@ void QStreamView::deselectTitles()
             m_pData->checks[Data::externSubtChecks].fill(false);
             m_pData->checks[Data::subtDef].fill(false);
             m_pData->checks[Data::externSubtDef].fill(false);
+            m_pData->checks[Data::subtBurn].fill(false);
             m_pData->checks[Data::externSubtBurn].fill(false);
         }
     }
