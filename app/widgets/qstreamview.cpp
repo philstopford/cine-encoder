@@ -775,17 +775,19 @@ QWidget *QStreamView::createCell(bool &state,
             // burnOnly indicates this subtitle format is incompatible with the target container
             // and MUST be hard-burned (cannot be copied as a separate stream)
             burn_only = true;
-            // Note: Don't automatically set burn = true here
-            // Let the user explicitly choose to include the subtitle by clicking "burn into video"
+            // If the input file marked this subtitle as default, respect that by setting burn flag
+            // Otherwise, let user explicitly choose to include it by clicking "burn into video"
+            if (deflt) {
+                burn = true;  // Auto-enable burning for default incompatible subtitles
+            }
             state = false;  // Cannot copy incompatible streams
             isIncompatible = true;
         }
         QRadioButton *brn_rbtn = QStreamViewPrivate::createRadio(info, "burnInto", tr("Burn into video"), burn);
         brn_rbtn->setFixedHeight(12 * Helper::scaling());
         brn_rbtn->setToolTip(tr("Burn into video"));
-        // For burn-only subtitles, check the button if burn flag is already set
-        // This handles cases where burn was previously set (e.g., saved state, user clicked before)
-        // Note: burn defaults to false on initial file load, so this won't auto-check for new files
+        // For burn-only subtitles, check the button if burn flag is set
+        // This includes: default incompatible subtitles, saved state, or user-clicked
         if (burn_only && burn) {
             brn_rbtn->setChecked(true);
         }
