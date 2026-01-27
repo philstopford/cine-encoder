@@ -641,7 +641,8 @@ void QStreamView::onStreamCheckboxClicked(QWidget* cell, QCheckBox* chkBox, bool
             }
             auto *brn_rbtn = item->widget()->findChild<QRadioButton*>("burnInto");
             if (brn_rbtn) {
-                // Always clear burn flag when unchecking - user doesn't want stream included
+                // Clear both the backing data and UI to ensure consistency
+                // User action: unchecking means don't include stream in any form
                 burn = false;
                 brn_rbtn->setChecked(false);
             }
@@ -782,8 +783,9 @@ QWidget *QStreamView::createCell(bool &state,
         QRadioButton *brn_rbtn = QStreamViewPrivate::createRadio(info, "burnInto", tr("Burn into video"), burn);
         brn_rbtn->setFixedHeight(12 * Helper::scaling());
         brn_rbtn->setToolTip(tr("Burn into video"));
-        // For burn-only subtitles, the button reflects the current burn state
-        // User must click it to actually enable burning
+        // For burn-only subtitles, check the button if burn flag is already set
+        // This handles cases where burn was previously set (e.g., saved state, user clicked before)
+        // Note: burn defaults to false on initial file load, so this won't auto-check for new files
         if (burn_only && burn) {
             brn_rbtn->setChecked(true);
         }
