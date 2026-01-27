@@ -629,7 +629,8 @@ void QStreamView::onStreamCheckboxClicked(QWidget* cell, QCheckBox* chkBox, bool
     }
     
     if (!state) {
-        // When unchecking the stream, also clear default and burn flags
+        // When unchecking the stream, clear default and burn flags
+        // User doesn't want this stream included at all
         const int cellIndex = m_pLayout->indexOf(cell);
         QLayoutItem *item = m_pLayout->itemAt(cellIndex);
         if (item && item->widget()) {
@@ -640,12 +641,9 @@ void QStreamView::onStreamCheckboxClicked(QWidget* cell, QCheckBox* chkBox, bool
             }
             auto *brn_rbtn = item->widget()->findChild<QRadioButton*>("burnInto");
             if (brn_rbtn) {
+                // Always clear burn flag when unchecking - user doesn't want stream included
                 burn = false;
-                // Exception: format-incompatible subtitles must keep burn flag set
-                if (burnOnly) {
-                    burn = true;
-                }
-                brn_rbtn->setChecked(burn);
+                brn_rbtn->setChecked(false);
             }
         }
     }
