@@ -259,12 +259,27 @@ void Encoder::initEncoding(const QString  &temp_file,
     if (!data.chaptersFile.isEmpty()) {
         // Calculate the input index for the chapters file
         // Input 0 is always the main video file
-        // Then we have external audio files
-        // Then external subtitle files
+        // Then we have external audio files (only checked ones)
+        // Then external subtitle files (only checked ones)
         // Then the chapters file
-        int extAudioCount = data.fields[Data::externAudioPath].size();
-        int extSubtCount = data.fields[Data::externSubtPath].size();
-        chaptersInputIndex = 1 + extAudioCount + extSubtCount;
+        
+        // Count checked external audio files
+        int checkedExtAudioCount = 0;
+        for (int i = 0; i < data.checks[Data::externAudioChecks].size(); ++i) {
+            if (data.checks[Data::externAudioChecks][i]) {
+                checkedExtAudioCount++;
+            }
+        }
+        
+        // Count checked external subtitle files
+        int checkedExtSubtCount = 0;
+        for (int i = 0; i < data.checks[Data::externSubtChecks].size(); ++i) {
+            if (data.checks[Data::externSubtChecks][i]) {
+                checkedExtSubtCount++;
+            }
+        }
+        
+        chaptersInputIndex = 1 + checkedExtAudioCount + checkedExtSubtCount;
         
         // Add the chapters file as an input source
         // The chapters file should be in FFMetadata format

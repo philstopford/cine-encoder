@@ -3866,6 +3866,12 @@ void MainWindow::onExportChapters()
         return;
     }
     
+    // Verify the input file exists
+    if (!QFileInfo::exists(inputFile)) {
+        showInfoMessage(tr("Input file does not exist:\n%1").arg(inputFile));
+        return;
+    }
+    
     // Get output file name from user
     QFileDialog dlg(this);
     dlg.setWindowTitle(tr("Export Chapters"));
@@ -3898,6 +3904,7 @@ void MainWindow::onExportChapters()
          << outputFile;
     
     QProcess process;
+    process.setProcessChannelMode(QProcess::MergedChannels);
     process.start("ffmpeg", args);
     
     if (!process.waitForStarted()) {
@@ -3914,8 +3921,8 @@ void MainWindow::onExportChapters()
     if (process.exitCode() == 0) {
         showPopup(tr("Chapters exported successfully to:\n%1").arg(outputFile));
     } else {
-        QString errorOutput = QString::fromUtf8(process.readAllStandardError());
-        showInfoMessage(tr("Failed to export chapters:\n%1").arg(errorOutput));
+        QString output = QString::fromUtf8(process.readAllStandardOutput());
+        showInfoMessage(tr("Failed to export chapters:\n%1").arg(output));
     }
 }
 
@@ -3955,15 +3962,24 @@ void MainWindow::onImportChapters()
     
     QString chaptersFile = files.at(0);
     
+    // Validate the chapters file exists and is readable
+    QFileInfo chaptersInfo(chaptersFile);
+    if (!chaptersInfo.exists()) {
+        showInfoMessage(tr("Chapters file does not exist:\n%1").arg(chaptersFile));
+        return;
+    }
+    
+    if (!chaptersInfo.isReadable()) {
+        showInfoMessage(tr("Cannot read chapters file:\n%1").arg(chaptersFile));
+        return;
+    }
+    
     // Store the chapters file path in the data structure for this file
     // We'll use it during encoding
     if (m_row < m_data.size()) {
-        // Store it as a custom field - we need to add this to the Data structure
-        // For now, store in output parameters or handle specially during encode
         m_data[m_row].chaptersFile = chaptersFile;
         showPopup(tr("Chapters file loaded:\n%1\nChapters will be applied during encoding.").arg(chaptersFile));
     }
-}
 }
 
 void MainWindow::updateFileIncompatibilityStatus(int fileRow)
