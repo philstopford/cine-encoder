@@ -140,6 +140,8 @@ private:
                 *m_pActDeselectAudio,
                 *m_pActDeselectSubtitles,
                 *m_pActSplitVideo,
+                *m_pActExportChapters,
+                *m_pActImportChapters,
                 *m_pActSettings,
                 *m_pActResetView,
                 *m_pActAbout,
@@ -347,6 +349,8 @@ private slots:
     void provideListContextMenu(const QPoint&);
     void onAddToTask();
     void onExtract(QStreamView::Content type, int num);
+    void onExportChapters();
+    void onImportChapters();
     void updateFileIncompatibilityStatus(int fileRow);
     void updateFileWarnings(int fileRow);
     

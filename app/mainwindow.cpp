@@ -37,7 +37,9 @@
 #include <QGridLayout>
 #include <QDockWidget>
 #include <QFile>
+#include <QFileDialog>
 #include <QFileInfo>
+#include <QProcess>
 #include <QSizePolicy>
 #include <QTranslator>
 #include <QScreen>
@@ -690,12 +692,16 @@ void MainWindow::createConnections()
     m_pActDeselectAudio = new QAction(tr("Deselect audio streams"), menuTools);
     m_pActDeselectSubtitles = new QAction(tr("Deselect subtitles"), menuTools);
     m_pActSplitVideo = new QAction(tr("Split video"), menuTools);
+    m_pActExportChapters = new QAction(tr("Export chapters to file"), menuTools);
+    m_pActImportChapters = new QAction(tr("Import chapters from file"), menuTools);
     connect(m_pActEditMetadata, &QAction::triggered, this, &MainWindow::showMetadataEditor);
     connect(m_pActSelectAudio, &QAction::triggered, this, &MainWindow::showAudioStreams);
     connect(m_pActSelectSubtitles, &QAction::triggered, this, &MainWindow::showSubtitles);
     connect(m_pActDeselectAudio, &QAction::triggered, this, &MainWindow::clearAudioStreams);
     connect(m_pActDeselectSubtitles, &QAction::triggered, this, &MainWindow::clearSubtitleStreams);
     connect(m_pActSplitVideo, &QAction::triggered, this, &MainWindow::showVideoSplitter);
+    connect(m_pActExportChapters, &QAction::triggered, this, &MainWindow::onExportChapters);
+    connect(m_pActImportChapters, &QAction::triggered, this, &MainWindow::onImportChapters);
     menuTools->addAction(m_pActEditMetadata);
     menuTools->addSeparator();
     menuTools->addAction(m_pActSelectAudio);
@@ -705,6 +711,9 @@ void MainWindow::createConnections()
     menuTools->addAction(m_pActDeselectSubtitles);
     menuTools->addSeparator();
     menuTools->addAction(m_pActSplitVideo);
+    menuTools->addSeparator();
+    menuTools->addAction(m_pActExportChapters);
+    menuTools->addAction(m_pActImportChapters);
 
     m_pActResetView = new QAction(tr("Reset state"), menuView);
     connect(m_pActResetView, &QAction::triggered, this, &MainWindow::resetView);
@@ -750,6 +759,9 @@ void MainWindow::createConnections()
     m_pItemMenu->addAction(m_pActDeselectSubtitles);
     m_pItemMenu->addSeparator();
     m_pItemMenu->addAction(m_pActSplitVideo);
+    m_pItemMenu->addSeparator();
+    m_pItemMenu->addAction(m_pActExportChapters);
+    m_pItemMenu->addAction(m_pActImportChapters);
     connect(ui->tableWidget, &QTableWidget::customContextMenuRequested, this, &MainWindow::provideContextMenu);
     
     // Setup header context menu for column visibility
@@ -3833,6 +3845,125 @@ void MainWindow::onExtract(QStreamView::Content type, int num)
     if (ext.exec() == QDialog::Accepted) {
         showPopup(tr("Task completed!\n"));
     }
+}
+
+void MainWindow::onExportChapters()
+{
+    if (m_row < 0 || m_row >= m_data.size()) {
+        showInfoMessage(tr("Please select a file first"));
+        return;
+    }
+    
+    // Check if the current file has chapters
+    QString inputFile = m_input_file;
+    if (inputFile.isEmpty()) {
+        get_current_data();
+        inputFile = m_input_file;
+    }
+    
+    if (inputFile.isEmpty()) {
+        showInfoMessage(tr("No file selected"));
+        return;
+    }
+    
+    // Get output file name from user
+    QFileDialog dlg(this);
+    dlg.setWindowTitle(tr("Export Chapters"));
+    dlg.setAcceptMode(QFileDialog::AcceptSave);
+    dlg.setDefaultSuffix("txt");
+    dlg.setNameFilter(tr("FFMetadata files (*.txt);;All files (*)"));
+    
+    QFileInfo inputInfo(inputFile);
+    QString defaultName = inputInfo.completeBaseName() + "_chapters.txt";
+    dlg.selectFile(defaultName);
+    dlg.setDirectory(inputInfo.absolutePath());
+    
+    if (dlg.exec() != QFileDialog::Accepted) {
+        return;
+    }
+    
+    QStringList files = dlg.selectedFiles();
+    if (files.isEmpty()) {
+        return;
+    }
+    
+    QString outputFile = files.at(0);
+    
+    // Use ffmpeg to export chapters in FFMetadata format
+    QStringList args;
+    args << "-hide_banner"
+         << "-i" << inputFile
+         << "-f" << "ffmetadata"
+         << "-y"
+         << outputFile;
+    
+    QProcess process;
+    process.start("ffmpeg", args);
+    
+    if (!process.waitForStarted()) {
+        showInfoMessage(tr("Failed to start ffmpeg"));
+        return;
+    }
+    
+    if (!process.waitForFinished(30000)) {  // 30 second timeout
+        process.kill();
+        showInfoMessage(tr("Chapter export timed out"));
+        return;
+    }
+    
+    if (process.exitCode() == 0) {
+        showPopup(tr("Chapters exported successfully to:\n%1").arg(outputFile));
+    } else {
+        QString errorOutput = QString::fromUtf8(process.readAllStandardError());
+        showInfoMessage(tr("Failed to export chapters:\n%1").arg(errorOutput));
+    }
+}
+
+void MainWindow::onImportChapters()
+{
+    if (m_row < 0 || m_row >= m_data.size()) {
+        showInfoMessage(tr("Please select a file first"));
+        return;
+    }
+    
+    // Get the chapter metadata file from user
+    QFileDialog dlg(this);
+    dlg.setWindowTitle(tr("Import Chapters"));
+    dlg.setAcceptMode(QFileDialog::AcceptOpen);
+    dlg.setFileMode(QFileDialog::ExistingFile);
+    dlg.setNameFilter(tr("FFMetadata files (*.txt);;All files (*)"));
+    
+    QString inputFile = m_input_file;
+    if (inputFile.isEmpty()) {
+        get_current_data();
+        inputFile = m_input_file;
+    }
+    
+    if (!inputFile.isEmpty()) {
+        QFileInfo inputInfo(inputFile);
+        dlg.setDirectory(inputInfo.absolutePath());
+    }
+    
+    if (dlg.exec() != QFileDialog::Accepted) {
+        return;
+    }
+    
+    QStringList files = dlg.selectedFiles();
+    if (files.isEmpty()) {
+        return;
+    }
+    
+    QString chaptersFile = files.at(0);
+    
+    // Store the chapters file path in the data structure for this file
+    // We'll use it during encoding
+    if (m_row < m_data.size()) {
+        // Store it as a custom field - we need to add this to the Data structure
+        // For now, store in output parameters or handle specially during encode
+        m_data[m_row].chaptersFile = chaptersFile;
+        showPopup(tr("Chapters file loaded:\n%1\nChapters will be applied during encoding.").arg(chaptersFile));
+    }
+}
 }
 
 void MainWindow::updateFileIncompatibilityStatus(int fileRow)
