@@ -2711,6 +2711,10 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             for (int j = 0; j < MAX_SUBTITLES; j++) {
                 const QString subtitleFormat = SINFO(size_t(j), "Format");
                 if (!subtitleFormat.isEmpty()) {
+                    // Get default flag from input file
+                    const QString deflt = SINFO(size_t(j), "Default");
+                    bool isDefault = (deflt == "Yes");
+                    
                     bool select;
                     if (m_subtitles_deselectall) {
                         select = false;
@@ -2721,15 +2725,18 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                         Tables t;
                         QString targetExtension = t.arr_container[currentPresetParams[CurParamIndex::CODEC].toInt()][currentPresetParams[CurParamIndex::CONTAINER].toInt()].toLower();
                         
-                        select = Helper::isSubtitleSupported(targetExtension, subtitleFormat);
+                        // Only auto-select subtitles if they're marked as default in the input file
+                        bool isCompatible = Helper::isSubtitleSupported(targetExtension, subtitleFormat);
+                        
+                        // Set checkbox only if subtitle is default AND compatible
+                        select = isDefault && isCompatible;
                     }
                     m_data[numRows].checks[Data::subtChecks].push_back(select);
                     m_data[numRows].fields[Data::subtFormats].push_back(subtitleFormat);
                     m_data[numRows].fields[Data::subtDuration].push_back(SINFO(size_t(j), "Duration"));
                     m_data[numRows].fields[Data::subtLangs].push_back(SINFO(size_t(j), "Language"));
                     m_data[numRows].fields[Data::subtTitles].push_back(SINFO(size_t(j), "Title"));
-                    const QString deflt = SINFO(size_t(j), "Default");
-                    m_data[numRows].checks[Data::subtDef].push_back(deflt == "Yes");
+                    m_data[numRows].checks[Data::subtDef].push_back(isDefault);
                     m_data[numRows].checks[Data::subtBurn].push_back(false);
                 } else {
                     break;

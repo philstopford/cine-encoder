@@ -33,11 +33,22 @@ signals:
     void streamSelectionChanged();
 
 private:
+    // UI flag types for resetFlags function
+    enum class FlagType {
+        Check,      // Selection checkboxes
+        Default,    // Default stream radio buttons
+        Burn        // Burn-into-video radio buttons
+    };
+    
     bool eventFilter(QObject*, QEvent*) final;
-    void resetCheckFlags(int ind);
-    void resetDefFlags(int ind);
-    void resetBurnFlags(int ind);
+    void resetFlags(FlagType type, int excludeIndex);
     void updateIncompatibleStreamStyling(QWidget* cell, QCheckBox* chkBox, bool isIncompatible, bool isSelected);
+    
+    // Event handlers for UI interactions
+    void onDefaultStreamClicked(QWidget* cell, bool checked, bool& deflt, bool& state, bool& burn);
+    void onBurnIntoClicked(QWidget* cell, bool checked, bool& burn, bool& deflt, bool& state, bool burnOnly);
+    void onStreamCheckboxClicked(QWidget* cell, QCheckBox* chkBox, bool& state, bool& deflt, bool& burn, bool burnOnly, bool isIncompatible);
+    
     QWidget *createCell(bool &state,
                         QString &extension,
                         const QString &format,

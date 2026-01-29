@@ -337,6 +337,7 @@ void QStreamView::deselectTitles()
             m_pData->checks[Data::externSubtChecks].fill(false);
             m_pData->checks[Data::subtDef].fill(false);
             m_pData->checks[Data::externSubtDef].fill(false);
+            m_pData->checks[Data::subtBurn].fill(false);
             m_pData->checks[Data::externSubtBurn].fill(false);
         }
     }
@@ -501,67 +502,158 @@ bool QStreamView::eventFilter(QObject *obj, QEvent *event)
     return QWidget::eventFilter(obj, event);
 }
 
-void QStreamView::resetCheckFlags(const int ind)
+void QStreamView::resetFlags(FlagType type, const int excludeIndex)
 {
+    // Reset UI elements in all cells except the excluded one
     for (int i = 1; i < m_pLayout->count(); i++) {
-        if (i != ind) {
+        if (i != excludeIndex) {
             QLayoutItem *item = m_pLayout->itemAt(i);
             if (item && item->widget()) {
-                auto *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
-                if (chkBox)
-                    chkBox->setChecked(false);
+                switch (type) {
+                    case FlagType::Check: {
+                        auto *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
+                        if (chkBox)
+                            chkBox->setChecked(false);
+                        break;
+                    }
+                    case FlagType::Default: {
+                        auto *rbtn = item->widget()->findChild<QRadioButton*>("defaultStream", Qt::FindDirectChildrenOnly);
+                        if (rbtn)
+                            rbtn->setChecked(false);
+                        break;
+                    }
+                    case FlagType::Burn: {
+                        auto *rbtn = item->widget()->findChild<QRadioButton*>("burnInto");
+                        if (rbtn)
+                            rbtn->setChecked(false);
+                        break;
+                    }
+                }
             }
         }
     }
 
-    if (m_type == Content::Audio) {
-        m_pData->checks[Data::audioChecks].fill(false);
-        m_pData->checks[Data::externAudioChecks].fill(false);
-    } else
-    if (m_type == Content::Subtitle) {
-        m_pData->checks[Data::subtChecks].fill(false);
-        m_pData->checks[Data::externSubtChecks].fill(false);
+    // Reset data arrays based on flag type and content type
+    if (type == FlagType::Check) {
+        if (m_type == Content::Audio) {
+            m_pData->checks[Data::audioChecks].fill(false);
+            m_pData->checks[Data::externAudioChecks].fill(false);
+        } else if (m_type == Content::Subtitle) {
+            m_pData->checks[Data::subtChecks].fill(false);
+            m_pData->checks[Data::externSubtChecks].fill(false);
+        }
+    } else if (type == FlagType::Default) {
+        if (m_type == Content::Audio) {
+            m_pData->checks[Data::audioDef].fill(false);
+            m_pData->checks[Data::externAudioDef].fill(false);
+        } else if (m_type == Content::Subtitle) {
+            m_pData->checks[Data::subtDef].fill(false);
+            m_pData->checks[Data::externSubtDef].fill(false);
+        }
+    } else if (type == FlagType::Burn) {
+        // Burn flags only apply to subtitles
+        m_pData->checks[Data::subtBurn].fill(false);
+        m_pData->checks[Data::externSubtBurn].fill(false);
     }
 }
 
-void QStreamView::resetDefFlags(const int ind)
+void QStreamView::onDefaultStreamClicked(QWidget* cell, bool checked, bool& deflt, bool& state, bool& burn)
 {
-    for (int i = 1; i < m_pLayout->count(); i++) {
-        if (i != ind) {
-            QLayoutItem *item = m_pLayout->itemAt(i);
-            if (item && item->widget()) {
-                auto *rbtn = item->widget()->findChild<QRadioButton*>("defaultStream", Qt::FindDirectChildrenOnly);
-                if (rbtn)
-                    rbtn->setChecked(false);
+    const int cellIndex = m_pLayout->indexOf(cell);
+    resetFlags(FlagType::Burn, cellIndex);
+    resetFlags(FlagType::Default, cellIndex);
+    deflt = checked;
+    
+    QLayoutItem *item = m_pLayout->itemAt(cellIndex);
+    if (item && item->widget()) {
+        if (deflt) {
+            // When marking as default, ensure the stream is selected
+            auto *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
+            if (chkBox && !chkBox->isChecked()) {
+                chkBox->setChecked(true);
+                state = true;
+            }
+        } else {
+            // When un-marking as default, also clear burn flag
+            auto *brn_rbtn = item->widget()->findChild<QRadioButton*>("burnInto");
+            if (brn_rbtn && brn_rbtn->isChecked()) {
+                brn_rbtn->setChecked(false);
+                burn = false;
             }
         }
-    }
-
-    if (m_type == Content::Audio) {
-        m_pData->checks[Data::audioDef].fill(false);
-        m_pData->checks[Data::externAudioDef].fill(false);
-    } else
-    if (m_type == Content::Subtitle) {
-        m_pData->checks[Data::subtDef].fill(false);
-        m_pData->checks[Data::externSubtDef].fill(false);
     }
 }
 
-void QStreamView::resetBurnFlags(const int ind)
+void QStreamView::onBurnIntoClicked(QWidget* cell, bool checked, bool& burn, bool& deflt, bool& state, bool burnOnly)
 {
-    for (int i = 1; i < m_pLayout->count(); i++) {
-        if (i != ind) {
-            QLayoutItem *item = m_pLayout->itemAt(i);
-            if (item && item->widget()) {
-                auto *rbtn = item->widget()->findChild<QRadioButton*>("burnInto");
-                if (rbtn)
-                    rbtn->setChecked(false);
+    const int cellIndex = m_pLayout->indexOf(cell);
+    resetFlags(FlagType::Burn, cellIndex);
+    resetFlags(FlagType::Default, cellIndex);
+    resetFlags(FlagType::Check, cellIndex);
+    
+    // For format-incompatible subtitles, burn must always be true (burnOnly mode)
+    // Otherwise, burn follows the user's selection
+    burn = checked || burnOnly;
+    
+    if (burn) {
+        QLayoutItem *item = m_pLayout->itemAt(cellIndex);
+        if (item && item->widget()) {
+            // Burning and copying are mutually exclusive - cannot copy stream if burn is set
+            auto *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
+            if (chkBox && chkBox->isChecked()) {
+                chkBox->setChecked(false);
+                state = false;
+            }
+            
+            // Set as default stream when burning (unless already in burnOnly mode)
+            auto *rbtn = item->widget()->findChild<QRadioButton *>("defaultStream",
+                                                                    Qt::FindDirectChildrenOnly);
+            if (!burnOnly) {
+                if (rbtn && !rbtn->isChecked()) {
+                    rbtn->setChecked(true);
+                    deflt = true;
+                }
             }
         }
     }
+}
 
-    m_pData->checks[Data::subtBurn].fill(false);
-    m_pData->checks[Data::externSubtBurn].fill(false);
+void QStreamView::onStreamCheckboxClicked(QWidget* cell, QCheckBox* chkBox, bool& state, bool& deflt, bool& burn, bool burnOnly, bool isIncompatible)
+{
+    state = (chkBox->checkState() == 2);
+    
+    // For format-incompatible subtitles (burnOnly mode), copying is not allowed
+    // The stream can only be burned, not copied
+    if (burnOnly) {
+        state = false;
+    }
+    
+    if (!state) {
+        // When unchecking the stream, clear default and burn flags
+        // User doesn't want this stream included at all
+        const int cellIndex = m_pLayout->indexOf(cell);
+        QLayoutItem *item = m_pLayout->itemAt(cellIndex);
+        if (item && item->widget()) {
+            auto *rbtn = item->widget()->findChild<QRadioButton*>("defaultStream", Qt::FindDirectChildrenOnly);
+            if (rbtn && rbtn->isChecked()) {
+                rbtn->setChecked(false);
+                deflt = false;
+            }
+            auto *brn_rbtn = item->widget()->findChild<QRadioButton*>("burnInto");
+            if (brn_rbtn) {
+                // Clear both the backing data and UI to ensure consistency
+                // User action: unchecking means don't include stream in any form
+                burn = false;
+                brn_rbtn->setChecked(false);
+            }
+        }
+    }
+    
+    // Update visual styling for incompatible streams
+    updateIncompatibleStreamStyling(cell, chkBox, isIncompatible, state);
+    
+    // Notify that stream selection has changed
+    emit streamSelectionChanged();
 }
 
 QWidget *QStreamView::createCell(bool &state,
@@ -615,25 +707,7 @@ QWidget *QStreamView::createCell(bool &state,
     // Install event filter on default radio button to forward context menu events to parent cell
     rbtn->installEventFilter(this);
     connect(rbtn, &QRadioButton::clicked, this, [this, cell, &burn, &deflt, &state](bool checked) {
-        resetBurnFlags(m_pLayout->indexOf(cell));
-        resetDefFlags(m_pLayout->indexOf(cell));
-        deflt = checked;
-        QLayoutItem *item = m_pLayout->itemAt(m_pLayout->indexOf(cell));
-        if (item && item->widget()) {
-            if (deflt) {
-                auto *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
-                if (chkBox && !chkBox->isChecked()) {
-                    chkBox->setChecked(true);
-                    state = true;
-                }
-            } else {
-                auto *brn_rbtn = item->widget()->findChild<QRadioButton*>("burnInto");
-                if (brn_rbtn && brn_rbtn->isChecked()) {
-                    brn_rbtn->setChecked(false);
-                    burn = false;
-                }
-            }
-        }
+        onDefaultStreamClicked(cell, checked, deflt, state, burn);
     });
     lut->addWidget(rbtn, 0, 0, Qt::AlignLeft);
 
@@ -698,45 +772,29 @@ QWidget *QStreamView::createCell(bool &state,
     if (m_type == Content::Subtitle) {
         if (Helper::isSubtitleIncompatible(extension, format, m_usePresetSubtitleSettings)) {
             tit->setText(tit->text() + tr("Hard-burn only"));
+            // burnOnly indicates this subtitle format is incompatible with the target container
+            // and MUST be hard-burned (cannot be copied as a separate stream)
             burn_only = true;
-            burn = true;  // Set burn flag when subtitle must be hard-burned
-            state = false;
+            // If the input file marked this subtitle as default, respect that by setting burn flag
+            // Otherwise, let user explicitly choose to include it by clicking "burn into video"
+            if (deflt) {
+                burn = true;  // Auto-enable burning for default incompatible subtitles
+            }
+            state = false;  // Cannot copy incompatible streams
             isIncompatible = true;
         }
         QRadioButton *brn_rbtn = QStreamViewPrivate::createRadio(info, "burnInto", tr("Burn into video"), burn);
         brn_rbtn->setFixedHeight(12 * Helper::scaling());
         brn_rbtn->setToolTip(tr("Burn into video"));
-        // Stream can only be burnt for target.
-        if (burn_only) {
+        // For burn-only subtitles, check the button if burn flag is set
+        // This includes: default incompatible subtitles, saved state, or user-clicked
+        if (burn_only && burn) {
             brn_rbtn->setChecked(true);
         }
         // Install event filter on burn radio button to forward context menu events to parent cell
         brn_rbtn->installEventFilter(this);
         connect(brn_rbtn, &QRadioButton::clicked, this, [this, cell, &burn, &deflt, &state, &burn_only](bool checked) {
-            resetBurnFlags(m_pLayout->indexOf(cell));
-            resetDefFlags(m_pLayout->indexOf(cell));
-            resetCheckFlags(m_pLayout->indexOf(cell));
-            burn = checked || burn_only;
-            if (burn) {
-                QLayoutItem *item = m_pLayout->itemAt(m_pLayout->indexOf(cell));
-                if (item && item->widget()) {
-                    // Cannot copy stream if burn is set.
-                    auto *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
-                    if (chkBox && chkBox->isChecked()) {
-                        chkBox->setChecked(false);
-                        state = false;
-                    }
-                    auto *rbtn = item->widget()->findChild<QRadioButton *>("defaultStream",
-                                                                                   Qt::FindDirectChildrenOnly);
-                    // Don't force this here - the default button is the way that the hard-burn is enabled.
-                    if (!burn_only) {
-                        if (rbtn && !rbtn->isChecked()) {
-                            rbtn->setChecked(true);
-                            deflt = true;
-                        }
-                    }
-                }
-            }
+            onBurnIntoClicked(cell, checked, burn, deflt, state, burn_only);
         });
         infoLut->addWidget(brn_rbtn, 0, 1, Qt::AlignLeft);
     }
@@ -798,40 +856,11 @@ QWidget *QStreamView::createCell(bool &state,
         chkBox->setEnabled(true);
         chkBox->setChecked(state);
     }
-    // Burn is whether the user selected to burn; burn_only is when only burning is an option.
-    // Default marks the default stream, which triggers burn. A stream cannot be burnt if it is not default.
+    // burnOnly: For format-incompatible subtitles, only burning is possible (cannot copy stream)
+    // burn: User selected to burn the subtitle into video
+    // deflt: This stream is marked as the default for playback
     connect(chkBox, &QCheckBox::clicked, this, [this, cell, chkBox, &burn, &burn_only, &state, &deflt, isIncompatible](){
-        state = (chkBox->checkState() == 2);
-        // Burn-only prohibits the copy of subtitle streams (target format cannot support the stream).
-        if (burn_only)
-        {
-            state = false;
-        }
-        if (!state) {
-            QLayoutItem *item = m_pLayout->itemAt(m_pLayout->indexOf(cell));
-            if (item && item->widget()) {
-                auto *rbtn = item->widget()->findChild<QRadioButton*>("defaultStream", Qt::FindDirectChildrenOnly);
-                if (rbtn && rbtn->isChecked()) {
-                    rbtn->setChecked(false);
-                    deflt = false;
-                }
-                auto *brn_rbtn = item->widget()->findChild<QRadioButton*>("burnInto");
-                if (brn_rbtn /* && brn_rbtn->isChecked()*/ ) {
-                    burn = false;
-                    if (burn_only)
-                    {
-                        burn = true;
-                    }
-                    brn_rbtn->setChecked(burn);
-                }
-            }
-        }
-        
-        // Update incompatible stream styling based on new selection state
-        updateIncompatibleStreamStyling(cell, chkBox, isIncompatible, state);
-        
-        // Emit signal to notify about stream selection change
-        emit streamSelectionChanged();
+        onStreamCheckboxClicked(cell, chkBox, state, deflt, burn, burn_only, isIncompatible);
     });
     lut->addWidget(chkBox, 1, 1);
 
