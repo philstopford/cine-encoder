@@ -38,6 +38,8 @@ SettingsData::SettingsData()
     , m_subtitlesBackgroundColor(Qt::black)
     , m_subtitlesLocation(0)
     , m_subtitlesFontSize(10)
+    , m_deinterlaceEnabled(false)
+    , m_deinterlaceFilter(DEINTERLACE_NONE)
     , m_requiresRestart(false)
 {
 }
@@ -316,6 +318,28 @@ int SettingsData::getSubtitlesFontSize() const
     return m_subtitlesFontSize;
 }
 
+// Deinterlace enabled
+void SettingsData::setDeinterlaceEnabled(bool flag)
+{
+    m_deinterlaceEnabled = flag;
+}
+
+bool SettingsData::getDeinterlaceEnabled() const
+{
+    return m_deinterlaceEnabled;
+}
+
+// Deinterlace filter
+void SettingsData::setDeinterlaceFilter(int filter)
+{
+    m_deinterlaceFilter = filter;
+}
+
+int SettingsData::getDeinterlaceFilter() const
+{
+    return m_deinterlaceFilter;
+}
+
 // Requires restart
 bool SettingsData::requiresRestart() const
 {
@@ -352,6 +376,8 @@ void SettingsData::resetToDefaults()
     m_subtitlesBackgroundColor = Qt::black;
     m_subtitlesLocation = 0;
     m_subtitlesFontSize = 8;
+    m_deinterlaceEnabled = false;
+    m_deinterlaceFilter = DEINTERLACE_NONE;
     m_requiresRestart = true;
 }
 

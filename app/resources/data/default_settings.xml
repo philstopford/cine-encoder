@@ -29,5 +29,7 @@
         <subtitles_background_alpha>150</subtitles_background_alpha>
         <subtitles_background_color>#000000</subtitles_background_color>
         <subtitles_location>0</subtitles_location>
+        <deinterlace_enabled>0</deinterlace_enabled>
+        <deinterlace_filter>0</deinterlace_filter>
         <threads>0</threads>
     </Settings>

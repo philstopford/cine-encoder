@@ -38,7 +38,7 @@ inline QString numToStr(long num) { return QString::number(num); }
 constexpr int PRESETS_VERSION = 355;
 constexpr int SETTINGS_VERSION = 355;
 
-constexpr int PARAMETERS_COUNT = 42;
+constexpr int PARAMETERS_COUNT = 45;
 constexpr int NUMBER_PRESETS = 31;
 
 constexpr int CODEC_QSV_FIRST = 6;
@@ -199,7 +199,10 @@ namespace Constants {
         SUBTITLE_FONT, SUBTITLE_FONT_SIZE,
         SUBTITLE_FONT_COLOR,
         SUBTITLE_BACKGROUND, SUBTITLE_BACKGROUND_COLOR,
-        SUBTITLE_BACKGROUND_ALPHA, SUBTITLE_LOCATION
+        SUBTITLE_BACKGROUND_ALPHA, SUBTITLE_LOCATION,
+        USE_PRESET_DEINTERLACE_SETTINGS,
+        DEINTERLACE_ENABLED,
+        DEINTERLACE_FILTER
     };
 
     static QString param_names[] = {
@@ -220,7 +223,10 @@ namespace Constants {
             "SUBTITLE_FONT", "SUBTITLE_FONT_SIZE",
             "SUBTITLE_FONT_COLOR",
             "SUBTITLE_BACKGROUND", "SUBTITLE_BACKGROUND_COLOR",
-            "SUBTITLE_BACKGROUND_ALPHA", "SUBTITLE_LOCATION"
+            "SUBTITLE_BACKGROUND_ALPHA", "SUBTITLE_LOCATION",
+            "USE_PRESET_DEINTERLACE_SETTINGS",
+            "DEINTERLACE_ENABLED",
+            "DEINTERLACE_FILTER"
     };
 
     static QList<QString> default_preset = {
@@ -238,7 +244,8 @@ namespace Constants {
             "ProRes HQ", "0", "0",
             "0",
             "0", "Arial", numToStr(FONTSIZE), defaultSubtitleColor(),
-            "0", defaultSubtitleBackgroundColor(), "150", "0"
+            "0", defaultSubtitleBackgroundColor(), "150", "0",
+            "0", "0", "0"
     };
 
     struct EncoderAudioParam {
@@ -279,6 +286,10 @@ namespace Constants {
     enum MasterDisplay {
         SOURCE, DISPLAY_P3, DCI_P3, BT_2020, BT_709, CUSTOM
     };   
+
+    enum DeinterlaceFilter {
+        DEINTERLACE_NONE, DEINTERLACE_YADIF, DEINTERLACE_BWDIF
+    };
 
     enum EncodingStatus {
         START, PAUSE, RESUME

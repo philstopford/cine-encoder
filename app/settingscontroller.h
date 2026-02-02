@@ -51,7 +51,8 @@ public:
                    bool* pSubtitlesDeselectAll, bool* pSubtitlesBackground,
                    QColor* pSubtitlesColor, QColor* pSubtitlesBackgroundColor,
                    int* pSubtitlesLocation, QString* pSubtitlesFont,
-                   int* pSubtitlesFontSize);
+                   int* pSubtitlesFontSize,
+                   bool* pDeinterlaceEnabled, int* pDeinterlaceFilter);
 
     // Load data from UI to model
     void loadFromUI();
@@ -110,6 +111,8 @@ private:
     int* m_pSubtitlesLocation;
     QString* m_pSubtitlesFont;
     int* m_pSubtitlesFontSize;
+    bool* m_pDeinterlaceEnabled;
+    int* m_pDeinterlaceFilter;
 
     // Temporary colors for UI feedback
     QColor m_subtitlesColorTemp;

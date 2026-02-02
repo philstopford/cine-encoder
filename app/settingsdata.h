@@ -101,6 +101,12 @@ public:
     void setSubtitlesFontSize(int size);
     int getSubtitlesFontSize() const;
 
+    void setDeinterlaceEnabled(bool flag);
+    bool getDeinterlaceEnabled() const;
+
+    void setDeinterlaceFilter(int filter);
+    int getDeinterlaceFilter() const;
+
     // Business logic methods
     bool requiresRestart() const;
     void setRequiresRestart(bool restart);
@@ -137,6 +143,8 @@ private:
     int m_subtitlesLocation;
     QString m_subtitlesFont;
     int m_subtitlesFontSize;
+    bool m_deinterlaceEnabled;
+    int m_deinterlaceFilter;
     bool m_requiresRestart;
 };
 

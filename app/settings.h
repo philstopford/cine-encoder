@@ -63,7 +63,9 @@ public:
                        QColor     *pSubtitlesColor,
                        QColor     *pSubtitlesBackgroundColor,
                        int        *pSubtitlesBackgroundAlpha,
-                       int        *pSubtitlesLocation);
+                       int        *pSubtitlesLocation,
+                       bool       *pDeinterlaceEnabled,
+                       int        *pDeinterlaceFilter);
 
 private:
     void onCloseWindow();
@@ -112,6 +114,7 @@ private:
             *m_pTheme,
             *m_pSubtitlesBackgroundAlpha,
             *m_pSubtitlesLocation,
+            *m_pDeinterlaceFilter,
             *m_pFFMpegPrio;
 
     bool    *m_pShowHdrFlag,
@@ -120,7 +123,8 @@ private:
             *m_pHideInTrayFlag,
             m_windowActivated,
             *m_pSubtitlesBackground,
-            *m_pSubtitlesDeselectAll;
+            *m_pSubtitlesDeselectAll,
+            *m_pDeinterlaceEnabled;
 };
 
 #endif // SETTINGS_H

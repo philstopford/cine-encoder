@@ -73,7 +73,9 @@ void Settings::setParameters(QString    *pOutputFolder,
                              QColor     *pSubtitlesColor,
                              QColor     *pSubtitlesBackgroundColor,
                              int        *pSubtitlesBackgroundAlpha,
-                             int        *pSubtitlesLocation)
+                             int        *pSubtitlesLocation,
+                             bool       *pDeinterlaceEnabled,
+                             int        *pDeinterlaceFilter)
 {
     QFont title_font;
     title_font.setPointSize(10);
@@ -105,6 +107,8 @@ void Settings::setParameters(QString    *pOutputFolder,
     m_pSubtitlesBackgroundColor = pSubtitlesBackgroundColor;
     m_pSubtitlesBackgroundAlpha = pSubtitlesBackgroundAlpha;
     m_pSubtitlesLocation = pSubtitlesLocation;
+    m_pDeinterlaceEnabled = pDeinterlaceEnabled;
+    m_pDeinterlaceFilter = pDeinterlaceFilter;
 
     // Initialize temp colors
     m_pSubtitlesColor_temp = QColor(m_pSubtitlesColor->name());
@@ -119,7 +123,8 @@ void Settings::setParameters(QString    *pOutputFolder,
                            pLanguage, pHideInTrayFlag, pFont, pFontSize,
                            pSubtitlesDeselectAll, pSubtitlesBackground,
                            pSubtitlesColor, pSubtitlesBackgroundColor,
-                           pSubtitlesLocation, pSubtitlesFont, pSubtitlesFontSize);
+                           pSubtitlesLocation, pSubtitlesFont, pSubtitlesFontSize,
+                           pDeinterlaceEnabled, pDeinterlaceFilter);
 
     // Update UI from current data
     m_controller->updateUI();

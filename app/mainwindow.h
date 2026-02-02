@@ -215,7 +215,8 @@ private:
                 m_multiInstances,
                 m_protectFlag,
                 m_subtitles_background,
-                m_subtitles_deselectall;
+                m_subtitles_deselectall,
+                m_deinterlace_enabled;
 
     int         m_fontSize,
                 m_subtitles_fontSize,
@@ -226,6 +227,7 @@ private:
                 m_timerInterval,
                 m_subtitles_background_alpha,
                 m_subtitles_location,
+                m_deinterlace_filter,
                 m_threads,
                 m_ffmpeg_prio;
 
