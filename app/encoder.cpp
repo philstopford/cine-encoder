@@ -302,13 +302,13 @@ void Encoder::initEncoding(const QString  &temp_file,
 
     /************************************* Deinterlace module ***************************************/
     QString deinterlace_vf;
-    bool useDeinterlace = CE_USE_PRESET_DEINTERLACE == 1 ? CE_DEINTERLACE_ENABLED : deinterlace_enabled;
-    int deinterlaceFilter = CE_USE_PRESET_DEINTERLACE == 1 ? CE_DEINTERLACE_FILTER : deinterlace_filter;
-    
-    if (useDeinterlace && deinterlaceFilter != DEINTERLACE_NONE) {
-        if (deinterlaceFilter == DEINTERLACE_YADIF) {
+    bool use_deinterlace = CE_USE_PRESET_DEINTERLACE == 1 ? CE_DEINTERLACE_ENABLED : deinterlace_enabled;
+    int deinterlace_filter_selected = CE_USE_PRESET_DEINTERLACE == 1 ? CE_DEINTERLACE_FILTER : deinterlace_filter;
+
+    if (use_deinterlace && deinterlace_filter_selected != Constants::DEINTERLACE_NONE) {
+        if (deinterlace_filter_selected == Constants::DEINTERLACE_YADIF) {
             deinterlace_vf = "yadif";
-        } else if (deinterlaceFilter == DEINTERLACE_BWDIF) {
+        } else if (deinterlace_filter_selected == Constants::DEINTERLACE_BWDIF) {
             deinterlace_vf = "bwdif";
         }
     }
@@ -587,7 +587,9 @@ QStringList Encoder::getCodec(const Tables &t, int CE_CODEC, const QString &resi
         }
     }
     codec.append(hwaccel_filter_vf.split(" "));
-    codec.append(deinterlace_vf.split(" "));
+    if (!deinterlace_vf.isEmpty()) {
+        codec.append(deinterlace_vf);
+    }
     codec.append(fps_vf.split(" "));
     codec.append(resize_vf.split(" "));
     codec.append(colorprim_vf);

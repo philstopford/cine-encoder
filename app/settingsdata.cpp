@@ -39,7 +39,7 @@ SettingsData::SettingsData()
     , m_subtitlesLocation(0)
     , m_subtitlesFontSize(10)
     , m_deinterlaceEnabled(false)
-    , m_deinterlaceFilter(DEINTERLACE_NONE)
+    , m_deinterlaceFilter(Constants::DEINTERLACE_NONE)
     , m_requiresRestart(false)
 {
 }
@@ -377,7 +377,7 @@ void SettingsData::resetToDefaults()
     m_subtitlesLocation = 0;
     m_subtitlesFontSize = 8;
     m_deinterlaceEnabled = false;
-    m_deinterlaceFilter = DEINTERLACE_NONE;
+    m_deinterlaceFilter = Constants::DEINTERLACE_NONE;
     m_requiresRestart = true;
 }
 

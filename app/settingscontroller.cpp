@@ -156,7 +156,7 @@ void SettingsController::loadFromUI()
     m_data.setSubtitlesLocation(m_ui->comboBox_subtitles_location->currentIndex());
 
     // Load deinterlace settings
-    m_data.setDeinterlaceEnabled(m_ui->checkBox_deinterlace->checkState() == 2);
+    m_data.setDeinterlaceEnabled(m_ui->checkBox_deinterlace->checkState() == Qt::CheckState::Checked);
     m_data.setDeinterlaceFilter(m_ui->comboBox_deinterlace_filter->currentIndex());
 
     // Load prefix/suffix settings
