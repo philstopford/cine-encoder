@@ -2147,6 +2147,8 @@ void MainWindow::initEncoding()
                              m_subtitles_background,
                              QString(subtitles_background_color.name(QColor::HexArgb).replace("#", "")),
                              m_subtitles_location,
+                             m_deinterlace_enabled,
+                             m_deinterlace_filter,
                              m_threads,
                              m_ffmpeg_prio
     );
