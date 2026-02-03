@@ -21,7 +21,7 @@ CODECFORSRC = UTF-8
 # GENERAL
 TARGET = cine_encoder
 TEMPLATE = app
-VERSION = 3.5.5
+VERSION = 2026.02
 
 # DIRS
 CONFIG -= debug_and_release debug_and_release_target
