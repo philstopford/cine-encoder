@@ -156,8 +156,10 @@ void SettingsController::loadFromUI()
     m_data.setSubtitlesLocation(m_ui->comboBox_subtitles_location->currentIndex());
 
     // Load deinterlace settings
-    m_data.setDeinterlaceEnabled(m_ui->checkBox_deinterlace->checkState() == Qt::CheckState::Checked);
-    m_data.setDeinterlaceFilter(m_ui->comboBox_deinterlace_filter->currentIndex());
+    if (m_ui->checkBox_deinterlace && m_ui->comboBox_deinterlace_filter) {
+        m_data.setDeinterlaceEnabled(m_ui->checkBox_deinterlace->checkState() == Qt::CheckState::Checked);
+        m_data.setDeinterlaceFilter(m_ui->comboBox_deinterlace_filter->currentIndex());
+    }
 
     // Load prefix/suffix settings
     m_data.setPrefixType(m_ui->comboBoxPrefixType->currentIndex());
@@ -189,7 +191,9 @@ void SettingsController::updateUI()
     m_ui->checkBox_allowDuplicates->setChecked(m_data.getMultiInstances());
     m_ui->checkBox_subtitles_deselectall->setChecked(m_data.getSubtitlesDeselectAll());
     m_ui->checkBox_subtitles_background->setChecked(m_data.getSubtitlesBackground());
-    m_ui->checkBox_deinterlace->setChecked(m_data.getDeinterlaceEnabled());
+    if (m_ui->checkBox_deinterlace) {
+        m_ui->checkBox_deinterlace->setChecked(m_data.getDeinterlaceEnabled());
+    }
 
     // Update spinboxes
     m_ui->spinBox_threads->setValue(m_data.getThreads());
@@ -200,7 +204,9 @@ void SettingsController::updateUI()
     m_ui->comboBox_priority->setCurrentIndex(m_data.getFFMpegPrio());
     m_ui->comboBoxPrefixType->setCurrentIndex(m_data.getPrefixType());
     m_ui->comboBoxSuffixType->setCurrentIndex(m_data.getSuffixType());
-    m_ui->comboBox_deinterlace_filter->setCurrentIndex(m_data.getDeinterlaceFilter());
+    if (m_ui->comboBox_deinterlace_filter) {
+        m_ui->comboBox_deinterlace_filter->setCurrentIndex(m_data.getDeinterlaceFilter());
+    }
 
     // Update text fields
     if (m_data.getSuffixType() == 0) {
@@ -292,8 +298,8 @@ void SettingsController::syncToExternalPointers()
     *m_pSubtitlesLocation = m_data.getSubtitlesLocation();
     *m_pSubtitlesFont = m_data.getSubtitlesFont();
     *m_pSubtitlesFontSize = m_data.getSubtitlesFontSize();
-    *m_pDeinterlaceEnabled = m_data.getDeinterlaceEnabled();
-    *m_pDeinterlaceFilter = m_data.getDeinterlaceFilter();
+    if (m_pDeinterlaceEnabled) *m_pDeinterlaceEnabled = m_data.getDeinterlaceEnabled();
+    if (m_pDeinterlaceFilter) *m_pDeinterlaceFilter = m_data.getDeinterlaceFilter();
 }
 
 void SettingsController::syncFromExternalPointers()
@@ -324,8 +330,8 @@ void SettingsController::syncFromExternalPointers()
     m_data.setSubtitlesLocation(*m_pSubtitlesLocation);
     m_data.setSubtitlesFont(*m_pSubtitlesFont);
     m_data.setSubtitlesFontSize(*m_pSubtitlesFontSize);
-    m_data.setDeinterlaceEnabled(*m_pDeinterlaceEnabled);
-    m_data.setDeinterlaceFilter(*m_pDeinterlaceFilter);
+    if (m_pDeinterlaceEnabled) m_data.setDeinterlaceEnabled(*m_pDeinterlaceEnabled);
+    if (m_pDeinterlaceFilter) m_data.setDeinterlaceFilter(*m_pDeinterlaceFilter);
 
     // Initialize temporary colors
     m_subtitlesColorTemp = *m_pSubtitlesColor;
