@@ -598,25 +598,28 @@ QStringList Encoder::getCodec(const Tables &t, int CE_CODEC, const QString &resi
     }
     
     // Add color primaries filter if present
-    all_vf_filters.append(colorprim_vf);
+    if (!colorprim_vf.isEmpty()) {
+        all_vf_filters.append(colorprim_vf);
+    }
     
     // Add color matrix filter if present
-    all_vf_filters.append(colormatrix_vf);
+    if (!colormatrix_vf.isEmpty()) {
+        all_vf_filters.append(colormatrix_vf);
+    }
     
     // Add transfer filter if present
-    all_vf_filters.append(transfer_vf);
+    if (!transfer_vf.isEmpty()) {
+        all_vf_filters.append(transfer_vf);
+    }
     
-    // Check if we have any filters to add or if we're burning subtitles
-    if (!all_vf_filters.isEmpty() || burn_subt_vf.count() != 0 || _burn_subtitle)
-    {
-        // If the complex filter is used, we don't want the -vf switch
-        if (!burn_subt_vf[0].startsWith("-filter_complex")) {
-            if (!all_vf_filters.isEmpty()) {
-                codec.append("-vf");
-                // Join all filters with commas for FFmpeg
-                codec.append(all_vf_filters.join(","));
-            }
-        }
+    // Determine if we're using complex filter for subtitle burning
+    bool using_complex_filter = burn_subt_vf.count() > 0 && burn_subt_vf[0].startsWith("-filter_complex");
+    
+    // Add -vf flag and filters if we have any regular video filters and not using complex filter
+    if (!all_vf_filters.isEmpty() && !using_complex_filter) {
+        codec.append("-vf");
+        // Join all filters with commas for FFmpeg
+        codec.append(all_vf_filters.join(","));
     }
     
     // Append subtitle burn filter (handled separately as it may use -filter_complex)
