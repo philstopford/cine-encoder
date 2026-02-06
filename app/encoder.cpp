@@ -166,7 +166,7 @@ void Encoder::initEncoding(const QString  &temp_file,
     for (int i = 0; i < data.fields[Data::subtFormats].size(); i++) {
         if (i < data.checks[Data::subtChecks].size() && data.checks[Data::subtChecks][i]) {
             const QString& subtFormat = data.fields[Data::subtFormats][i];
-            if (Helper::isSubtitleIncompatible(container, subtFormat, CE_USE_PRESET_SUBTITLES == 1)) {
+            if (Helper::isSubtitleIncompatible(container, subtFormat, CE_USE_PRESET_SUBTITLES == 2)) {
                 validationErrors.append(tr("Subtitle stream %1 (%2) is not compatible with container '%3'")
                                       .arg(i + 1).arg(subtFormat).arg(container));
             }
@@ -177,7 +177,7 @@ void Encoder::initEncoding(const QString  &temp_file,
     for (int i = 0; i < data.fields[Data::externSubtFormats].size(); i++) {
         if (i < data.checks[Data::externSubtChecks].size() && data.checks[Data::externSubtChecks][i]) {
             const QString& subtFormat = data.fields[Data::externSubtFormats][i];
-            if (Helper::isSubtitleIncompatible(container, subtFormat, CE_USE_PRESET_SUBTITLES == 1)) {
+            if (Helper::isSubtitleIncompatible(container, subtFormat, CE_USE_PRESET_SUBTITLES == 2)) {
                 validationErrors.append(tr("External subtitle stream %1 (%2) is not compatible with container '%3'")
                                       .arg(i + 1).arg(subtFormat).arg(container));
             }
@@ -244,12 +244,12 @@ void Encoder::initEncoding(const QString  &temp_file,
     QStringList _subtitleFormatParam;
     int subtNum;
     subtitles(input_file,
-              CE_USE_PRESET_SUBTITLES == 1 ? CE_SUBTITLE_FONT : subtitle_font,
-              CE_USE_PRESET_SUBTITLES == 1 ? CE_SUBTITLE_FONT_SIZE : subtitle_font_size,
-              CE_USE_PRESET_SUBTITLES == 1 ? CE_SUBTITLE_FONT_COLOR : subtitle_font_color,
-              CE_USE_PRESET_SUBTITLES == 1 ? CE_SUBTITLE_BACKGROUND : burn_background,
-              CE_USE_PRESET_SUBTITLES == 1 ? CE_SUBTITLE_BACKGROUND_COLOR : subtitle_background_color,
-              CE_USE_PRESET_SUBTITLES == 1 ? CE_SUBTITLE_LOCATION : subtitle_location,
+              CE_USE_PRESET_SUBTITLES == 2 ? CE_SUBTITLE_FONT : subtitle_font,
+              CE_USE_PRESET_SUBTITLES == 2 ? CE_SUBTITLE_FONT_SIZE : subtitle_font_size,
+              CE_USE_PRESET_SUBTITLES == 2 ? CE_SUBTITLE_FONT_COLOR : subtitle_font_color,
+              CE_USE_PRESET_SUBTITLES == 2 ? CE_SUBTITLE_BACKGROUND : burn_background,
+              CE_USE_PRESET_SUBTITLES == 2 ? CE_SUBTITLE_BACKGROUND_COLOR : subtitle_background_color,
+              CE_USE_PRESET_SUBTITLES == 2 ? CE_SUBTITLE_LOCATION : subtitle_location,
               data, burn_subt_vf, const_cast<QString &>(width), const_cast<QString &>(height), _subtitleMapParam,
               _subtitleMetadataParam,
               _subtitleFormatParam,
@@ -304,8 +304,8 @@ void Encoder::initEncoding(const QString  &temp_file,
 
     /************************************* Deinterlace module ***************************************/
     QString deinterlace_vf;
-    bool use_deinterlace = CE_USE_PRESET_DEINTERLACE == 1 ? CE_DEINTERLACE_ENABLED : deinterlace_enabled;
-    int deinterlace_filter_selected = CE_USE_PRESET_DEINTERLACE == 1 ? CE_DEINTERLACE_FILTER : deinterlace_filter;
+    bool use_deinterlace = CE_USE_PRESET_DEINTERLACE == 2 ? CE_DEINTERLACE_ENABLED : deinterlace_enabled;
+    int deinterlace_filter_selected = CE_USE_PRESET_DEINTERLACE == 2 ? CE_DEINTERLACE_FILTER : deinterlace_filter;
 
     if (use_deinterlace && deinterlace_filter_selected != Constants::DEINTERLACE_NONE) {
         if (deinterlace_filter_selected == Constants::DEINTERLACE_YADIF) {
