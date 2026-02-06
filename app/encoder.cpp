@@ -74,6 +74,8 @@ void Encoder::initEncoding(const QString  &temp_file,
                            const bool burn_background,
                            const QString &subtitle_background_color,
                            int subtitle_location,
+                           bool deinterlace_enabled,
+                           int deinterlace_filter,
                            int threads,
                            int prio
                            )
