@@ -312,6 +312,8 @@ void Encoder::initEncoding(const QString  &temp_file,
             deinterlace_vf = "yadif";
         } else if (deinterlace_filter_selected == Constants::DEINTERLACE_BWDIF) {
             deinterlace_vf = "bwdif";
+        } else if (deinterlace_filter_selected == Constants::DEINTERLACE_ESTDIF) {
+            deinterlace_vf = "estdif";
         }
     }
 

@@ -288,7 +288,7 @@ namespace Constants {
     };   
 
     enum DeinterlaceFilter {
-        DEINTERLACE_NONE, DEINTERLACE_YADIF, DEINTERLACE_BWDIF
+        DEINTERLACE_NONE, DEINTERLACE_YADIF, DEINTERLACE_BWDIF, DEINTERLACE_ESTDIF
     };
 
     enum EncodingStatus {

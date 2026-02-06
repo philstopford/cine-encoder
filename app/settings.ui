@@ -1641,7 +1641,7 @@
                         <item row="13" column="2">
                          <widget class="QComboBox" name="comboBox_deinterlace_filter">
                           <property name="toolTip">
-                           <string>Select the deinterlacing algorithm to use (yadif or bwdif)</string>
+                           <string>Select the deinterlacing algorithm to use (yadif, bwdif, or estdif)</string>
                           </property>
                           <property name="currentIndex">
                            <number>0</number>
@@ -1659,6 +1659,11 @@
                           <item>
                            <property name="text">
                             <string>bwdif</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>estdif</string>
                            </property>
                           </item>
                          </widget>
