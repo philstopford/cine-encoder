@@ -573,31 +573,55 @@ QStringList Encoder::getCodec(const Tables &t, int CE_CODEC, const QString &resi
     codec.append(_audioMetadataParam);
     codec.append(_subtitleMetadataParam);
     codec.append(_subtitleFormatParam);
-    if ((hwaccel_filter_vf != "") ||
-        (fps_vf != "") ||
-        (resize_vf != "") ||
-        (deinterlace_vf != "") ||
-        (colorprim_vf.count() != 0) ||
-        (colormatrix_vf.count() != 0) ||
-        (transfer_vf.count() != 0) ||
-        (burn_subt_vf.count() != 0) ||
-        _burn_subtitle)
+    
+    // Collect all video filters that need to be combined
+    QStringList all_vf_filters;
+    
+    // Add hwaccel filter if present
+    if (!hwaccel_filter_vf.isEmpty()) {
+        all_vf_filters.append(hwaccel_filter_vf);
+    }
+    
+    // Add deinterlace filter if present
+    if (!deinterlace_vf.isEmpty()) {
+        all_vf_filters.append(deinterlace_vf);
+    }
+    
+    // Add fps filter if present
+    if (!fps_vf.isEmpty()) {
+        all_vf_filters.append(fps_vf);
+    }
+    
+    // Add resize filter if present
+    if (!resize_vf.isEmpty()) {
+        all_vf_filters.append(resize_vf);
+    }
+    
+    // Add color primaries filter if present
+    all_vf_filters.append(colorprim_vf);
+    
+    // Add color matrix filter if present
+    all_vf_filters.append(colormatrix_vf);
+    
+    // Add transfer filter if present
+    all_vf_filters.append(transfer_vf);
+    
+    // Check if we have any filters to add or if we're burning subtitles
+    if (!all_vf_filters.isEmpty() || burn_subt_vf.count() != 0 || _burn_subtitle)
     {
         // If the complex filter is used, we don't want the -vf switch
         if (!burn_subt_vf[0].startsWith("-filter_complex")) {
-            codec.append("-vf");
+            if (!all_vf_filters.isEmpty()) {
+                codec.append("-vf");
+                // Join all filters with commas for FFmpeg
+                codec.append(all_vf_filters.join(","));
+            }
         }
     }
-    codec.append(hwaccel_filter_vf.split(" "));
-    if (!deinterlace_vf.isEmpty()) {
-        codec.append(deinterlace_vf);
-    }
-    codec.append(fps_vf.split(" "));
-    codec.append(resize_vf.split(" "));
-    codec.append(colorprim_vf);
-    codec.append(colormatrix_vf);
-    codec.append(transfer_vf);
+    
+    // Append subtitle burn filter (handled separately as it may use -filter_complex)
     codec.append(burn_subt_vf);
+    
     codec.append(t.arr_params[CE_CODEC][0].split(" "));
     return codec;
 }
