@@ -97,7 +97,8 @@ private:
     time_t  _loop_start, _last_update;
 
     QStringList _extAudioPaths,
-                _extSubPaths;
+                _extSubPaths,
+                _chaptersInput;
     QStringList _preset_0;
     QString _temp_file,
             _input_file,
@@ -203,7 +204,8 @@ private slots:
                          const QStringList &_subtitleFormatParam,
                          const QString &hwaccel_filter_vf, const QStringList &colorprim_vf,
                          const QStringList &colormatrix_vf, const QStringList &transfer_vf,
-                         const QString &deinterlace_vf) const;
+                         const QString &deinterlace_vf, 
+                         const QString &chaptersFile, int chaptersInputIndex) const;
 
     void getPresets(const QStringList &_splitStartParam, const QStringList &_splitParam, const QString &hwaccel,
                     const QStringList &level, const QStringList &mode, const QStringList &preset,

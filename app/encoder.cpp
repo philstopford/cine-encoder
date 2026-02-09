@@ -260,6 +260,39 @@ void Encoder::initEncoding(const QString  &temp_file,
     /****************************** External Subtitle streams *********************************/
     extSub(data, extTrackNum, _subtitleMapParam, _subtitleMetadataParam, _subtitleFormatParam, subtNum);
 
+    /****************************** External Chapters File ************************************/
+    int chaptersInputIndex = -1;  // -1 means no external chapters file
+    if (!data.chaptersFile.isEmpty()) {
+        // Calculate the input index for the chapters file
+        // Input 0 is always the main video file
+        // Then we have external audio files (only checked ones)
+        // Then external subtitle files (only checked ones)
+        // Then the chapters file
+        
+        // Count checked external audio files
+        int checkedExtAudioCount = 0;
+        for (int i = 0; i < data.checks[Data::externAudioChecks].size(); ++i) {
+            if (data.checks[Data::externAudioChecks][i]) {
+                checkedExtAudioCount++;
+            }
+        }
+        
+        // Count checked external subtitle files
+        int checkedExtSubtCount = 0;
+        for (int i = 0; i < data.checks[Data::externSubtChecks].size(); ++i) {
+            if (data.checks[Data::externSubtChecks][i]) {
+                checkedExtSubtCount++;
+            }
+        }
+        
+        chaptersInputIndex = 1 + checkedExtAudioCount + checkedExtSubtCount;
+        
+        // Add the chapters file as an input source
+        // The chapters file should be in FFMetadata format
+        _chaptersInput << "-i" << Helper::makeFileStringFFMPEGReady(data.chaptersFile);
+        // Note: The actual chapter mapping is handled in getCodec() with -map_chapters
+    }
+
     /************************************* Codec module ***************************************/
     QString hwaccel;
     QString hwaccel_filter_vf;
@@ -319,7 +352,7 @@ void Encoder::initEncoding(const QString  &temp_file,
 
     QStringList codec = getCodec(t, CE_CODEC, resize_vf, fps_vf, _videoMetadataParam, _audioMapParam, _audioMetadataParam,
                                  burn_subt_vf, _subtitleMapParam, _subtitleMetadataParam, _subtitleFormatParam, hwaccel_filter_vf,
-                                 colorprim_vf, colormatrix_vf, transfer_vf, deinterlace_vf);
+                                 colorprim_vf, colormatrix_vf, transfer_vf, deinterlace_vf, data.chaptersFile, chaptersInputIndex);
 
     /************************************* HDR module ***************************************/
 
@@ -464,6 +497,7 @@ void Encoder::initVariables(const QString &temp_file, const QString &input_file,
     fr_count = _fr_count;//int _CONTAINER = _cur_param[CurParamIndex::CONTAINER].toInt();
     _extAudioPaths = QStringList();
     _extSubPaths = QStringList();
+    _chaptersInput = QStringList();
     _preset_0 = QStringList();
     _preset_pass1.clear();
     _preset.clear();
@@ -559,7 +593,8 @@ QStringList Encoder::getCodec(const Tables &t, int CE_CODEC, const QString &resi
                               const QStringList &_subtitleFormatParam,
                               const QString &hwaccel_filter_vf, const QStringList &colorprim_vf,
                               const QStringList &colormatrix_vf, const QStringList &transfer_vf,
-                              const QString &deinterlace_vf) const {
+                              const QString &deinterlace_vf, 
+                              const QString &chaptersFile, int chaptersInputIndex) const {
     QStringList codec;
     // Need to pay attention to whether the complex filter is being used. It seems to be incompatible with these arguments.
     if (!_burn_subtitle || (_burn_subtitle && (!burn_subt_vf[0].startsWith("-filter_complex"))))
@@ -570,7 +605,16 @@ QStringList Encoder::getCodec(const Tables &t, int CE_CODEC, const QString &resi
     codec.append(_audioMapParam);
     codec.append(_subtitleMapParam);
     codec.append({"-map_metadata", "0"});
-    codec.append({"-map_chapters", "0"});
+    
+    // Handle chapter mapping - either from input file or external chapters file
+    if (!chaptersFile.isEmpty() && chaptersInputIndex >= 0) {
+        // When importing chapters from external file, map from the calculated input index
+        codec.append({"-map_chapters", QString::number(chaptersInputIndex)});
+    } else {
+        // Default behavior: copy chapters from input video
+        codec.append({"-map_chapters", "0"});
+    }
+    
     codec.append(_videoMetadataParam);
     codec.append(_audioMetadataParam);
     codec.append(_subtitleMetadataParam);
@@ -1460,7 +1504,8 @@ void Encoder::encode()   // Encode
             emit onEncodingMode(_encoding_mode);
             arguments << _preset_0 << "-i" << escaped_file_in
                       << _extAudioPaths
-                      << _extSubPaths << _preset
+                      << _extSubPaths
+                      << _chaptersInput << _preset
                      << "-threads" << numToStr(_threads)
                       << "-y" << escaped_file_out;
         }
@@ -1472,7 +1517,8 @@ void Encoder::encode()   // Encode
             emit onEncodingMode(_encoding_mode);
             arguments << _preset_0 << "-i" << escaped_file_in
                       << _extAudioPaths
-                      << _extSubPaths << _preset
+                      << _extSubPaths
+                      << _chaptersInput << _preset
                       << "-threads" << numToStr(_threads)
                       << "-y" << escaped_file_out;
         }
@@ -1484,6 +1530,7 @@ void Encoder::encode()   // Encode
             arguments << _preset_0 << "-y" << "-i" << escaped_file_in
                       << _extAudioPaths
                       << _extSubPaths
+                      << _chaptersInput
                       << "-threads" << numToStr(_threads)
                       << _preset_pass1;
         }
