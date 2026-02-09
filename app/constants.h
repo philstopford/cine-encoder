@@ -165,6 +165,9 @@ namespace Constants {
         QVector<QString> presetParams;
         QString presetName;
         
+        // Chapter metadata file path for import
+        QString chaptersFile;
+        
         void clear() {
             videoMetadata.clear();
             for (auto & check : checks)
@@ -173,6 +176,7 @@ namespace Constants {
                 field.clear();
             presetParams.clear();
             presetName.clear();
+            chaptersFile.clear();
         }
     };
 
