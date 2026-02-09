@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <cineencoder>
-    <version>355</version>
+    <version>202602</version>
     <Settings>
         <prefix_type>0</prefix_type>
         <suffix_type>0</suffix_type>
@@ -29,5 +29,7 @@
         <subtitles_background_alpha>150</subtitles_background_alpha>
         <subtitles_background_color>#000000</subtitles_background_color>
         <subtitles_location>0</subtitles_location>
+        <deinterlace_enabled>0</deinterlace_enabled>
+        <deinterlace_filter>0</deinterlace_filter>
         <threads>0</threads>
     </Settings>

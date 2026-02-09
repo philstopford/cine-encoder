@@ -74,6 +74,8 @@ void Encoder::initEncoding(const QString  &temp_file,
                            const bool burn_background,
                            const QString &subtitle_background_color,
                            int subtitle_location,
+                           bool deinterlace_enabled,
+                           int deinterlace_filter,
                            int threads,
                            int prio
                            )
@@ -118,6 +120,9 @@ void Encoder::initEncoding(const QString  &temp_file,
     int CE_SUBTITLE_BACKGROUND;
     QString CE_SUBTITLE_BACKGROUND_COLOR;
     int CE_SUBTITLE_LOCATION;
+    int CE_USE_PRESET_DEINTERLACE;
+    bool CE_DEINTERLACE_ENABLED;
+    int CE_DEINTERLACE_FILTER;
     initVariables(temp_file, input_file, output_file, _cur_param, _fr_count, t, CE_CODEC, _CE_MODE, CE_BQR, CE_MINRATE, CE_MAXRATE,
                   CE_BUFSIZE,
                   CE_LEVEL, CE_FRAME_RATE, CE_BLENDING, CE_WIDTH, CE_HEIGHT, CE_PASS, CE_PRESET, CE_COLOR_RANGE, CE_MATRIX, CE_PRIMARY,
@@ -126,7 +131,8 @@ void Encoder::initEncoding(const QString  &temp_file,
                   CE_AUDIO_BITRATE,
                   CE_AUDIO_SAMPLING, CE_AUDIO_CHANNELS, CE_REP_PRIM, CE_REP_MATRIX, CE_REP_TRC,
                   CE_USE_PRESET_SUBTITLES, CE_SUBTITLE_FONT, CE_SUBTITLE_FONT_SIZE, CE_SUBTITLE_FONT_COLOR, CE_SUBTITLE_BACKGROUND,
-                  CE_SUBTITLE_BACKGROUND_COLOR, CE_SUBTITLE_LOCATION);
+                  CE_SUBTITLE_BACKGROUND_COLOR, CE_SUBTITLE_LOCATION,
+                  CE_USE_PRESET_DEINTERLACE, CE_DEINTERLACE_ENABLED, CE_DEINTERLACE_FILTER);
 
     // Comprehensive pre-flight validation of stream compatibility
     QStringList validationErrors;
@@ -160,7 +166,7 @@ void Encoder::initEncoding(const QString  &temp_file,
     for (int i = 0; i < data.fields[Data::subtFormats].size(); i++) {
         if (i < data.checks[Data::subtChecks].size() && data.checks[Data::subtChecks][i]) {
             const QString& subtFormat = data.fields[Data::subtFormats][i];
-            if (Helper::isSubtitleIncompatible(container, subtFormat, CE_USE_PRESET_SUBTITLES == 1)) {
+            if (Helper::isSubtitleIncompatible(container, subtFormat, CE_USE_PRESET_SUBTITLES == 2)) {
                 validationErrors.append(tr("Subtitle stream %1 (%2) is not compatible with container '%3'")
                                       .arg(i + 1).arg(subtFormat).arg(container));
             }
@@ -171,7 +177,7 @@ void Encoder::initEncoding(const QString  &temp_file,
     for (int i = 0; i < data.fields[Data::externSubtFormats].size(); i++) {
         if (i < data.checks[Data::externSubtChecks].size() && data.checks[Data::externSubtChecks][i]) {
             const QString& subtFormat = data.fields[Data::externSubtFormats][i];
-            if (Helper::isSubtitleIncompatible(container, subtFormat, CE_USE_PRESET_SUBTITLES == 1)) {
+            if (Helper::isSubtitleIncompatible(container, subtFormat, CE_USE_PRESET_SUBTITLES == 2)) {
                 validationErrors.append(tr("External subtitle stream %1 (%2) is not compatible with container '%3'")
                                       .arg(i + 1).arg(subtFormat).arg(container));
             }
@@ -238,12 +244,12 @@ void Encoder::initEncoding(const QString  &temp_file,
     QStringList _subtitleFormatParam;
     int subtNum;
     subtitles(input_file,
-              CE_USE_PRESET_SUBTITLES == 1 ? CE_SUBTITLE_FONT : subtitle_font,
-              CE_USE_PRESET_SUBTITLES == 1 ? CE_SUBTITLE_FONT_SIZE : subtitle_font_size,
-              CE_USE_PRESET_SUBTITLES == 1 ? CE_SUBTITLE_FONT_COLOR : subtitle_font_color,
-              CE_USE_PRESET_SUBTITLES == 1 ? CE_SUBTITLE_BACKGROUND : burn_background,
-              CE_USE_PRESET_SUBTITLES == 1 ? CE_SUBTITLE_BACKGROUND_COLOR : subtitle_background_color,
-              CE_USE_PRESET_SUBTITLES == 1 ? CE_SUBTITLE_LOCATION : subtitle_location,
+              CE_USE_PRESET_SUBTITLES == 2 ? CE_SUBTITLE_FONT : subtitle_font,
+              CE_USE_PRESET_SUBTITLES == 2 ? CE_SUBTITLE_FONT_SIZE : subtitle_font_size,
+              CE_USE_PRESET_SUBTITLES == 2 ? CE_SUBTITLE_FONT_COLOR : subtitle_font_color,
+              CE_USE_PRESET_SUBTITLES == 2 ? CE_SUBTITLE_BACKGROUND : burn_background,
+              CE_USE_PRESET_SUBTITLES == 2 ? CE_SUBTITLE_BACKGROUND_COLOR : subtitle_background_color,
+              CE_USE_PRESET_SUBTITLES == 2 ? CE_SUBTITLE_LOCATION : subtitle_location,
               data, burn_subt_vf, const_cast<QString &>(width), const_cast<QString &>(height), _subtitleMapParam,
               _subtitleMetadataParam,
               _subtitleFormatParam,
@@ -329,10 +335,24 @@ void Encoder::initEncoding(const QString  &temp_file,
     QStringList transfer_vf;
     colorTransfer(_hdr, CE_TRC, CE_REP_TRC, transfer, transfer_vf);
 
+    /************************************* Deinterlace module ***************************************/
+    QString deinterlace_vf;
+    bool use_deinterlace = CE_USE_PRESET_DEINTERLACE == 2 ? CE_DEINTERLACE_ENABLED : deinterlace_enabled;
+    int deinterlace_filter_selected = CE_USE_PRESET_DEINTERLACE == 2 ? CE_DEINTERLACE_FILTER : deinterlace_filter;
+
+    if (use_deinterlace && deinterlace_filter_selected != Constants::DEINTERLACE_NONE) {
+        if (deinterlace_filter_selected == Constants::DEINTERLACE_YADIF) {
+            deinterlace_vf = "yadif";
+        } else if (deinterlace_filter_selected == Constants::DEINTERLACE_BWDIF) {
+            deinterlace_vf = "bwdif";
+        } else if (deinterlace_filter_selected == Constants::DEINTERLACE_ESTDIF) {
+            deinterlace_vf = "estdif";
+        }
+    }
+
     QStringList codec = getCodec(t, CE_CODEC, resize_vf, fps_vf, _videoMetadataParam, _audioMapParam, _audioMetadataParam,
                                  burn_subt_vf, _subtitleMapParam, _subtitleMetadataParam, _subtitleFormatParam, hwaccel_filter_vf,
-                                 colorprim_vf,
-                                 colormatrix_vf, transfer_vf, data.chaptersFile, chaptersInputIndex);
+                                 colorprim_vf, colormatrix_vf, transfer_vf, deinterlace_vf, data.chaptersFile, chaptersInputIndex);
 
     /************************************* HDR module ***************************************/
 
@@ -384,7 +404,8 @@ void Encoder::initVariables(const QString &temp_file, const QString &input_file,
                             int &CE_USE_PRESET_SUBTITLES, QString &CE_SUBTITLE_FONT, int &CE_SUBTITLE_FONT_SIZE,
                             QString &CE_SUBTITLE_FONT_COLOR, int &CE_SUBTITLE_BACKGROUND,
                             QString &CE_SUBTITLE_BACKGROUND_COLOR,
-                            int &CE_SUBTITLE_LOCATION) {
+                            int &CE_SUBTITLE_LOCATION,
+                            int &CE_USE_PRESET_DEINTERLACE, bool &CE_DEINTERLACE_ENABLED, int &CE_DEINTERLACE_FILTER) {
     CE_CODEC= _cur_param[CODEC].toInt();
     _CE_MODE= _cur_param[MODE].toInt();
     CE_BQR= _cur_param[BQR];
@@ -428,6 +449,9 @@ void Encoder::initVariables(const QString &temp_file, const QString &input_file,
     bgColor.setAlpha(bgAlpha);
     CE_SUBTITLE_BACKGROUND_COLOR = bgColor.name();
     CE_SUBTITLE_LOCATION = _cur_param[SUBTITLE_LOCATION].toInt();
+    CE_USE_PRESET_DEINTERLACE = _cur_param[USE_PRESET_DEINTERLACE_SETTINGS].toInt();
+    CE_DEINTERLACE_ENABLED = _cur_param[DEINTERLACE_ENABLED].toInt() != 0;
+    CE_DEINTERLACE_FILTER = _cur_param[DEINTERLACE_FILTER].toInt();
     Print("Make preset...");
     _temp_file = temp_file;
     // Check for file name collisions and add a suffix as needed.
@@ -568,7 +592,8 @@ QStringList Encoder::getCodec(const Tables &t, int CE_CODEC, const QString &resi
                               const QStringList &_subtitleMapParam, const QStringList &_subtitleMetadataParam,
                               const QStringList &_subtitleFormatParam,
                               const QString &hwaccel_filter_vf, const QStringList &colorprim_vf,
-                              const QStringList &colormatrix_vf, const QStringList &transfer_vf, 
+                              const QStringList &colormatrix_vf, const QStringList &transfer_vf,
+                              const QString &deinterlace_vf, 
                               const QString &chaptersFile, int chaptersInputIndex) const {
     QStringList codec;
     // Need to pay attention to whether the complex filter is being used. It seems to be incompatible with these arguments.
@@ -594,27 +619,58 @@ QStringList Encoder::getCodec(const Tables &t, int CE_CODEC, const QString &resi
     codec.append(_audioMetadataParam);
     codec.append(_subtitleMetadataParam);
     codec.append(_subtitleFormatParam);
-    if ((hwaccel_filter_vf != "") ||
-        (fps_vf != "") ||
-        (resize_vf != "") ||
-        (colorprim_vf.count() != 0) ||
-        (colormatrix_vf.count() != 0) ||
-        (transfer_vf.count() != 0) ||
-        (burn_subt_vf.count() != 0) ||
-        _burn_subtitle)
-    {
-        // If the complex filter is used, we don't want the -vf switch
-        if (!burn_subt_vf[0].startsWith("-filter_complex")) {
-            codec.append("-vf");
-        }
+    
+    // Collect all video filters that need to be combined
+    QStringList all_vf_filters;
+    
+    // Add hwaccel filter if present
+    if (!hwaccel_filter_vf.isEmpty()) {
+        all_vf_filters.append(hwaccel_filter_vf);
     }
-    codec.append(hwaccel_filter_vf.split(" "));
-    codec.append(fps_vf.split(" "));
-    codec.append(resize_vf.split(" "));
-    codec.append(colorprim_vf);
-    codec.append(colormatrix_vf);
-    codec.append(transfer_vf);
+    
+    // Add deinterlace filter if present
+    if (!deinterlace_vf.isEmpty()) {
+        all_vf_filters.append(deinterlace_vf);
+    }
+    
+    // Add fps filter if present
+    if (!fps_vf.isEmpty()) {
+        all_vf_filters.append(fps_vf);
+    }
+    
+    // Add resize filter if present
+    if (!resize_vf.isEmpty()) {
+        all_vf_filters.append(resize_vf);
+    }
+    
+    // Add color primaries filter if present
+    if (!colorprim_vf.isEmpty()) {
+        all_vf_filters.append(colorprim_vf);
+    }
+    
+    // Add color matrix filter if present
+    if (!colormatrix_vf.isEmpty()) {
+        all_vf_filters.append(colormatrix_vf);
+    }
+    
+    // Add transfer filter if present
+    if (!transfer_vf.isEmpty()) {
+        all_vf_filters.append(transfer_vf);
+    }
+    
+    // Determine if we're using complex filter for subtitle burning
+    bool using_complex_filter = burn_subt_vf.count() > 0 && burn_subt_vf[0].startsWith("-filter_complex");
+    
+    // Add -vf flag and filters if we have any regular video filters and not using complex filter
+    if (!all_vf_filters.isEmpty() && !using_complex_filter) {
+        codec.append("-vf");
+        // Join all filters with commas for FFmpeg
+        codec.append(all_vf_filters.join(","));
+    }
+    
+    // Append subtitle burn filter (handled separately as it may use -filter_complex)
     codec.append(burn_subt_vf);
+    
     codec.append(t.arr_params[CE_CODEC][0].split(" "));
     return codec;
 }

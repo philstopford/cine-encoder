@@ -108,6 +108,10 @@ void Preset::onButtonApply()  // Apply preset
     (*m_pNew_param)[CurParamIndex::SUBTITLE_BACKGROUND_ALPHA] = QString::number(bgAlpha);
     (*m_pNew_param)[CurParamIndex::SUBTITLE_LOCATION] = QString::number(ui->comboBox_preset_subtitles_location->currentIndex());
 
+    (*m_pNew_param)[CurParamIndex::USE_PRESET_DEINTERLACE_SETTINGS] = QString::number(ui->checkBox_use_preset_deinterlace->checkState());
+    (*m_pNew_param)[CurParamIndex::DEINTERLACE_ENABLED] = QString::number(ui->checkBox_preset_deinterlace_enabled->checkState());
+    (*m_pNew_param)[CurParamIndex::DEINTERLACE_FILTER] = QString::number(ui->comboBox_preset_deinterlace_filter->currentIndex());
+
     (*m_pNew_param)[CurParamIndex::SUBTITLE_FONT_COLOR] = m_pPresetSubtitlesColor_temp.name();
     QColor temp = QColor(m_pPresetSubtitlesColor_temp.name());
     QString s("background: " + temp.name() + ";");
@@ -270,6 +274,12 @@ void Preset::showEvent(QShowEvent *event)
         ui->comboBox_preset_subtitles_location->blockSignals(true);
         ui->comboBox_preset_subtitles_location->setCurrentIndex((*m_pNew_param)[CurParamIndex::SUBTITLE_LOCATION].toInt());
         ui->comboBox_preset_subtitles_location->blockSignals(false);
+
+        ui->checkBox_use_preset_deinterlace->setCheckState((Qt::CheckState)(*m_pNew_param)[CurParamIndex::USE_PRESET_DEINTERLACE_SETTINGS].toInt());
+        ui->checkBox_preset_deinterlace_enabled->setCheckState((Qt::CheckState)(*m_pNew_param)[CurParamIndex::DEINTERLACE_ENABLED].toInt());
+        ui->comboBox_preset_deinterlace_filter->blockSignals(true);
+        ui->comboBox_preset_deinterlace_filter->setCurrentIndex((*m_pNew_param)[CurParamIndex::DEINTERLACE_FILTER].toInt());
+        ui->comboBox_preset_deinterlace_filter->blockSignals(false);
 
         (*m_pNew_param)[CurParamIndex::SUBTITLE_FONT_COLOR] = m_pPresetSubtitlesColor_temp.name();
         QColor temp = QColor(m_pPresetSubtitlesColor_temp.name());

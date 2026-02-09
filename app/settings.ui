@@ -1614,6 +1614,60 @@
                           </property>
                          </spacer>
                         </item>
+                        <item row="12" column="1">
+                         <widget class="QLabel" name="label_deinterlace">
+                          <property name="text">
+                           <string>Deinterlace</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="12" column="2">
+                         <widget class="QCheckBox" name="checkBox_deinterlace">
+                          <property name="toolTip">
+                           <string>Enable deinterlacing filter for interlaced video content</string>
+                          </property>
+                          <property name="text">
+                           <string>Enable Deinterlacing</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="13" column="1">
+                         <widget class="QLabel" name="label_deinterlace_filter">
+                          <property name="text">
+                           <string>Filter</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="13" column="2">
+                         <widget class="QComboBox" name="comboBox_deinterlace_filter">
+                          <property name="toolTip">
+                           <string>Select the deinterlacing algorithm to use (yadif, bwdif, or estdif)</string>
+                          </property>
+                          <property name="currentIndex">
+                           <number>0</number>
+                          </property>
+                          <item>
+                           <property name="text">
+                            <string>None</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>yadif</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>bwdif</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>estdif</string>
+                           </property>
+                          </item>
+                         </widget>
+                        </item>
                        </layout>
                       </item>
                      </layout>
@@ -2037,6 +2091,7 @@
                         </property>
                        </widget>
                       </item>
+
                      </layout>
                     </widget>
                    </widget>

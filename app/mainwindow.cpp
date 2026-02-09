@@ -495,6 +495,12 @@ void MainWindow::saveXMLSettingsFile()
     streamSettings.writeStartElement("subtitles_location");
     streamSettings.writeCharacters(numToStr(m_subtitles_location));
     streamSettings.writeEndElement();
+    streamSettings.writeStartElement("deinterlace_enabled");
+    streamSettings.writeCharacters(numToStr(m_deinterlace_enabled));
+    streamSettings.writeEndElement();
+    streamSettings.writeStartElement("deinterlace_filter");
+    streamSettings.writeCharacters(numToStr(m_deinterlace_filter));
+    streamSettings.writeEndElement();
     streamSettings.writeStartElement("threads");
     streamSettings.writeCharacters(numToStr(m_threads));
     streamSettings.writeEndElement();
@@ -1059,6 +1065,8 @@ void MainWindow::setParameters()    // Set parameters
     m_subtitles_background_alpha = 150;
     m_subtitles_background_color = "#000000";
     m_subtitles_location = 0;
+    m_deinterlace_enabled = false;
+    m_deinterlace_filter = Constants::DEINTERLACE_NONE;
     m_threads = 0;
     m_ffmpeg_prio = Constants::normal;
 
@@ -1280,6 +1288,14 @@ void MainWindow::readXMLSettingsFile(const QString& xmlFileName)
                 if (tagName == "subtitles_location") {
                     const QString value = stream.readElementText();
                     m_subtitles_location = value.toInt();
+                }
+                if (tagName == "deinterlace_enabled") {
+                    const QString value = stream.readElementText();
+                    m_deinterlace_enabled = value.toInt();
+                }
+                if (tagName == "deinterlace_filter") {
+                    const QString value = stream.readElementText();
+                    m_deinterlace_filter = value.toInt();
                 }
                 if (tagName == "threads") {
                     const QString value = stream.readElementText();
@@ -1543,7 +1559,9 @@ void MainWindow::onSettings()
                            &m_subtitles_color,
                            &m_subtitles_background_color,
                            &m_subtitles_background_alpha,
-                           &m_subtitles_location);
+                           &m_subtitles_location,
+                           &m_deinterlace_enabled,
+                           &m_deinterlace_filter);
     if (settings.exec() == Dialog::Accept) {
         m_pTimer->setInterval(m_timerInterval*1000);
         setTheme(m_theme);
@@ -2141,6 +2159,8 @@ void MainWindow::initEncoding()
                              m_subtitles_background,
                              QString(subtitles_background_color.name(QColor::HexArgb).replace("#", "")),
                              m_subtitles_location,
+                             m_deinterlace_enabled,
+                             m_deinterlace_filter,
                              m_threads,
                              m_ffmpeg_prio
     );

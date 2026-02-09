@@ -3396,6 +3396,173 @@
                          </layout>
                         </widget>
                        </item>
+                       <item row="9" column="0">
+                        <widget class="QGroupBox" name="groupBox_deinterlace">
+                         <property name="title">
+                          <string>Deinterlacing</string>
+                         </property>
+                         <layout class="QGridLayout" name="gridLayout_deinterlace">
+                          <property name="leftMargin">
+                           <number>9</number>
+                          </property>
+                          <property name="topMargin">
+                           <number>20</number>
+                          </property>
+                          <property name="rightMargin">
+                           <number>9</number>
+                          </property>
+                          <property name="bottomMargin">
+                           <number>20</number>
+                          </property>
+                          <item row="0" column="0">
+                           <layout class="QGridLayout" name="gridLayout_212">
+                            <property name="leftMargin">
+                             <number>0</number>
+                            </property>
+                            <property name="topMargin">
+                             <number>0</number>
+                            </property>
+                            <property name="rightMargin">
+                             <number>0</number>
+                            </property>
+                            <item row="0" column="2">
+                             <widget class="QCheckBox" name="checkBox_use_preset_deinterlace">
+                              <property name="toolTip">
+                               <string>Use deinterlacing settings from this preset instead of preferences</string>
+                              </property>
+                              <property name="text">
+                               <string>Use preset deinterlacing settings</string>
+                              </property>
+                             </widget>
+                            </item>
+                            <item row="1" column="0">
+                             <spacer name="horizontalSpacer_deinterlace_1">
+                              <property name="orientation">
+                               <enum>Qt::Orientation::Horizontal</enum>
+                              </property>
+                              <property name="sizeType">
+                               <enum>QSizePolicy::Policy::Expanding</enum>
+                              </property>
+                              <property name="sizeHint" stdset="0">
+                               <size>
+                                <width>40</width>
+                                <height>20</height>
+                               </size>
+                              </property>
+                             </spacer>
+                            </item>
+                            <item row="1" column="5">
+                             <spacer name="horizontalSpacer_deinterlace_2">
+                              <property name="orientation">
+                               <enum>Qt::Orientation::Horizontal</enum>
+                              </property>
+                              <property name="sizeHint" stdset="0">
+                               <size>
+                                <width>40</width>
+                                <height>20</height>
+                               </size>
+                              </property>
+                             </spacer>
+                            </item>
+                            <item row="2" column="2">
+                             <spacer name="verticalSpacer_deinterlace_1">
+                              <property name="orientation">
+                               <enum>Qt::Orientation::Vertical</enum>
+                              </property>
+                              <property name="sizeType">
+                               <enum>QSizePolicy::Policy::Fixed</enum>
+                              </property>
+                              <property name="sizeHint" stdset="0">
+                               <size>
+                                <width>20</width>
+                                <height>18</height>
+                               </size>
+                              </property>
+                             </spacer>
+                            </item>
+                            <item row="3" column="2">
+                             <widget class="QCheckBox" name="checkBox_preset_deinterlace_enabled">
+                              <property name="toolTip">
+                               <string>Enable deinterlacing filter for interlaced video</string>
+                              </property>
+                              <property name="text">
+                               <string>Enable Deinterlacing</string>
+                              </property>
+                             </widget>
+                            </item>
+                            <item row="4" column="2">
+                             <spacer name="verticalSpacer_deinterlace_2">
+                              <property name="orientation">
+                               <enum>Qt::Orientation::Vertical</enum>
+                              </property>
+                              <property name="sizeType">
+                               <enum>QSizePolicy::Policy::Fixed</enum>
+                              </property>
+                              <property name="sizeHint" stdset="0">
+                               <size>
+                                <width>20</width>
+                                <height>18</height>
+                               </size>
+                              </property>
+                             </spacer>
+                            </item>
+                            <item row="5" column="1">
+                             <widget class="QLabel" name="label_preset_deinterlace_filter">
+                              <property name="text">
+                               <string>Filter</string>
+                              </property>
+                             </widget>
+                            </item>
+                            <item row="5" column="2">
+                             <widget class="QComboBox" name="comboBox_preset_deinterlace_filter">
+                              <property name="sizePolicy">
+                               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                                <horstretch>0</horstretch>
+                                <verstretch>0</verstretch>
+                               </sizepolicy>
+                              </property>
+                              <property name="minimumSize">
+                               <size>
+                                <width>155</width>
+                                <height>24</height>
+                               </size>
+                              </property>
+                              <property name="maximumSize">
+                               <size>
+                                <width>155</width>
+                                <height>30</height>
+                               </size>
+                              </property>
+                              <property name="toolTip">
+                               <string>Select the deinterlacing algorithm (yadif, bwdif, or estdif)</string>
+                              </property>
+                              <item>
+                               <property name="text">
+                                <string>None</string>
+                               </property>
+                              </item>
+                              <item>
+                               <property name="text">
+                                <string>yadif</string>
+                               </property>
+                              </item>
+                              <item>
+                               <property name="text">
+                                <string>bwdif</string>
+                               </property>
+                              </item>
+                              <item>
+                               <property name="text">
+                                <string>estdif</string>
+                               </property>
+                              </item>
+                             </widget>
+                            </item>
+                           </layout>
+                          </item>
+                         </layout>
+                        </widget>
+                       </item>
                       </layout>
                      </widget>
                     </item>

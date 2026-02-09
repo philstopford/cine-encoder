@@ -56,6 +56,8 @@ public:
                       bool     burn_background,
                       const QString  &subtitle_background_color,
                       int            subtitle_location,
+                      bool     deinterlace_enabled,
+                      int      deinterlace_filter,
                       int threads,
                       int prio
                       );
@@ -201,7 +203,8 @@ private slots:
                          const QStringList &_subtitleMapParam, const QStringList &_subtitleMetadataParam,
                          const QStringList &_subtitleFormatParam,
                          const QString &hwaccel_filter_vf, const QStringList &colorprim_vf,
-                         const QStringList &colormatrix_vf, const QStringList &transfer_vf, 
+                         const QStringList &colormatrix_vf, const QStringList &transfer_vf,
+                         const QString &deinterlace_vf, 
                          const QString &chaptersFile, int chaptersInputIndex) const;
 
     void getPresets(const QStringList &_splitStartParam, const QStringList &_splitParam, const QString &hwaccel,
@@ -226,7 +229,8 @@ private slots:
                        int &CE_AUDIO_CHANNELS, int &CE_REP_PRIM, int &CE_REP_MATRIX, int &CE_REP_TRC,
                        int &CE_USE_PRESET_SUBTITLES, QString &CE_SUBTITLE_FONT, int &CE_SUBTITLE_FONT_SIZE,
                        QString &CE_SUBTITLE_FONT_COLOR, int &CE_SUBTITLE_BACKGROUND,
-                       QString &CE_SUBTITLE_BACKGROUND_COLOR, int &CE_SUBTITLE_LOCATION);
+                       QString &CE_SUBTITLE_BACKGROUND_COLOR, int &CE_SUBTITLE_LOCATION,
+                       int &CE_USE_PRESET_DEINTERLACE, bool &CE_DEINTERLACE_ENABLED, int &CE_DEINTERLACE_FILTER);
 
 };
 
