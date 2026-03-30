@@ -3378,17 +3378,37 @@ void MainWindow::onApplyPreset()  // Apply preset
         showPopup(tr("Select preset first!\n"));
         return;
     }
-    
+
+    QTreeWidgetItem *item = ui->treeWidget->currentItem();
+    QTreeWidgetItem *parentItem = item->parent();
+    if (!parentItem) {
+        // Item is parent (section), not a preset leaf
+        showPopup(tr("Select preset first!\n"));
+        return;
+    }
+
+    // Extract preset parameters and name
+    QVector<QString> presetParams(PARAMETERS_COUNT);
+    for (int k = 0; k < PARAMETERS_COUNT; k++)
+        presetParams[k] = item->text(k+7);
+    QString presetName = item->text(0);
+
+    // Always update global preset state so newly loaded files inherit this preset
+    for (int k = 0; k < PARAMETERS_COUNT; k++)
+        m_curParams[k] = presetParams[k];
+    m_pos_top = ui->treeWidget->indexOfTopLevelItem(parentItem);
+    m_pos_cld = parentItem->indexOfChild(item);
+
     // Get selected rows
     QList<int> selectedRows;
     QModelIndexList selectedIndexes = ui->tableWidget->selectionModel()->selectedRows();
-    
+
     if (selectedIndexes.isEmpty()) {
         // If no files are selected, apply to all files in the task list
         for (int i = 0; i < ui->tableWidget->rowCount(); i++) {
             selectedRows.append(i);
         }
-        
+
         if (selectedRows.isEmpty()) {
             showPopup(tr("No files in task list!\n"));
             return;
@@ -3399,58 +3419,36 @@ void MainWindow::onApplyPreset()  // Apply preset
             selectedRows.append(index.row());
         }
     }
-    
-    QTreeWidgetItem *item = ui->treeWidget->currentItem();
-    QTreeWidgetItem *parentItem = item->parent();
-    if (parentItem) {
-        // Item is child - get preset parameters
-        QVector<QString> presetParams(PARAMETERS_COUNT);
-        for (int k = 0; k < PARAMETERS_COUNT; k++)
-            presetParams[k] = item->text(k+7);
-        
-        QString presetName = item->text(0);  // Get preset name
-        
-        // Apply preset to all selected files
-        for (int row : selectedRows) {
-            if (row < m_data.size()) {
-                m_data[row].presetParams = presetParams;
-                m_data[row].presetName = presetName;
-                
-                // Update the preset column in the table
-                QTableWidgetItem *presetItem = ui->tableWidget->item(row, ColumnIndex::PRESET_COL);
-                if (presetItem) {
-                    presetItem->setText(presetName);
-                    
-                    // Add tooltip showing preset details
-                    Tables t;
-                    int codecIndex = presetParams[CurParamIndex::CODEC].toInt();
-                    QString container = t.arr_container[codecIndex][presetParams[CurParamIndex::CONTAINER].toInt()];
-                    QString tooltip = tr("Preset: %1\nCodec: %2\nContainer: %3")
-                                     .arg(presetName)
-                                     .arg(t.arr_codec[codecIndex][0])
-                                     .arg(container);
-                    presetItem->setToolTip(tooltip);
-                }
+
+    // Apply preset to all selected files
+    for (int row : selectedRows) {
+        if (row < m_data.size()) {
+            m_data[row].presetParams = presetParams;
+            m_data[row].presetName = presetName;
+
+            // Update the preset column in the table
+            QTableWidgetItem *presetItem = ui->tableWidget->item(row, ColumnIndex::PRESET_COL);
+            if (presetItem) {
+                presetItem->setText(presetName);
+
+                // Add tooltip showing preset details
+                Tables t;
+                int codecIndex = presetParams[CurParamIndex::CODEC].toInt();
+                QString container = t.arr_container[codecIndex][presetParams[CurParamIndex::CONTAINER].toInt()];
+                QString tooltip = tr("Preset: %1\nCodec: %2\nContainer: %3")
+                                 .arg(presetName)
+                                 .arg(t.arr_codec[codecIndex][0])
+                                 .arg(container);
+                presetItem->setToolTip(tooltip);
             }
         }
-        
-        // Update current global parameters from the preset for UI consistency
-        for (int k = 0; k < PARAMETERS_COUNT; k++)
-            m_curParams[k] = presetParams[k];
-            
-        m_pos_top = ui->treeWidget->indexOfTopLevelItem(parentItem);
-        m_pos_cld = parentItem->indexOfChild(item);
-        
-        if (m_row != -1)
-            get_output_filename();
-        
-        showPopup(tr("Applied preset '%1' to %2 file(s)").arg(presetName).arg(selectedRows.size()));
-    } else {
-        // Item is parent...
-        showPopup(tr("Select preset first!\n"));
-        return;
     }
-    
+
+    if (m_row != -1)
+        get_output_filename();
+
+    showPopup(tr("Applied preset '%1' to %2 file(s)").arg(presetName).arg(selectedRows.size()));
+
     // Update all warnings for all files since container format may have changed
     for (int i = 0; i < ui->tableWidget->rowCount(); i++) {
         updateFileWarnings(i);
