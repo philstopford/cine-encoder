@@ -659,17 +659,25 @@ QStringList Encoder::getCodec(const Tables &t, int CE_CODEC, const QString &resi
     }
     
     // Determine if we're using complex filter for subtitle burning
-    bool using_complex_filter = burn_subt_vf.count() > 0 && burn_subt_vf[0].startsWith("-filter_complex");
-    
-    // Add -vf flag and filters if we have any regular video filters and not using complex filter
-    if (!all_vf_filters.isEmpty() && !using_complex_filter) {
+    bool using_complex_filter = _burn_subtitle && burn_subt_vf.count() > 0 && burn_subt_vf[0].startsWith("-filter_complex");
+
+    // If subtitle burn uses a simple -vf filter (not -filter_complex), merge it with the other
+    // video filters so they all share a single -vf flag. Without this, the subtitle filter string
+    // would appear as a bare argument that FFmpeg misinterprets as an output filename.
+    if (_burn_subtitle && !using_complex_filter && !burn_subt_vf.isEmpty()) {
+        all_vf_filters.append(burn_subt_vf);
+    }
+
+    // Add -vf flag and all video filters (including any merged subtitle filter)
+    if (!all_vf_filters.isEmpty()) {
         codec.append("-vf");
-        // Join all filters with commas for FFmpeg
         codec.append(all_vf_filters.join(","));
     }
-    
-    // Append subtitle burn filter (handled separately as it may use -filter_complex)
-    codec.append(burn_subt_vf);
+
+    // Append -filter_complex subtitle args (includes the flag, filter graph, and -map [v])
+    if (using_complex_filter) {
+        codec.append(burn_subt_vf);
+    }
     
     codec.append(t.arr_params[CE_CODEC][0].split(" "));
     return codec;
