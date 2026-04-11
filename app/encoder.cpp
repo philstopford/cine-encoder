@@ -659,7 +659,7 @@ QStringList Encoder::getCodec(const Tables &t, int CE_CODEC, const QString &resi
     }
     
     // Determine if we're using complex filter for subtitle burning
-    bool using_complex_filter = _burn_subtitle && burn_subt_vf.count() > 0 && burn_subt_vf[0].startsWith("-filter_complex");
+    bool using_complex_filter = _burn_subtitle && !burn_subt_vf.isEmpty() && burn_subt_vf[0].startsWith("-filter_complex");
 
     // If subtitle burn uses a simple -vf filter (not -filter_complex), merge it with the other
     // video filters so they all share a single -vf flag. Without this, the subtitle filter string
