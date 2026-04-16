@@ -8,144 +8,32 @@ By default, there are several categories of presets. You can change existing or 
 
 ![View](./images/View_2.png)
 
+### Differences in this Fork
+
+- Use of CMake over QMake.
+- Adoption of Qt6 for user interface and removal of hacks around high DPI scaling, etc.
+- Wayland-ready, avoiding XWayland.
+- Use of XML files for presets and preferences, avoiding loss of preset information when tool feature set is changed.
+- Enhanced preset features that work together with preference options.
+- Extracting audio tracks maintains metadata if destination format supports it.
+- Ability to hard burn subtitles with customizable background color, opacity, text appearance, etc.
+- Warning in case transcode settings are incompatible with target format, with advice on how to mitigate (e.g. transcode audio, hard-burn subtitles, etc.)
+- Ability to dynamically adjust task priority for background ffmpeg sessions to help maintain usability.
+- Improved error handling for ffmpeg issues.
+- Improved handling for filenames, streams, etc. that have special characters.
+- Heavily refactored code to make it more understandable and maintainable. Addressed numerous weaknesses in the original design.
+
 ### Installation
 
-Supported operating system: Linux x86_64, Windows 8.1/10 x86_64.
-
-Make sure that the NVIDIA drivers are installed in accordance with the following requirements: [Using FFMPEG with NVIDIA.](https://docs.nvidia.com/video-technologies/video-codec-sdk/ffmpeg-with-nvidia-gpu/index.html)
-
-##### - Arch Linux / Manjaro Linux:
-  - install [AUR package](https://aur.archlinux.org/packages/cine-encoder/) or cine-encoder-(ver)_manjaro_x86_64.pkg.tar.xz file from [release](https://github.com/CineEncoder/cine-encoder/releases)
-
-##### - Debian 10.6 / Ubuntu 20.04 / Linux Mint 20:
-  - install file cine-encoder-(ver)_amd64.deb from [release](https://github.com/CineEncoder/cine-encoder/releases)
-
-##### - Fedora 33:
-  - to satisfy ffmpeg dependency Fedora users have to use rpmfusion (https://rpmfusion.org/)
-  - install file cine-encoder-(ver)_fedora33_x86_64.rpm from [release](https://github.com/CineEncoder/cine-encoder/releases)
-
-##### - CentOS 7.8:
-  - to satisfy ffmpeg dependency CentOS users have to use rpmfusion (https://rpmfusion.org/)
-  - install file cine-encoder-(ver)_centos7_x86_64.rpm from [release](https://github.com/CineEncoder/cine-encoder/releases)
-
-*ver - current version
+Supported operating system: Linux x86_64. I tried to make thisfork still work on Windows but it's untested. Mac support is untested as well.
 
 ### Build instruction for Linux
-Install dependencies:
+In general, you need mkvtoolnix (the terminal version is fine), and mediainfo. The GUI will call ffmpeg but it is not required for building. Qt6 development libraries (multimedia, etc.) are also needed.
+The build system is based on CMake.
+With something like CLion, you can just open the project folder, set up the build configurations and build. There should be no issues.
+This fork removed various X.org hangovers, so the output should work well with high DPI settinsg (including scaling) and on Wayland.
 
-##### - Arch Linux / Manjaro Linux:
-    gcc
-    qt5-base
-    qt5-multimedia
-    qt5-svg
-    qt5-x11extras
-    libmediainfo
-    libxext
-
-    ffmpeg
-    mkvtoolnix-cli
-    intel-media-driver
-    libva-intel-driver
-
-##### - Debian / Ubuntu / Linux Mint:
-    gcc
-    qt5-qmake
-    qtbase5-dev
-    qtmultimedia5-dev
-    libqt5svg5-dev
-    libqt5x11extras5-dev
-    libmediainfo-dev
-    libxext-dev
-
-    ffmpeg
-    mkvtoolnix
-    i965-va-driver
-
-##### - Fedora / CentOS:
-    gcc-c++
-    qt5-qtbase-devel
-    qt5-qtmultimedia-devel
-    qt5-qtsvg-devel
-    qt5-qtx11extras-devel
-    libmediainfo-devel
-    libXext-devel
-
-    ffmpeg
-    mkvtoolnix
-    intel-media-driver
-    libva-intel-driver
-
-Build package:
-
-```sh
-mkdir build
-cd build
-git clone https://github.com/CineEncoder/cine-encoder.git
-cd cine-encoder
-qmake-qt5 -o builddir/Makefile app/cine_encoder.pro -spec linux-g++ CONFIG+=qtquickcompiler (or for Debian:  /usr/lib/qt5/bin/qmake -o builddir/Makefile app/cine_encoder.pro -spec linux-g++)
-cd builddir
-make
-```
-or
-```sh
-git clone https://github.com/CineEncoder/cine-encoder.git
-mkdir build
-cd build
-cmake ../cine-encoder
-make
-```
-
-Run:
-
-```sh
-./cine_encoder -platform xcb
-```
-
-### Build instruction for Windows
-
-```sh
-mkdir build
-cd build
-git clone https://github.com/CineEncoder/cine-encoder.git
-cd cine-encoder
-mkdir builddir
-```
-
-Install dependencies to builddir folder:
-
-    imageformats/qsvg.dll
-    platforms/qwindows.dll
-    plugins/audio/qtaudio_windows.dll
-    plugins/mediaservice/qtmedia_audioengine.dll
-    styles/qwindowsvistastyle.dll
-    ffmpeg.exe
-    libgcc_s_seh-1.dll
-    libstdc++-6.dll
-    libwinpthread-1.dll
-    MediaInfo.dll
-    MediaInfo_InfoTip.dll
-    mkvpropedit.exe
-    Qt5Core.dll
-    Qt5Gui.dll
-    Qt5Multimedia.dll
-    Qt5Network.dll
-    Qt5Svg.dll
-    Qt5Widgets.dll
-    cine-encoder.ico
-
-Build package:
-
-```sh
-cd builddir
-<path_to_qmake>/qmake.exe ../app/cine_encoder.pro -spec win32-g++ "CONFIG+=qtquickcompiler"
-<path_to_make>/mingw32-make.exe
-```
-
-### Tracking the development of the project
-
-Next release version: 3.5.5. Estimated release date: Dec 15 2022.
-To tracking the development of the project see [Project page](https://github.com/CineEncoder/cine-encoder/projects/1?fullscreen=true)
-
+Windows support in this fork is largely untested. I took a stab at it, but don't run Windows often enough to know if there are issues on that platform.
 
 ### Code Quality & Architecture
 
@@ -160,15 +48,7 @@ This project follows modern C++ best practices and Qt coding standards. Recent i
 
 For detailed information about architectural improvements, see [ARCHITECTURE_IMPROVEMENTS.md](ARCHITECTURE_IMPROVEMENTS.md).
 
-
 ### Licence
 
 GNU GPL v.3
 See [LICENSE.md](https://github.com/CineEncoder/CineEncoder/blob/master/LICENSE)
-
-
-### Donate
-
-If you wish to support this project, you can make a donation. Your contributions will help keep the project alive and support future development.
-
-[![PayPal](./images/PayPal.png)](https://paypal.me/CineEncoder?country.x=MD&locale.x=en_US)
