@@ -2194,7 +2194,8 @@ void MainWindow::onEncodingProgress(const int percent, const float rem_time)
 
 void MainWindow::onEncodingLog(const QString &log)
 {
-    ui->textBrowser_log->append(log);
+    ui->textBrowser_log->moveCursor(QTextCursor::End);
+    ui->textBrowser_log->insertPlainText(log + "\n");
 }
 
 void MainWindow::onEncodingCompleted()
