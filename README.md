@@ -8,6 +8,11 @@ By default, there are several categories of presets. You can change existing or 
 
 ![View](./images/View_2.png)
 
+### Why fork?
+
+The original project seems to have stalled a few years ago. I wrote and submitted a bunch of pull requests that have been languishing. I fear that the original developer got impacted by the Ukraine conflict and rather than let this wonderful project sit unloved, I decided to fork it and do my best not to ruin their original vision, while bringing it up to date and adding some features and fixes that I felt were important.
+At the same time, I don't have Windows installations around and also have no Mac environment, so the cross-platform nature of this fork may be affected. I run Linux full time and know that there are competing commercial offerings on Windows and Mac (iFFMpeg, myFFMpeg) that people can turn to there.
+
 ### Differences in this Fork
 
 - Use of CMake over QMake.
@@ -25,7 +30,7 @@ By default, there are several categories of presets. You can change existing or 
 
 ### Installation
 
-Supported operating system: Linux x86_64. I tried to make thisfork still work on Windows but it's untested. Mac support is untested as well.
+Supported operating system: Linux x86_64. I tried to make this fork still work on Windows, but it's untested. Mac support is untested as well.
 
 ### Build instruction for Linux
 In general, you need mkvtoolnix (the terminal version is fine), and mediainfo. The GUI will call ffmpeg but it is not required for building. Qt6 development libraries (multimedia, etc.) are also needed.
@@ -36,6 +41,8 @@ This fork removed various X.org hangovers, so the output should work well with h
 Windows support in this fork is largely untested. I took a stab at it, but don't run Windows often enough to know if there are issues on that platform.
 
 ### Code Quality & Architecture
+
+I have used Copilot from time to time on this project to help with some of the tedious work. I use this tool ~daily and am reasonably confident that nothing is broken, but I have not used all features in the tool.
 
 This project follows modern C++ best practices and Qt coding standards. Recent improvements include:
 
