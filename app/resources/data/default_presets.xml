@@ -1409,5 +1409,116 @@
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
         </preset36>
+        <preset37>
+            <OUTPUT_PARAM>Web High Quality AV1 HDR 10 bit</OUTPUT_PARAM>
+            <CODEC>30</CODEC>
+            <MODE>0</MODE>
+            <CONTAINER>0</CONTAINER>
+            <BQR>Auto</BQR>
+            <MAXRATE>Auto</MAXRATE>
+            <BUFSIZE>Auto</BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>6</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>0</AUDIO_CODEC>
+            <AUDIO_BITRATE>2</AUDIO_BITRATE>
+            <MINRATE>Auto</MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>SVT-AV1 4:2:0 10 bit</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>TopLewelItem</TYPE>
+        </preset37>
+        <preset38>
+            <OUTPUT_PARAM>AV1, Res: Source, Fps: Source, YUV, 4:2:0, 10 bit, ABR 20 MBps, Preset: Medium, 2 Pass, HDR: Enabled, Audio: Opus, 256k, WebM</OUTPUT_PARAM>
+            <CODEC>30</CODEC>
+            <MODE>0</MODE>
+            <CONTAINER>0</CONTAINER>
+            <BQR>20</BQR>
+            <MAXRATE></MAXRATE>
+            <BUFSIZE></BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>1</PASS>
+            <PRESET>6</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>0</AUDIO_CODEC>
+            <AUDIO_BITRATE>2</AUDIO_BITRATE>
+            <MINRATE></MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>SVT-AV1 4:2:0 10 bit</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset38>
+        <preset39>
+            <OUTPUT_PARAM>AV1, Res: Source, Fps: Source, YUV, 4:2:0, 10 bit, CRF 28, Preset: Medium, 1 Pass, HDR: Enabled, Audio: Opus, 256k, WebM</OUTPUT_PARAM>
+            <CODEC>30</CODEC>
+            <MODE>1</MODE>
+            <CONTAINER>0</CONTAINER>
+            <BQR>28</BQR>
+            <MAXRATE></MAXRATE>
+            <BUFSIZE></BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>6</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>0</AUDIO_CODEC>
+            <AUDIO_BITRATE>2</AUDIO_BITRATE>
+            <MINRATE></MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>SVT-AV1 4:2:0 10 bit</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset39>
     </presettable>
 </cineencoder>

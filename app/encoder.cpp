@@ -885,7 +885,25 @@ QStringList Encoder::presetModule(const Tables &t, int CE_CODEC, int CE_PRESET) 
     QStringList preset;
     const QString selected_preset = t.getCurrentPreset(CE_CODEC, CE_PRESET);
     if (selected_preset != "" && selected_preset != tr("None")) {
-        preset.append({"-preset", selected_preset.toLower() });
+        if (t.arr_params[CE_CODEC][0].contains("libsvtav1")) {
+            const QMap<QString, QString> svtAv1PresetMap = {
+                {"Ultrafast", "12"},
+                {"Superfast", "10"},
+                {"Veryfast",  "8"},
+                {"Faster",    "7"},
+                {"Fast",      "6"},
+                {"Medium",    "5"},
+                {"Slow",      "4"},
+                {"Slower",    "3"},
+                {"Veryslow",  "2"}
+            };
+            const QString svtPresetValue = svtAv1PresetMap.value(selected_preset, "");
+            if (!svtPresetValue.isEmpty()) {
+                preset.append({"-preset", svtPresetValue});
+            }
+        } else {
+            preset.append({"-preset", selected_preset.toLower() });
+        }
     }
     return preset;
 }

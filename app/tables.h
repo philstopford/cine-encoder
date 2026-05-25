@@ -221,7 +221,7 @@ public:
         {tr("None"), "",              "",              "",             "",           "",         "",           "",             "",           ""},
         {tr("None"), tr("Ultrafast"), tr("Superfast"), tr("Veryfast"), tr("Faster"), tr("Fast"), tr("Medium"), tr("Slow"),     tr("Slower"), tr("Veryslow")},
         {tr("None"), "",              "",              "",             "",           "",         "",           "",             "",           ""},
-        {tr("None"), "",              "",              "",             "",           "",         "",           "",             "",           ""}  // SVT-AV1
+        {tr("None"), tr("Ultrafast"), tr("Superfast"), tr("Veryfast"), tr("Faster"), tr("Fast"), tr("Medium"), tr("Slow"), tr("Slower"), tr("Veryslow")}  // SVT-AV1
     };
 
     const QString arr_level[NUMBER_PRESETS][21] = {
