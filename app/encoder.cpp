@@ -1311,6 +1311,7 @@ QStringList Encoder::audioModule(const Tables &t, int CE_CODEC, int CE_AUDIO_COD
     const QString selected_acodec = t.arr_acodec[CE_CODEC][CE_AUDIO_CODEC];
     QString selected_bitrate = "";
 
+    QStringList audioFilters;
     QStringList sampling;
     const QString selected_sampling = t.arr_sampling[CE_AUDIO_SAMPLING];
     if (selected_sampling != "Source") {
@@ -1325,6 +1326,16 @@ QStringList Encoder::audioModule(const Tables &t, int CE_CODEC, int CE_AUDIO_COD
 
     if (selected_acodec == "AAC") {
         selected_bitrate = t.arr_bitrate[0][CE_AUDIO_BITRATE];
+
+        // FFmpeg's native AAC encoder does not support some source layouts such as
+        // 5.1.2 / 7.1 layouts with height channels. If the user leaves channels set
+        // to Source, constrain AAC negotiation to layouts that the native AAC encoder
+        // can open reliably. This lets FFmpeg downmix/rematrix unsupported layouts
+        // instead of failing with "Unsupported channel layout".
+        if (selected_channels == "Source") {
+            audioFilters.append("aformat=channel_layouts=mono|stereo|5.1");
+        }
+
         acodec.append({"-c:a","aac", "-b:a", selected_bitrate});
     }
     else
@@ -1363,6 +1374,14 @@ QStringList Encoder::audioModule(const Tables &t, int CE_CODEC, int CE_AUDIO_COD
     if (selected_acodec == tr("Source")) {
         acodec.append({"-c:a", "copy"});
     }
+
+    if (!audioFilters.isEmpty()) {
+        QStringList filterParam;
+        filterParam.append({"-af", audioFilters.join(",")});
+        const QStringList audio_param = filterParam + acodec + channels;
+        return audio_param;
+    }
+
     const QStringList audio_param = sampling + acodec + channels;
     return audio_param;
 }
