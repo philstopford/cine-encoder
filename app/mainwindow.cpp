@@ -41,7 +41,17 @@
 #include <QFileInfo>
 #include <QProcess>
 #include <QSizePolicy>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QHash>
+#include <QSet>
 #include <QTranslator>
+#include <QTreeWidget>
+#include <QVBoxLayout>
+#include <QSignalBlocker>
 #include <QScreen>
 #include <QHeaderView>
 #include <iostream>
@@ -128,6 +138,394 @@ namespace MainWindowPrivate
     }
 }
 
+namespace {
+struct PresetRowData {
+    QVector<QString> values;
+};
+
+struct PresetSectionData {
+    PresetRowData sectionRow;
+    QVector<PresetRowData> children;
+};
+
+struct PresetChangeData {
+    QString sectionName;
+    QString presetName;
+    PresetRowData currentRow;
+    PresetRowData referenceRow;
+    bool isNew = false;
+    bool isChanged = false;
+};
+
+struct PresetSectionDiff {
+    QString sectionName;
+    QVector<PresetChangeData> changes;
+    bool isNewSection = false;
+};
+
+using PresetRows = QVector<PresetRowData>;
+
+static bool isSectionType(const QString &type)
+{
+    return type == "TopLevelItem" || type == "TopLewelItem";
+}
+
+static QString sectionName(const PresetRowData &row)
+{
+    return row.values.isEmpty() ? QString() : row.values[0].trimmed();
+}
+
+static QString presetName(const PresetRowData &row)
+{
+    if (row.values.size() > Constants::CurParamIndex::PRESET_NAME) {
+        const QString name = row.values[Constants::CurParamIndex::PRESET_NAME].trimmed();
+        if (!name.isEmpty()) {
+            return name;
+        }
+    }
+    return row.values.isEmpty() ? QString() : row.values[0].trimmed();
+}
+
+static PresetRows tableToRows(const TableString &table)
+{
+    PresetRows rows;
+    if (table.isEmpty()) {
+        return rows;
+    }
+
+    const int rowCount = table[0].size();
+    rows.reserve(rowCount);
+    for (int row = 0; row < rowCount; row++) {
+        PresetRowData data;
+        data.values.resize(PARAMETERS_COUNT + 1);
+        for (int col = 0; col < table.size() && col <= PARAMETERS_COUNT; col++) {
+            if (row < table[col].size()) {
+                data.values[col] = table[col][row];
+            }
+        }
+        rows.push_back(std::move(data));
+    }
+    return rows;
+}
+
+static TableString rowsToTable(const PresetRows &rows)
+{
+    TableString table;
+    table.resize(PARAMETERS_COUNT + 1);
+    for (const auto &row : rows) {
+        for (int col = 0; col <= PARAMETERS_COUNT; col++) {
+            table[col].append(col < row.values.size() ? row.values[col] : QString());
+        }
+    }
+    return table;
+}
+
+static QMap<QString, PresetSectionData> buildSectionMap(const PresetRows &rows, QStringList &order)
+{
+    QMap<QString, PresetSectionData> sections;
+    QString currentSection;
+    for (const auto &row : rows) {
+        const QString type = row.values.size() > PARAMETERS_COUNT
+                ? row.values[PARAMETERS_COUNT]
+                : QString();
+        if (isSectionType(type)) {
+            currentSection = sectionName(row);
+            if (!sections.contains(currentSection)) {
+                order.append(currentSection);
+            }
+            sections[currentSection].sectionRow = row;
+        } else if (!currentSection.isEmpty()) {
+            sections[currentSection].children.append(row);
+        }
+    }
+    return sections;
+}
+
+static QString changeKey(const QString &sectionName, const QString &presetName)
+{
+    return sectionName + QChar(0x1f) + presetName;
+}
+
+static bool rowsEqual(const PresetRowData &left, const PresetRowData &right)
+{
+    return left.values == right.values;
+}
+
+static int findSectionHeaderIndex(const PresetRows &rows, const QString &sectionNameToFind)
+{
+    for (int i = 0; i < rows.size(); i++) {
+        const QString type = rows[i].values.size() > PARAMETERS_COUNT ? rows[i].values[PARAMETERS_COUNT] : QString();
+        if (isSectionType(type) && sectionName(rows[i]) == sectionNameToFind) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static int findChildIndex(const PresetRows &rows, const QString &sectionNameToFind, const QString &presetNameToFind)
+{
+    bool inSection = false;
+    for (int i = 0; i < rows.size(); i++) {
+        const QString type = rows[i].values.size() > PARAMETERS_COUNT ? rows[i].values[PARAMETERS_COUNT] : QString();
+        if (isSectionType(type)) {
+            inSection = sectionName(rows[i]) == sectionNameToFind;
+            continue;
+        }
+        if (inSection && presetName(rows[i]) == presetNameToFind) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static int findSectionTailIndex(const PresetRows &rows, const QString &sectionNameToFind)
+{
+    const int headerIndex = findSectionHeaderIndex(rows, sectionNameToFind);
+    if (headerIndex < 0) {
+        return -1;
+    }
+
+    int tailIndex = headerIndex;
+    for (int i = headerIndex + 1; i < rows.size(); i++) {
+        const QString type = rows[i].values.size() > PARAMETERS_COUNT ? rows[i].values[PARAMETERS_COUNT] : QString();
+        if (isSectionType(type)) {
+            break;
+        }
+        tailIndex = i;
+    }
+    return tailIndex;
+}
+
+static QString rowSummary(const PresetRowData &row)
+{
+    const QString output = row.values.size() > CurParamIndex::OUTPUT_PARAM ? row.values[CurParamIndex::OUTPUT_PARAM].trimmed() : QString();
+    if (!output.isEmpty()) {
+        return output;
+    }
+    return presetName(row);
+}
+
+static QVector<PresetSectionDiff> collectPresetDiffs(const PresetRows &currentRows, const PresetRows &referenceRows)
+{
+    QStringList currentOrder;
+    QStringList referenceOrder;
+    const QMap<QString, PresetSectionData> currentSections = buildSectionMap(currentRows, currentOrder);
+    const QMap<QString, PresetSectionData> referenceSections = buildSectionMap(referenceRows, referenceOrder);
+    Q_UNUSED(currentOrder);
+
+    QVector<PresetSectionDiff> diffs;
+
+    for (const QString &section : referenceOrder) {
+        const auto referenceSectionIt = referenceSections.find(section);
+        if (referenceSectionIt == referenceSections.end()) {
+            continue;
+        }
+
+        PresetSectionDiff sectionDiff;
+        sectionDiff.sectionName = section;
+        sectionDiff.isNewSection = !currentSections.contains(section);
+
+        QHash<QString, PresetRowData> currentChildren;
+        if (currentSections.contains(section)) {
+            for (const auto &child : currentSections.value(section).children) {
+                currentChildren.insert(presetName(child), child);
+            }
+        }
+
+        for (const auto &child : referenceSectionIt->children) {
+            const QString name = presetName(child);
+            const auto currentChildIt = currentChildren.find(name);
+            if (currentChildIt == currentChildren.end()) {
+                PresetChangeData change;
+                change.sectionName = section;
+                change.presetName = name;
+                change.referenceRow = child;
+                change.isNew = true;
+                sectionDiff.changes.append(change);
+            } else if (!rowsEqual(currentChildIt.value(), child)) {
+                PresetChangeData change;
+                change.sectionName = section;
+                change.presetName = name;
+                change.currentRow = currentChildIt.value();
+                change.referenceRow = child;
+                change.isChanged = true;
+                sectionDiff.changes.append(change);
+            }
+        }
+
+        if (!sectionDiff.changes.isEmpty()) {
+            diffs.append(sectionDiff);
+        }
+    }
+
+    return diffs;
+}
+
+static QString presetChangeLabel(const PresetChangeData &change)
+{
+    if (change.isNew) {
+        return MainWindow::tr("Add");
+    }
+    if (change.isChanged) {
+        return MainWindow::tr("Update");
+    }
+    return QString();
+}
+
+static bool promptPresetReconcile(QWidget *parent,
+                                  const QVector<PresetSectionDiff> &diffs,
+                                  QSet<QString> *selectedKeys)
+{
+    if (!selectedKeys) {
+        return false;
+    }
+
+    QDialog dialog(parent);
+    dialog.setWindowTitle(MainWindow::tr("Preset updates available"));
+    dialog.setModal(true);
+    dialog.resize(940, 620);
+
+    auto *layout = new QVBoxLayout(&dialog);
+    layout->setContentsMargins(12, 12, 12, 12);
+    layout->setSpacing(8);
+
+    auto *title = new QLabel(MainWindow::tr("Select the bundled preset changes to apply."), &dialog);
+    title->setWordWrap(true);
+    layout->addWidget(title);
+
+    auto *tree = new QTreeWidget(&dialog);
+    tree->setColumnCount(4);
+    tree->setHeaderLabels({MainWindow::tr("Preset"), MainWindow::tr("Status"),
+                           MainWindow::tr("Current"), MainWindow::tr("Bundled")});
+    tree->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    tree->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    tree->header()->setSectionResizeMode(2, QHeaderView::Stretch);
+    tree->header()->setSectionResizeMode(3, QHeaderView::Stretch);
+    tree->setRootIsDecorated(true);
+    tree->setAlternatingRowColors(true);
+    layout->addWidget(tree, 1);
+
+    for (const auto &sectionDiff : diffs) {
+        auto *sectionItem = new QTreeWidgetItem(tree);
+        sectionItem->setText(0, sectionDiff.sectionName);
+        sectionItem->setText(1, sectionDiff.isNewSection ? MainWindow::tr("New section") : MainWindow::tr("Updated section"));
+        QFont sectionFont = sectionItem->font(0);
+        sectionFont.setBold(true);
+        sectionItem->setFont(0, sectionFont);
+        sectionItem->setFirstColumnSpanned(false);
+        sectionItem->setExpanded(true);
+
+        for (const auto &change : sectionDiff.changes) {
+            auto *child = new QTreeWidgetItem(sectionItem);
+            child->setFlags(child->flags() | Qt::ItemIsUserCheckable | Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+            child->setCheckState(0, Qt::Checked);
+            child->setText(0, change.presetName);
+            child->setText(1, presetChangeLabel(change));
+            child->setText(2, change.currentRow.values.isEmpty() ? QString() : rowSummary(change.currentRow));
+            child->setText(3, rowSummary(change.referenceRow));
+            child->setData(0, Qt::UserRole, change.sectionName);
+            child->setData(0, Qt::UserRole + 1, change.presetName);
+        }
+    }
+
+    auto *buttonRow = new QHBoxLayout();
+    auto *selectAll = new QPushButton(MainWindow::tr("Select all"), &dialog);
+    auto *clearAll = new QPushButton(MainWindow::tr("Clear all"), &dialog);
+    buttonRow->addWidget(selectAll);
+    buttonRow->addWidget(clearAll);
+    buttonRow->addStretch(1);
+    layout->addLayout(buttonRow);
+
+    auto *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    layout->addWidget(buttonBox);
+    QObject::connect(buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    QObject::connect(buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    QObject::connect(selectAll, &QPushButton::clicked, tree, [tree]() {
+        QSignalBlocker blocker(tree);
+        for (int i = 0; i < tree->topLevelItemCount(); i++) {
+            auto *sectionItem = tree->topLevelItem(i);
+            for (int j = 0; j < sectionItem->childCount(); j++) {
+                sectionItem->child(j)->setCheckState(0, Qt::Checked);
+            }
+        }
+    });
+    QObject::connect(clearAll, &QPushButton::clicked, tree, [tree]() {
+        QSignalBlocker blocker(tree);
+        for (int i = 0; i < tree->topLevelItemCount(); i++) {
+            auto *sectionItem = tree->topLevelItem(i);
+            for (int j = 0; j < sectionItem->childCount(); j++) {
+                sectionItem->child(j)->setCheckState(0, Qt::Unchecked);
+            }
+        }
+    });
+
+    if (dialog.exec() != QDialog::Accepted) {
+        return false;
+    }
+
+    for (int i = 0; i < tree->topLevelItemCount(); i++) {
+        auto *sectionItem = tree->topLevelItem(i);
+        for (int j = 0; j < sectionItem->childCount(); j++) {
+            auto *child = sectionItem->child(j);
+            if (child->checkState(0) == Qt::Checked) {
+                const QString sectionName = child->data(0, Qt::UserRole).toString();
+                const QString presetName = child->data(0, Qt::UserRole + 1).toString();
+                selectedKeys->insert(changeKey(sectionName, presetName));
+            }
+        }
+    }
+
+    return true;
+}
+
+static PresetRows applyPresetSelection(const PresetRows &currentRows,
+                                       const PresetRows &referenceRows,
+                                       const QSet<QString> &selectedKeys)
+{
+    QStringList referenceOrder;
+    const QMap<QString, PresetSectionData> referenceSections = buildSectionMap(referenceRows, referenceOrder);
+
+    PresetRows updated = currentRows;
+    for (const QString &section : referenceOrder) {
+        const PresetSectionData &referenceSection = referenceSections.value(section);
+        QVector<PresetRowData> selectedRows;
+        for (const auto &child : referenceSection.children) {
+            if (selectedKeys.contains(changeKey(section, presetName(child)))) {
+                selectedRows.append(child);
+            }
+        }
+
+        if (selectedRows.isEmpty()) {
+            continue;
+        }
+
+        const int headerIndex = findSectionHeaderIndex(updated, section);
+        if (headerIndex < 0) {
+            updated.append(referenceSection.sectionRow);
+            for (const auto &child : selectedRows) {
+                updated.append(child);
+            }
+            continue;
+        }
+
+        int insertPos = findSectionTailIndex(updated, section) + 1;
+        for (const auto &child : selectedRows) {
+            const QString name = presetName(child);
+            const int currentIndex = findChildIndex(updated, section, name);
+            if (currentIndex >= 0) {
+                updated[currentIndex] = child;
+            } else {
+                updated.insert(insertPos, child);
+                insertPos++;
+            }
+        }
+    }
+
+    return updated;
+}
+}
+
 MainWindow::MainWindow(QWidget *parent):
     BaseWindow(parent),
     ui(new Ui::Widget),
@@ -141,6 +539,7 @@ MainWindow::MainWindow(QWidget *parent):
     m_temp_file(""),
     m_input_file(""),
     m_output_file(""),
+    m_presetFileVersion(0),
     m_windowActivated(false),
     m_expandWindowsState(false),
     m_rowHeight(ROWHEIGHTDFLT)
@@ -284,74 +683,7 @@ void MainWindow::closeEvent(QCloseEvent *event) // Show prompt when close app
             if (m_pProcessThumbCreation->state() != QProcess::NotRunning)
                 m_pProcessThumbCreation->kill();
         }
-
-        QFile xmlFile(XMLPRESETFILE);
-        if (!xmlFile.open(QFile::WriteOnly | QFile::Text)) { // Open file in write only mode
-            qDebug() << QString("Cannot write file %1(%2).").arg(XMLPRESETFILE, xmlFile.errorString());
-            return;
-        }
-        QXmlStreamWriter stream(&xmlFile);
-        stream.setAutoFormatting(true);
-        stream.writeStartDocument();
-        stream.writeStartElement("cineencoder");
-        stream.writeTextElement("version", numToStr(PRESETS_VERSION));
-        stream.writeTextElement("m_pos_top", numToStr(m_pos_top));
-        stream.writeTextElement("m_pos_cld", numToStr(m_pos_cld));
-
-        stream.writeStartElement("params");
-        int i = 0;
-        for (const QString& param : m_curParams) {
-            stream.writeStartElement(param_names[i]);
-            stream.writeCharacters(param);
-            stream.writeEndElement();
-            i++;
-        }
-        stream.writeEndElement();
-
-        stream.writeStartElement("presettable");
-
-        // Data structure internally is column-wise preset. We need to capture each column into an XML
-        // entry
-        int paramscount;
-        try {
-            paramscount = m_preset_table.count();
-        }
-        catch (...)
-        {
-            paramscount = 0;
-        }
-        int presetcount;
-        try {
-            presetcount = m_preset_table[0].count();
-
-        }
-        catch (...)
-        {
-            presetcount = 0;
-        }
-
-        // Preset
-        for (int preset = 0; preset < presetcount; preset++) {
-            stream.writeStartElement(QString("preset") + numToStr(preset));
-            // Parameters
-            for (int param = 0; param < paramscount; param++)
-            {
-                if (param < PARAMETERS_COUNT) {
-                    stream.writeStartElement(param_names[param]);
-                }
-                else
-                {
-                    stream.writeStartElement("TYPE");
-                }
-                stream.writeCharacters(m_preset_table[param][preset]);
-                stream.writeEndElement();
-            }
-            stream.writeEndElement();
-        }
-
-        stream.writeEndElement();
-        stream.writeEndDocument();
-        xmlFile.close();
+        saveXMLPresetFile();
 
         SETTINGS(stn);
         // Save Version
@@ -365,9 +697,9 @@ void MainWindow::closeEvent(QCloseEvent *event) // Show prompt when close app
         stn.setValue("DocksContainer/state", m_pDocksContainer->saveState());
         stn.setValue("DocksContainer/geometry", m_pDocksContainer->saveGeometry());
         stn.beginWriteArray("DocksContainer/docks_geometry");
-            for (auto & m_pDock : m_pDocks) {
+            for (int i = 0; i < DOCKS_COUNT; i++) {
                 stn.setArrayIndex(i);
-                stn.setValue("DocksContainer/docks_geometry/dock_size", m_pDock->size());
+                stn.setValue("DocksContainer/docks_geometry/dock_size", m_pDocks[i]->size());
             }
             stn.endArray();
         stn.endGroup();
@@ -391,6 +723,62 @@ void MainWindow::closeEvent(QCloseEvent *event) // Show prompt when close app
             m_pTrayIcon->deleteLater();
         event->accept();
     }
+}
+
+bool MainWindow::saveXMLPresetFile()
+{
+    QFile xmlFile(XMLPRESETFILE);
+    if (!xmlFile.open(QFile::WriteOnly | QFile::Text)) {
+        qDebug() << QString("Cannot write file %1(%2).").arg(XMLPRESETFILE, xmlFile.errorString());
+        return false;
+    }
+
+    QXmlStreamWriter stream(&xmlFile);
+    stream.setAutoFormatting(true);
+    stream.writeStartDocument();
+    stream.writeStartElement("cineencoder");
+    stream.writeTextElement("version", numToStr(PRESETS_VERSION));
+    stream.writeTextElement("m_pos_top", numToStr(m_pos_top));
+    stream.writeTextElement("m_pos_cld", numToStr(m_pos_cld));
+
+    stream.writeStartElement("params");
+    int i = 0;
+    for (const QString &param : m_curParams) {
+        stream.writeStartElement(param_names[i]);
+        stream.writeCharacters(param);
+        stream.writeEndElement();
+        i++;
+    }
+    stream.writeEndElement();
+
+    stream.writeStartElement("presettable");
+    int paramscount = 0;
+    int presetcount = 0;
+    try {
+        paramscount = m_preset_table.count();
+    } catch (...) {
+        paramscount = 0;
+    }
+    try {
+        presetcount = m_preset_table[0].count();
+    } catch (...) {
+        presetcount = 0;
+    }
+
+    for (int preset = 0; preset < presetcount; preset++) {
+        stream.writeStartElement(QString("preset") + numToStr(preset));
+        for (int param = 0; param < paramscount; param++) {
+            stream.writeStartElement(param < PARAMETERS_COUNT ? param_names[param] : "TYPE");
+            stream.writeCharacters(m_preset_table[param][preset]);
+            stream.writeEndElement();
+        }
+        stream.writeEndElement();
+    }
+
+    stream.writeEndElement();
+    stream.writeEndDocument();
+    xmlFile.close();
+    return true;
 }
 
 void MainWindow::saveXMLSettingsFile()
@@ -858,7 +1246,7 @@ void MainWindow::createConnections()
 
     for (int i = VIDEO_TITLE; i < VIDEO_DESCRIPTION + 1; i++) {
         Q_ASSERT(i < 6);
-        connect(videoMetadata[i], &QLineEdit::editingFinished, this, [=](){
+        connect(videoMetadata[i], &QLineEdit::editingFinished, this, [=, this](){
             if (m_row != -1) {
                 if (videoMetadata[i]->isModified()) {
                     videoMetadata[i]->setModified(false);
@@ -952,6 +1340,7 @@ void MainWindow::setParameters()    // Set parameters
     //************** Read presets ******************//
     bool validXmlFile = false;
     validXmlFile = readXMLPresetFile(XMLPRESETFILE);
+    const bool presetReconcileNeeded = m_presetFileVersion < PRESETS_VERSION;
     if (!validXmlFile)
     {
         setDefaultPresets();
@@ -1074,57 +1463,7 @@ void MainWindow::setParameters()    // Set parameters
     readXMLSettingsFile(XMLSETTINGSFILE);
 
     //*********** Preset parameters ****************//
-    ui->treeWidget->clear();
-    ui->treeWidget->header()->setFont(fnt);
-    ui->treeWidget->setHeaderHidden(false);
-    ui->treeWidget->setAlternatingRowColors(true);
-    auto NUM_ROWS = m_preset_table[0].size();
-    auto NUM_COLUMNS = m_preset_table.size();
-    QString type;
-    QFont parentFont;
-    parentFont.setBold(true);
-    parentFont.setItalic(true);
-    for (int i = 0; i < NUM_ROWS; i++) {
-        type = m_preset_table[PARAMETERS_COUNT][i];
-        // Fix for typo in name within previous code.
-        if ((type == "TopLewelItem") || (type == "TopLevelItem")) {
-            auto *root = new QTreeWidgetItem();
-            root->setText(0, m_preset_table[0][i]);
-            root->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
-            root->setFont(0, parentFont);
-            setPresetIcon(root, true);
-            ui->treeWidget->addTopLevelItem(root);
-            ui->treeWidget->setCurrentItem(root);
-            root->setFirstColumnSpanned(true);
-        }
-        if (type == "ChildItem") {
-            auto *item = ui->treeWidget->currentItem();
-            auto *child = new QTreeWidgetItem();
-            for (int j = 0; j < PARAMETERS_COUNT; j++) {
-                child->setText(j + 7, m_preset_table[j][i]);
-            }
-            QString savedPresetName = child->text(30 + 7);
-            child->setText(0, savedPresetName);
-
-            updateInfoFields(m_preset_table[1][i],
-                             m_preset_table[2][i],
-                             m_preset_table[3][i],
-                             m_preset_table[4][i],
-                             m_preset_table[11][i],
-                             m_preset_table[12][i],
-                             m_preset_table[21][i],
-                             child, false);
-            setItemStyle(child);
-            item->addChild(child);
-        }
-    }
-    if (m_pos_top != -1 && m_pos_cld != -1) {
-        QTreeWidgetItem *item = ui->treeWidget->topLevelItem(m_pos_top)->child(m_pos_cld);
-        ui->treeWidget->setCurrentItem(item);
-    }
-    // Print(NUM_ROWS << " x " << NUM_COLUMNS);
-    for (int i = 7; i < 41; i++)
-        ui->treeWidget->hideColumn(i);
+    rebuildPresetTreeFromTable();
 
     //*********** Other parameters *****************//
     if (dockSizesX.count() < DOCKS_COUNT || dockSizesY.count() < DOCKS_COUNT) {
@@ -1167,6 +1506,12 @@ void MainWindow::setParameters()    // Set parameters
     ui->listFiles->setRootIndex(m_pFileModel->setRootPath(m_openDir));
 
     ui->comboBox_changePrio->setCurrentIndex(m_ffmpeg_prio);
+
+    if (presetReconcileNeeded) {
+        QTimer::singleShot(0, this, [this]() {
+            reconcilePresetLibraryIfNeeded();
+        });
+    }
 }
 
 void MainWindow::readXMLSettingsFile(const QString& xmlFileName)
@@ -1371,126 +1716,220 @@ int MainWindow::doesParamsContain(const QString& findMe)
     return index;
 }
 
+bool MainWindow::loadXMLPresetFileData(const QString& file,
+                                       TableString &tableOut,
+                                       int *versionOut,
+                                       QVector<QString> *paramsOut,
+                                       int *posTopOut,
+                                       int *posCldOut,
+                                       bool captureVersion)
+{
+    tableOut.clear();
+    bool validXmlFile = false;
+    if (paramsOut) {
+        paramsOut->resize(PARAMETERS_COUNT);
+        for (int i = 0; i < PARAMETERS_COUNT && i < default_preset.size(); i++) {
+            (*paramsOut)[i] = default_preset[i];
+        }
+    }
+    if (posTopOut) {
+        *posTopOut = 0;
+    }
+    if (posCldOut) {
+        *posCldOut = 0;
+    }
+    QFile xmlFile(file);
+    if (!xmlFile.open(QFile::ReadOnly | QFile::Text)) {
+        return false;
+    }
+
+    QXmlStreamReader stream(&xmlFile);
+    if (!stream.readNextStartElement() || stream.name().toString() != QString("cineencoder")) {
+        return false;
+    }
+
+    if (!stream.readNextStartElement() || stream.name().toString() != QString("version")) {
+        return false;
+    }
+    const int parsedVersion = stream.readElementText().toInt();
+    if (captureVersion && versionOut) {
+        *versionOut = parsedVersion;
+    }
+    validXmlFile = true;
+
+    QList<QString> ptable_list[PARAMETERS_COUNT + 1];
+    int presets_added = 0;
+
+    while (!stream.atEnd()) {
+        stream.readNextStartElement();
+        const QString tagName = stream.name().toString();
+        if (tagName.isEmpty()) {
+            continue;
+        }
+
+        if (tagName == QString("m_pos_top")) {
+            const QString val = stream.readElementText();
+            if (posTopOut) {
+                *posTopOut = val.toInt();
+            }
+            continue;
+        }
+        if (tagName == QString("m_pos_cld")) {
+            const QString val = stream.readElementText();
+            if (posCldOut) {
+                *posCldOut = val.toInt();
+            }
+            continue;
+        }
+        if (tagName == QString("params")) {
+            while (stream.readNextStartElement()) {
+                const QString paramName = stream.name().toString();
+                const QString val = stream.readElementText();
+                if (paramsOut) {
+                    const int index = doesParamsContain(paramName);
+                    if (index != -1 && index < paramsOut->size()) {
+                        (*paramsOut)[index] = val;
+                    }
+                }
+            }
+            continue;
+        }
+        if (tagName == QString("presettable")) {
+            while (stream.readNextStartElement()) {
+                QString parameters[PARAMETERS_COUNT + 1];
+                for (int p = 0; p < PARAMETERS_COUNT; p++) {
+                    parameters[p] = default_preset[p];
+                }
+                parameters[PARAMETERS_COUNT] = "ChildItem";
+                while (stream.readNextStartElement()) {
+                    const QString childName = stream.name().toString();
+                    const QString val = stream.readElementText();
+                    const int index = doesParamsContain(childName);
+                    if (index != -1) {
+                        parameters[index] = val;
+                    } else if (childName == "TYPE") {
+                        parameters[PARAMETERS_COUNT] = val;
+                    }
+                }
+                for (int p = 0; p < PARAMETERS_COUNT + 1; p++) {
+                    ptable_list[p].push_back(parameters[p]);
+                }
+                presets_added++;
+            }
+            continue;
+        }
+    }
+
+    for (auto &column : ptable_list) {
+        QList<QString> parlist;
+        for (int j = 0; j < presets_added; j++) {
+            parlist.append(column[j]);
+        }
+        tableOut.append(parlist);
+    }
+    xmlFile.close();
+    return validXmlFile;
+}
+
+void MainWindow::rebuildPresetTreeFromTable()
+{
+    ui->treeWidget->clear();
+    ui->treeWidget->header()->setFont(ui->tableWidget->horizontalHeader()->font());
+    ui->treeWidget->setHeaderHidden(false);
+    ui->treeWidget->setAlternatingRowColors(true);
+    const int numRows = m_preset_table.isEmpty() ? 0 : m_preset_table[0].size();
+    QString type;
+    QFont parentFont;
+    parentFont.setBold(true);
+    parentFont.setItalic(true);
+    for (int i = 0; i < numRows; i++) {
+        type = m_preset_table[PARAMETERS_COUNT][i];
+        if ((type == "TopLewelItem") || (type == "TopLevelItem")) {
+            auto *root = new QTreeWidgetItem();
+            root->setText(0, m_preset_table[0][i]);
+            root->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
+            root->setFont(0, parentFont);
+            setPresetIcon(root, true);
+            ui->treeWidget->addTopLevelItem(root);
+            ui->treeWidget->setCurrentItem(root);
+            root->setFirstColumnSpanned(true);
+        }
+        if (type == "ChildItem") {
+            auto *item = ui->treeWidget->currentItem();
+            if (!item) {
+                continue;
+            }
+            auto *child = new QTreeWidgetItem();
+            for (int j = 0; j < PARAMETERS_COUNT; j++) {
+                child->setText(j + 7, m_preset_table[j][i]);
+            }
+            const QString savedPresetName = child->text(30 + 7);
+            child->setText(0, savedPresetName);
+
+            updateInfoFields(m_preset_table[1][i],
+                             m_preset_table[2][i],
+                             m_preset_table[3][i],
+                             m_preset_table[4][i],
+                             m_preset_table[11][i],
+                             m_preset_table[12][i],
+                             m_preset_table[21][i],
+                             child, false);
+            setItemStyle(child);
+            item->addChild(child);
+        }
+    }
+    if (m_pos_top != -1 && m_pos_cld != -1 && m_pos_top < ui->treeWidget->topLevelItemCount()) {
+        QTreeWidgetItem *item = ui->treeWidget->topLevelItem(m_pos_top);
+        if (item && m_pos_cld < item->childCount()) {
+            ui->treeWidget->setCurrentItem(item->child(m_pos_cld));
+        }
+    }
+    for (int i = 7; i < 41; i++) {
+        ui->treeWidget->hideColumn(i);
+    }
+}
+
 bool MainWindow::readXMLPresetFile(const QString& file)
 {
-    const bool debug = false;
     m_preset_table.clear();
-    bool validXmlFile = false;
-    QFile xmlFile(file);
-    int presets_added = 0;
-    if (!xmlFile.open(QFile::ReadOnly | QFile::Text)) { // Open file in write only mode
-        return validXmlFile;
+    const bool ok = loadXMLPresetFileData(file, m_preset_table, &m_presetFileVersion, &m_curParams, &m_pos_top, &m_pos_cld);
+    if (!ok || m_preset_table.isEmpty() || m_preset_table[0].isEmpty()) {
+        m_preset_table.clear();
+        return false;
     }
-    QXmlStreamReader stream(&xmlFile);
-    stream.readNextStartElement();
-    // Check we have a cineencoder XML file.
-    if (stream.name().toString() == QString("cineencoder")) {
-        // Check our version.
-        stream.readNextStartElement();
-        if (stream.name().toString() != QString("version")) {
-            return validXmlFile;
-        }
-        validXmlFile = true;
-        auto version_from_xml = stream.readElementText();
-        // Don't actually use the version, but read it in case compatibility shims needed later.
+    return true;
+}
 
-        if (validXmlFile) {
-            QList<QString> ptable_list[PARAMETERS_COUNT + 1];
+void MainWindow::reconcilePresetLibraryIfNeeded()
+{
+    if (m_presetFileVersion >= PRESETS_VERSION) {
+        return;
+    }
 
-            while (!stream.atEnd()) {
-                stream.readNextStartElement();
-                QString nnn = stream.name().toString();
-                std::string sss = nnn.toStdString();
-                if (nnn == QString("m_pos_top")) {
-                    QString val = stream.readElementText();
-                    m_pos_top = val.toInt();
-                }
-                if (nnn == QString("m_pos_cld")) {
-                    QString val = stream.readElementText();
-                    m_pos_cld = val.toInt();
-                }
-                if (nnn == QString("params")) {
-                    while (stream.readNextStartElement()) {
-                        QString nnn = stream.name().toString();
-                        QString val = stream.readElementText();
-                        // Do we have this parameter name in our supported list?
-                        int index = doesParamsContain(nnn);
-                        if (index != -1) {
-                            m_curParams[index] = val;
-                        }
-                    }
-                }
-                if (nnn == QString("presettable")) {
-                    // Each preset is a start element
-                    while (stream.readNextStartElement()) {
-                        // Set up our defaults.
-                        QString parameters[PARAMETERS_COUNT + 1];
-                        for (int p = 0; p < PARAMETERS_COUNT; p++) {
-                            parameters[p] = default_preset[p];
-                        }
-                        parameters[PARAMETERS_COUNT] = "ChildItem";
-                        while (stream.readNextStartElement()) {
-                            QString nnn = stream.name().toString();
-                            QString val = stream.readElementText();
-                            // Do we have this parameter name in our supported list?
-                            int index = doesParamsContain(nnn);
+    TableString referenceTable;
+    int referenceVersion = 0;
+    if (!loadXMLPresetFileData(":/resources/data/default_presets.xml", referenceTable, &referenceVersion, nullptr, nullptr, nullptr, false)) {
+        return;
+    }
 
-                            if (index != -1) {
-                                parameters[index] = val;
-                            } else {
-                                if (stream.name().toString() == "TYPE") {
-                                    parameters[PARAMETERS_COUNT] = val;
-                                }
-                            }
-                        }
+    const PresetRows currentRows = tableToRows(m_preset_table);
+    const PresetRows referenceRows = tableToRows(referenceTable);
+    const QVector<PresetSectionDiff> diffs = collectPresetDiffs(currentRows, referenceRows);
 
-                        // Use our parameters to extend our list of values.
-                        for (int p = 0; p < PARAMETERS_COUNT + 1; p++) {
-                            ptable_list[p].push_back(parameters[p]);
-                        }
-                        presets_added++;
-
-                    }
-                }
-            }
-
-            // Dump the table for review.
-            if (debug) {
-                std::list<std::list<std::string>> list_of_list_of_strings;
-                for (auto & pp : ptable_list) {
-                    std::list<std::string> list_of_strings;
-                    for (int pr = 0; pr < presets_added; pr++) {
-                        list_of_strings.push_back(pp[pr].toStdString());
-                    }
-
-                    list_of_list_of_strings.push_back(list_of_strings);
-                }
-            }
-
-            for (auto & i : ptable_list)
-            {
-                QList<QString> parlist;
-                for (int j = 0; j < presets_added; j++)
-                {
-                    QString sss = i[j];
-                    parlist.append(sss);
-                }
-                m_preset_table.append(parlist);
-            }
-            xmlFile.close();
+    if (!diffs.isEmpty()) {
+        QSet<QString> selectedKeys;
+        if (promptPresetReconcile(this, diffs, &selectedKeys) && !selectedKeys.isEmpty()) {
+            m_preset_table = rowsToTable(applyPresetSelection(currentRows, referenceRows, selectedKeys));
+            rebuildPresetTreeFromTable();
         }
     }
-    if (debug) {
-        std::list<std::list<std::string>> m_preset_table_actual;
-        for (int outer = 0; outer < m_preset_table.count(); outer++) {
-            std::list<std::string> tmp;
-            for (int inner = 0; inner < m_preset_table[outer].count(); inner++) {
-                tmp.push_back(m_preset_table[outer][inner].toStdString());
-            }
-            m_preset_table_actual.push_back(tmp);
-        }
+
+    if (referenceVersion > 0) {
+        m_presetFileVersion = qMax(m_presetFileVersion, PRESETS_VERSION);
+    } else {
+        m_presetFileVersion = PRESETS_VERSION;
     }
-    return validXmlFile;
+    saveXMLPresetFile();
 }
 
 void MainWindow::onCloseWindow()    // Close window
@@ -3370,7 +3809,8 @@ void MainWindow::onResetLabels()
 void MainWindow::setDefaultPresets() // Set default presets
 {
     Print("Set defaults...");
-    readXMLPresetFile(":/resources/data/default_presets.xml");
+    m_preset_table.clear();
+    loadXMLPresetFileData(":/resources/data/default_presets.xml", m_preset_table, nullptr, &m_curParams, &m_pos_top, &m_pos_cld, false);
 }
 
 void MainWindow::onApplyPreset()  // Apply preset

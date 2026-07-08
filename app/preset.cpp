@@ -365,11 +365,12 @@ void Preset::change_preset_name()
     /************************************* Mode module ***************************************/    
     QString mode("");
     const QString selected_mode = t.getCurrentMode(_ind_codec, _ind_mode);
-    if ((selected_mode != "" && selected_mode != tr("Auto")) && (selected_mode == "CRF" || selected_mode == "CQP")) {
-        mode = selected_mode + " " + ui->lineEdit_bitrate->text() + ", ";
+    if ((selected_mode != "" && selected_mode != tr("Auto")) && (selected_mode == "CRF" || selected_mode == "CQP" || selected_mode == "CQ_NV")) {
+        mode = (selected_mode == "CQ_NV" ? tr("Constant Quality (NVENC)") : selected_mode) + " " + ui->lineEdit_bitrate->text() + ", ";
     }
     else if ((selected_mode != "" && selected_mode != tr("Auto")) && (selected_mode != "CRF" && selected_mode != "CQP")) {
-        mode = selected_mode + " " + ui->lineEdit_bitrate->text() + tr(" MBps, ");
+        const QString modeLabel = selected_mode == "VBR_NV" ? tr("Variable Bitrate (NVENC)") : selected_mode;
+        mode = modeLabel + " " + ui->lineEdit_bitrate->text() + tr(" MBps, ");
     }
 
     /************************************* Preset module ***************************************/   
@@ -764,8 +765,9 @@ void Preset::onComboBox_codec_textChanged(const QString &arg1)  // Change curren
             ui->comboBox_container->setCurrentIndex(2);
             ui->comboBox_profile->setCurrentIndex(Profile::MAIN10);
             ui->comboBox_pixfmt->setCurrentIndex(Pixformat::P010LE);
-            ui->comboBox_preset->setCurrentIndex(1);
+            ui->comboBox_preset->setCurrentIndex(2);
             ui->comboBox_level->setCurrentIndex(0);
+            ui->comboBox_mode->setCurrentIndex(1);
             ui->comboBox_mode->setEnabled(false);
             ui->comboBox_pass->setEnabled(false);
         }
@@ -774,8 +776,9 @@ void Preset::onComboBox_codec_textChanged(const QString &arg1)  // Change curren
             ui->comboBox_container->setCurrentIndex(2);
             ui->comboBox_profile->setCurrentIndex(Profile::MAIN);
             ui->comboBox_pixfmt->setCurrentIndex(Pixformat::YUV420P);
-            ui->comboBox_preset->setCurrentIndex(1);
+            ui->comboBox_preset->setCurrentIndex(2);
             ui->comboBox_level->setCurrentIndex(0);
+            ui->comboBox_mode->setCurrentIndex(1);
             ui->comboBox_mode->setEnabled(false);
             ui->comboBox_pass->setEnabled(false);
             disableHDR();
@@ -785,8 +788,9 @@ void Preset::onComboBox_codec_textChanged(const QString &arg1)  // Change curren
             ui->comboBox_container->setCurrentIndex(2);
             ui->comboBox_profile->setCurrentIndex(Profile::HIGH);
             ui->comboBox_pixfmt->setCurrentIndex(Pixformat::YUV420P);
-            ui->comboBox_preset->setCurrentIndex(1);
+            ui->comboBox_preset->setCurrentIndex(2);
             ui->comboBox_level->setCurrentIndex(0);
+            ui->comboBox_mode->setCurrentIndex(1);
             ui->comboBox_mode->setEnabled(false);
             ui->comboBox_pass->setEnabled(false);
             disableHDR();
@@ -1044,7 +1048,7 @@ void Preset::onComboBox_mode_textChanged(const QString &arg1)  // Change curret 
         ui->lineEdit_maxrate->setText("50");
         ui->lineEdit_bufsize->setText("50");
     }
-    else if (arg1 == tr("Constant Rate Factor")) {
+    else if (arg1 == tr("Constant Rate Factor") || arg1 == tr("Constant Quality (NVENC)")) {
         ui->label_bitrate->setText(tr("Rate factor"));
         ui->label_minrate->hide();
         ui->label_maxrate->hide();

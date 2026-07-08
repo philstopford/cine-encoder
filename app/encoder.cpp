@@ -885,7 +885,23 @@ QStringList Encoder::presetModule(const Tables &t, int CE_CODEC, int CE_PRESET) 
     QStringList preset;
     const QString selected_preset = t.getCurrentPreset(CE_CODEC, CE_PRESET);
     if (selected_preset != "" && selected_preset != tr("None")) {
-        if (t.arr_params[CE_CODEC][0].contains("libsvtav1")) {
+        if (t.arr_params[CE_CODEC][0].contains("nvenc")) {
+            if (selected_preset == tr("Quality")) {
+                preset.append({"-preset", "p7", "-tune", "hq", "-multipass", "fullres",
+                               "-spatial-aq", "1", "-temporal-aq", "1", "-aq-strength", "10",
+                               "-rc-lookahead", "32"});
+            } else if (selected_preset == tr("Balanced")) {
+                preset.append({"-preset", "p5", "-tune", "hq", "-multipass", "fullres",
+                               "-spatial-aq", "1", "-temporal-aq", "1", "-aq-strength", "8",
+                               "-rc-lookahead", "24"});
+            } else if (selected_preset == tr("Speed")) {
+                preset.append({"-preset", "p3", "-tune", "hq", "-multipass", "qres",
+                               "-spatial-aq", "1", "-temporal-aq", "1", "-aq-strength", "6",
+                               "-rc-lookahead", "16"});
+            } else {
+                preset.append({"-preset", selected_preset.toLower() });
+            }
+        } else if (t.arr_params[CE_CODEC][0].contains("libsvtav1")) {
             const QMap<QString, QString> svtAv1PresetMap = {
                 {"Ultrafast", "12"},
                 {"Superfast", "10"},
@@ -1039,6 +1055,11 @@ QStringList Encoder::modeModule(const Tables &t, int CE_CODEC, int _CE_MODE, con
     else
     if (selected_mode == "VBR_NV") {
         mode.append({"-b:v", bitrate, "-minrate", minrate, "-maxrate", maxrate, "-bufsize", bufsize, "-rc", "vbr"});
+    }
+    else
+    if (selected_mode == "CQ_NV") {
+        mode.append({"-cq", CE_BQR, "-rc", "vbr_hq", "-spatial-aq", "1", "-temporal-aq", "1",
+                     "-aq-strength", "8", "-rc-lookahead", "32", "-multipass", "fullres"});
     }
     else
     if (selected_mode == "CRF") {

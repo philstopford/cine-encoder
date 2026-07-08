@@ -170,9 +170,9 @@ public:
         {"ABR",      "CRF",    "",    "",    ""}, // QSV VP9
         {"VBR",      "",       "",    "",    ""}, // QSV MPEG2
         {"VBR",      "CQP_VA", "",    "",    ""}, // Intel VAAPI h264
-        {"VBR_NV",   "",       "",    "",    ""}, // NVENC H265
-        {"VBR_NV",   "",       "",    "",    ""}, // NVENC H265
-        {"VBR_NV",   "",       "",    "",    ""}, // NVENC H264
+        {"VBR_NV",   "CQ_NV",  "",    "",    ""}, // NVENC H265
+        {"VBR_NV",   "CQ_NV",  "",    "",    ""}, // NVENC H265
+        {"VBR_NV",   "CQ_NV",  "",    "",    ""}, // NVENC H264
         {tr("Auto"), "",       "",    "",    ""},
         {tr("Auto"), "",       "",    "",    ""},
         {tr("Auto"), "",       "",    "",    ""},
@@ -204,9 +204,9 @@ public:
         {tr("None"), "",              "",              "",             "",           "",         "",           "",             "",           ""},
         {tr("None"), tr("Veryfast"),  tr("Faster"),    tr("Fast"),     tr("Medium"), tr("Slow"), tr("Slower"), tr("Veryslow"), "",           ""},
         {tr("None"), tr("Veryfast"),  tr("Faster"),    tr("Fast"),     tr("Medium"), tr("Slow"), tr("Slower"), tr("Veryslow"), "",           ""}, // Intel VAAPI h264
-        {tr("None"), tr("Slow"),      "",              "",             "",           "",         "",           "",             "",           ""},
-        {tr("None"), tr("Slow"),      "",              "",             "",           "",         "",           "",             "",           ""},
-        {tr("None"), tr("Slow"),      "",              "",             "",           "",         "",           "",             "",           ""},
+        {tr("None"), tr("Slow"),      tr("Quality"),   tr("Balanced"), tr("Speed"),  "",         "",           "",             "",           ""},
+        {tr("None"), tr("Slow"),      tr("Quality"),   tr("Balanced"), tr("Speed"),  "",         "",           "",             "",           ""},
+        {tr("None"), tr("Slow"),      tr("Quality"),   tr("Balanced"), tr("Speed"),  "",         "",           "",             "",           ""},
         {tr("None"), "",              "",              "",             "",           "",         "",           "",             "",           ""},
         {tr("None"), "",              "",              "",             "",           "",         "",           "",             "",           ""},
         {tr("None"), "",              "",              "",             "",           "",         "",           "",             "",           ""},
@@ -513,8 +513,12 @@ private:
             {"CBR", tr("Constant Bitrate")},
             {"ABR", tr("Average Bitrate")},
             {"VBR", tr("Variable Bitrate")},
+            {"VBR_NV", tr("Variable Bitrate (NVENC)")},
             {"CRF", tr("Constant Rate Factor")},
-            {"CQP", tr("Constant QP")}
+            {"CQP", tr("Constant QP")},
+            {"CQ_NV", tr("Constant Quality (NVENC)")},
+            {"CQP_QS", tr("Constant QP (QSV)")},
+            {"CQP_VA", tr("Constant QP (VAAPI)" )}
         };
         for (int i = 0; i < c; i++) {
             QString val = arr[row][i];
