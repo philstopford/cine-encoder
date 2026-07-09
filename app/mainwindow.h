@@ -81,6 +81,14 @@ private:
 
     // ============= Preset Window =============
     void setDefaultPresets();
+    bool loadXMLPresetFileData(const QString& file,
+                               TableString &tableOut,
+                               int *versionOut = nullptr,
+                               QVector<QString> *paramsOut = nullptr,
+                               int *posTopOut = nullptr,
+                               int *posCldOut = nullptr,
+                               bool captureVersion = true);
+    void reconcilePresetLibraryIfNeeded();
     void setItemStyle(QTreeWidgetItem *item) const;
     void updateCurPresetPos(int index_top, int index_child);
     static void updateInfoFields(const QString &codec_qstr,
@@ -92,7 +100,9 @@ private:
                           const QString &acodec_qstr,
                           QTreeWidgetItem *item,
                           bool defaultNameFlag);
+    void rebuildPresetTreeFromTable();
     void updatePresetTable();
+    bool saveXMLPresetFile();
     void saveXMLSettingsFile();
     static int doesParamsContain(const QString& findMe);
     void readXMLSettingsFile(const QString& xmlFileName);
@@ -103,6 +113,7 @@ private:
     QVector<QString> m_newParams,
                      m_curParams;
     TableString      m_preset_table;
+    int              m_presetFileVersion;
     QPixmap          m_preview_pixmap;
 
     // ============= Dock area =============

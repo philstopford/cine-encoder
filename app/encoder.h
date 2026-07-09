@@ -103,13 +103,12 @@ private:
     QString _temp_file,
             _input_file,
             _output_file,
-            _preset_mkvmerge,
             _message,
             _error_message,
             _encoding_mode;
     QStringList _error_lines;  // Accumulate error lines for better error reporting
 
-    QStringList _preset, _preset_pass1, _sub_mux_param;
+    QStringList _preset, _preset_pass1, _preset_mkvmerge, _sub_mux_param;
 
     QProcess *processEncoding;
 
@@ -145,7 +144,7 @@ private slots:
 
     void passModule(const Tables &t, int CE_CODEC, int CE_PASS, QStringList &pass, QStringList &pass1);
 
-    void codecModule(const Tables &t, int CE_CODEC, QString &hwaccel, QString &hwaccel_filter_vf);
+    void codecModule(const Tables &t, int CE_CODEC, QStringList &hwaccel, QString &hwaccel_filter_vf);
 
     void split(const double &_startTime, const double &_endTime, const double &_dur, int streamCutting, const Tables &t,
                int CE_CODEC, double fps_dest, double minExtTime, QStringList &_splitStartParam,
@@ -207,7 +206,7 @@ private slots:
                          const QString &deinterlace_vf, 
                          const QString &chaptersFile, int chaptersInputIndex) const;
 
-    void getPresets(const QStringList &_splitStartParam, const QStringList &_splitParam, const QString &hwaccel,
+    void getPresets(const QStringList &_splitStartParam, const QStringList &_splitParam, const QStringList &hwaccel,
                     const QStringList &level, const QStringList &mode, const QStringList &preset,
                     const QStringList &pass,
                     const QStringList &pass1, const QStringList &audio_param,

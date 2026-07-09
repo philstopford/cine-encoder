@@ -14,6 +14,7 @@
 #include "tables.h"
 #include "helper.h"
 #include <QDir>
+#include <QFileInfo>
 #include <QMap>
 #include <QOperatingSystemVersion>
 #include <iostream>
@@ -294,7 +295,7 @@ void Encoder::initEncoding(const QString  &temp_file,
     }
 
     /************************************* Codec module ***************************************/
-    QString hwaccel;
+    QStringList hwaccel;
     QString hwaccel_filter_vf;
     codecModule(t, CE_CODEC, hwaccel, hwaccel_filter_vf);
 
@@ -501,7 +502,7 @@ void Encoder::initVariables(const QString &temp_file, const QString &input_file,
     _preset_0 = QStringList();
     _preset_pass1.clear();
     _preset.clear();
-    _preset_mkvmerge = "";
+    _preset_mkvmerge.clear();
     _sub_mux_param.clear();
     _error_message = "";
     _error_lines.clear();  // Clear accumulated error lines for new encoding
@@ -563,7 +564,7 @@ long long Encoder::getPid()
     return processEncoding->processId();
 }
 
-void Encoder::getPresets(const QStringList &_splitStartParam, const QStringList &_splitParam, const QString &hwaccel,
+void Encoder::getPresets(const QStringList &_splitStartParam, const QStringList &_splitParam, const QStringList &hwaccel,
                          const QStringList &level, const QStringList &mode, const QStringList &preset,
                          const QStringList &pass, const QStringList &pass1, const QStringList &audio_param,
                          const QStringList &colorprim, const QStringList &colormatrix,
@@ -583,7 +584,7 @@ void Encoder::getPresets(const QStringList &_splitStartParam, const QStringList 
     _preset = _splitParam + codec + level + preset + mode + pass + color_range
               + colorprim + colormatrix + transfer + audio_param;
 
-    _preset_mkvmerge = max_cll.join(" ") + max_fall.join(" ") + max_lum.join(" ") + min_lum.join(" ") + chroma_coord.join(" ") + white_coord.join(" ");
+    _preset_mkvmerge = max_cll + max_fall + max_lum + min_lum + chroma_coord + white_coord;
 }
 
 QStringList Encoder::getCodec(const Tables &t, int CE_CODEC, const QString &resize_vf, const QString &fps_vf,
@@ -679,7 +680,7 @@ QStringList Encoder::getCodec(const Tables &t, int CE_CODEC, const QString &resi
         codec.append(burn_subt_vf);
     }
     
-    codec.append(t.arr_params[CE_CODEC][0].split(" "));
+    codec.append(t.getCodecArgs(CE_CODEC));
     return codec;
 }
 
@@ -885,7 +886,41 @@ QStringList Encoder::presetModule(const Tables &t, int CE_CODEC, int CE_PRESET) 
     QStringList preset;
     const QString selected_preset = t.getCurrentPreset(CE_CODEC, CE_PRESET);
     if (selected_preset != "" && selected_preset != tr("None")) {
-        preset.append({"-preset", selected_preset.toLower() });
+        if (t.arr_params[CE_CODEC][0].contains("nvenc")) {
+            if (selected_preset == tr("Quality")) {
+                preset.append({"-preset", "p7", "-tune", "hq", "-multipass", "fullres",
+                               "-spatial-aq", "1", "-temporal-aq", "1", "-aq-strength", "10",
+                               "-rc-lookahead", "32"});
+            } else if (selected_preset == tr("Balanced")) {
+                preset.append({"-preset", "p5", "-tune", "hq", "-multipass", "fullres",
+                               "-spatial-aq", "1", "-temporal-aq", "1", "-aq-strength", "8",
+                               "-rc-lookahead", "24"});
+            } else if (selected_preset == tr("Speed")) {
+                preset.append({"-preset", "p3", "-tune", "hq", "-multipass", "qres",
+                               "-spatial-aq", "1", "-temporal-aq", "1", "-aq-strength", "6",
+                               "-rc-lookahead", "16"});
+            } else {
+                preset.append({"-preset", selected_preset.toLower() });
+            }
+        } else if (t.arr_params[CE_CODEC][0].contains("libsvtav1")) {
+            const QMap<QString, QString> svtAv1PresetMap = {
+                {"Ultrafast", "12"},
+                {"Superfast", "10"},
+                {"Veryfast",  "8"},
+                {"Faster",    "7"},
+                {"Fast",      "6"},
+                {"Medium",    "5"},
+                {"Slow",      "4"},
+                {"Slower",    "3"},
+                {"Veryslow",  "2"}
+            };
+            const QString svtPresetValue = svtAv1PresetMap.value(selected_preset, "");
+            if (!svtPresetValue.isEmpty()) {
+                preset.append({"-preset", svtPresetValue});
+            }
+        } else {
+            preset.append({"-preset", selected_preset.toLower() });
+        }
     }
     return preset;
 }
@@ -1020,7 +1055,17 @@ QStringList Encoder::modeModule(const Tables &t, int CE_CODEC, int _CE_MODE, con
     }
     else
     if (selected_mode == "VBR_NV") {
-        mode.append({"-b:v", bitrate, "-minrate", minrate, "-maxrate", maxrate, "-bufsize", bufsize, "-rc", "vbr"});
+        mode.append({"-rc", "vbr", "-b:v", bitrate, "-minrate", minrate, "-maxrate", maxrate, "-bufsize", bufsize,
+                     "-bf", "2", "-spatial_aq", "1", "-temporal_aq", "1"});
+    }
+    else
+    if (selected_mode == "CQ_NV") {
+        mode.append({"-rc", "constqp", "-qp", CE_BQR, "-bf", "2", "-spatial_aq", "0", "-temporal_aq", "0"});
+    }
+    else
+    if (selected_mode == "CQ_NV") {
+        mode.append({"-cq", CE_BQR, "-rc", "vbr_hq", "-spatial-aq", "1", "-temporal-aq", "1",
+                     "-aq-strength", "8", "-rc-lookahead", "32", "-multipass", "fullres"});
     }
     else
     if (selected_mode == "CRF") {
@@ -1206,11 +1251,11 @@ QString Encoder::getLog() const {
     if (_flag_two_pass && _flag_hdr) {
         Print("preset_pass1: " << _preset_pass1.join(" ").toStdString());
         Print("preset: " << _preset.join(" ").toStdString());
-        Print("preset_mkvpropedit: " << _preset_mkvmerge.toStdString());
+        Print("preset_mkvpropedit: " << _preset_mkvmerge.join(" ").toStdString());
         log = QString("Preset pass 1: %1 -i <input file> %2\n"
                       "Preset pass 2: %3 -i <input file> %4 -y <output file>\n"
                       "Preset mkvpropedit: %5\n")
-                .arg(_preset_0.join(" "), _preset_pass1.join(" "), _preset_0.join(" "), _preset.join(" "), _preset_mkvmerge);
+                .arg(_preset_0.join(" "), _preset_pass1.join(" "), _preset_0.join(" "), _preset.join(" "), _preset_mkvmerge.join(" "));
     }
     else
     if (_flag_two_pass && !_flag_hdr) {
@@ -1223,10 +1268,10 @@ QString Encoder::getLog() const {
     else
     if (!_flag_two_pass && _flag_hdr) {
         Print("preset: " << _preset.join(" ").toStdString());
-        Print("preset_mkvpropedit: " << _preset_mkvmerge.toStdString());
+        Print("preset_mkvpropedit: " << _preset_mkvmerge.join(" ").toStdString());
         log = QString("Preset: %1 -i <input file> %2 -y <output file>\n"
                       "Preset mkvpropedit: %3\n")
-                .arg(_preset_0.join(" "), _preset.join(" "), _preset_mkvmerge);
+                .arg(_preset_0.join(" "), _preset.join(" "), _preset_mkvmerge.join(" "));
     }
     else
     if (!_flag_two_pass && !_flag_hdr) {
@@ -1262,8 +1307,8 @@ Encoder::split(const double &_startTime, const double &_endTime, const double &_
     }
 }
 
-void Encoder::codecModule(const Tables &t, int CE_CODEC, QString &hwaccel, QString &hwaccel_filter_vf) {
-    hwaccel= t.arr_params[CE_CODEC][1];
+void Encoder::codecModule(const Tables &t, int CE_CODEC, QStringList &hwaccel, QString &hwaccel_filter_vf) {
+    hwaccel= t.getHwaccelArgs(CE_CODEC);
     hwaccel_filter_vf= t.arr_params[CE_CODEC][3];
     _flag_hdr = static_cast<bool>(t.arr_params[CE_CODEC][2].toInt());
 }
@@ -1293,6 +1338,7 @@ QStringList Encoder::audioModule(const Tables &t, int CE_CODEC, int CE_AUDIO_COD
     const QString selected_acodec = t.arr_acodec[CE_CODEC][CE_AUDIO_CODEC];
     QString selected_bitrate = "";
 
+    QStringList audioFilters;
     QStringList sampling;
     const QString selected_sampling = t.arr_sampling[CE_AUDIO_SAMPLING];
     if (selected_sampling != "Source") {
@@ -1307,6 +1353,16 @@ QStringList Encoder::audioModule(const Tables &t, int CE_CODEC, int CE_AUDIO_COD
 
     if (selected_acodec == "AAC") {
         selected_bitrate = t.arr_bitrate[0][CE_AUDIO_BITRATE];
+
+        // FFmpeg's native AAC encoder does not support some source layouts such as
+        // 5.1.2 / 7.1 layouts with height channels. If the user leaves channels set
+        // to Source, constrain AAC negotiation to layouts that the native AAC encoder
+        // can open reliably. This lets FFmpeg downmix/rematrix unsupported layouts
+        // instead of failing with "Unsupported channel layout".
+        if (selected_channels == "Source") {
+            audioFilters.append("aformat=channel_layouts=mono|stereo|5.1");
+        }
+
         acodec.append({"-c:a","aac", "-b:a", selected_bitrate});
     }
     else
@@ -1345,6 +1401,14 @@ QStringList Encoder::audioModule(const Tables &t, int CE_CODEC, int CE_AUDIO_COD
     if (selected_acodec == tr("Source")) {
         acodec.append({"-c:a", "copy"});
     }
+
+    if (!audioFilters.isEmpty()) {
+        QStringList filterParam;
+        filterParam.append({"-af", audioFilters.join(",")});
+        const QStringList audio_param = filterParam + acodec + channels;
+        return audio_param;
+    }
+
     const QStringList audio_param = sampling + acodec + channels;
     return audio_param;
 }
@@ -1478,19 +1542,36 @@ void Encoder::encode()   // Encode
     connect(processEncoding, SIGNAL(finished(int)), this, SLOT(completed(int)));
     emit onEncodingProgress(0, 0.0f);
 
+    const auto ensureParentDirectory = [this](const QString &filePath) {
+        const QString parentPath = QFileInfo(filePath).absolutePath();
+        if (!parentPath.isEmpty() && !QDir(parentPath).exists() && !QDir().mkpath(parentPath)) {
+            _message = tr("Unable to create output directory:\n%1").arg(parentPath);
+            emit onEncodingInitError(_message);
+            return false;
+        }
+        return true;
+    };
+    if (!ensureParentDirectory(_output_file) || (_flag_hdr && !ensureParentDirectory(_temp_file))) {
+        return;
+    }
+
     QString escaped_file_in;
     std::string debug1 = _input_file.toStdString();
     std::string debug3 = _output_file.toStdString();
     QString escaped_file_out = Helper::makeFileStringFFMPEGReady(_output_file);
     std::string debug4 = escaped_file_out.toStdString();
+    const QString outputExtension = _output_file.section('.', -1).toLower();
+    const bool useFastStart = outputExtension == "mp4" || outputExtension == "mov" || outputExtension == "m4v";
+    const QStringList fastStartParam = useFastStart ? QStringList{"-movflags", "+faststart"} : QStringList{};
 
     if (_mux_mode) {
         Print("Muxing mode ...");
         _encoding_mode = tr("Muxing:");
         emit onEncodingMode(_encoding_mode);
         escaped_file_in = Helper::makeFileStringFFMPEGReady(_temp_file);
+        const QString movflags = useFastStart ? "+faststart+write_colr" : "+write_colr";
         arguments << "-hide_banner" << "-i" << escaped_file_in << "-map" << "0:v:0?" << "-map" << "0:a?"
-                  << "-map" << "0:s?" << "-movflags" << "+write_colr"
+                  << "-map" << "0:s?" << "-movflags" << movflags
                   << "-c:v" << "copy" << "-c:a" << "copy" << _sub_mux_param
                   << "-threads" << numToStr(_threads)
                   << "-y" << escaped_file_out;
@@ -1514,7 +1595,8 @@ void Encoder::encode()   // Encode
                       << _extAudioPaths
                       << _extSubPaths
                       << _chaptersInput << _preset
-                     << "-threads" << numToStr(_threads)
+                      << fastStartParam
+                      << "-threads" << numToStr(_threads)
                       << "-y" << escaped_file_out;
         }
         else
@@ -1725,7 +1807,7 @@ void Encoder::add_metadata() // Add metedata
     emit onEncodingMode(_encoding_mode);
     emit onEncodingProgress(0, 0.0f);
     QStringList arguments;
-    arguments << "--edit" << "track:1" << _preset_mkvmerge.split(" ") << _temp_file;
+    arguments << "--edit" << "track:1" << _preset_mkvmerge << _temp_file;
     processEncoding->start("mkvpropedit", arguments);
     if (!processEncoding->waitForStarted()) {
         Print("cmd command not found!!!");

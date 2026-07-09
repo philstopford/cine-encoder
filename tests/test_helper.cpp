@@ -36,7 +36,7 @@ void TestHelper::testMakeFileStringFFMPEGFilterReady_singleQuote()
     QCOMPARE(result1, expected1);
     
     // Test Unicode right single quotation mark
-    QString input2 = "Don't.mkv";  // U+2019
+    QString input2 = QString("Don%1t.mkv").arg(QChar(0x2019));
     QString result2 = Helper::makeFileStringFFMPEGFilterReady(input2);
     QString expected2 = "Don\\'t.mkv";
     QCOMPARE(result2, expected2);
@@ -59,7 +59,7 @@ void TestHelper::testMakeFileStringFFMPEGFilterReady_backslash()
     QString input = "Test\\File.mkv";
     QString result = Helper::makeFileStringFFMPEGFilterReady(input);
     
-    // Backslash should be escaped as \\
+    // Backslash should be escaped as "\\\\"
     QString expected = "Test\\\\File.mkv";
     QCOMPARE(result, expected);
 }
@@ -70,7 +70,7 @@ void TestHelper::testMakeFileStringFFMPEGFilterReady_space()
     QString input = "Test File.mkv";
     QString result = Helper::makeFileStringFFMPEGFilterReady(input);
     
-    // Space should be escaped as \ 
+    // Space should be escaped "\ "
     QString expected = "Test\\ File.mkv";
     QCOMPARE(result, expected);
 }
