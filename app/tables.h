@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QMap>
+#include <QStringList>
 #include "constants.h"
 
 class Tables : public QObject
@@ -156,6 +157,70 @@ public:
         {"-pix_fmt yuv420p10le -c:v libsvtav1 ",                        "",                     "1", ""}
     };
 
+    [[nodiscard]] QStringList getCodecArgs(int row) const
+    {
+        const QStringList codecArgs[NUMBER_PRESETS] = {
+            {"-pix_fmt", "yuv420p12le", "-c:v", "libx265", "-profile:v", "main12"},
+            {"-pix_fmt", "yuv420p10le", "-c:v", "libx265", "-profile:v", "main10"},
+            {"-pix_fmt", "yuv420p", "-c:v", "libx265", "-profile:v", "main"},
+            {"-pix_fmt", "yuv420p", "-c:v", "libx264", "-profile:v", "high"},
+            {"-pix_fmt", "yuv420p10le", "-c:v", "libvpx-vp9", "-speed", "4", "-profile:v", "2"},
+            {"-pix_fmt", "yuv420p", "-c:v", "libvpx-vp9", "-speed", "4"},
+            {"-c:v", "hevc_qsv", "-profile:v", "main10"},
+            {"-pix_fmt", "qsv", "-c:v", "hevc_qsv", "-profile:v", "main"},
+            {"-pix_fmt", "qsv", "-c:v", "h264_qsv", "-profile:v", "high"},
+            {"-c:v", "vp9_qsv", "-profile:v", "2"},
+            {"-pix_fmt", "qsv", "-c:v", "vp9_qsv"},
+            {"-pix_fmt", "qsv", "-c:v", "mpeg2_qsv", "-profile:v", "high"},
+            {"-c:v", "h264_vaapi", "-profile:v", "high"},
+            {"-pix_fmt", "p010le", "-c:v", "hevc_nvenc", "-profile:v", "main10"},
+            {"-pix_fmt", "yuv420p", "-c:v", "hevc_nvenc", "-profile:v", "main"},
+            {"-pix_fmt", "yuv420p", "-c:v", "h264_nvenc", "-profile:v", "high"},
+            {"-pix_fmt", "yuv422p10le", "-c:v", "prores_ks", "-profile:v", "0"},
+            {"-pix_fmt", "yuv422p10le", "-c:v", "prores_ks", "-profile:v", "1"},
+            {"-pix_fmt", "yuv422p10le", "-c:v", "prores_ks", "-profile:v", "2"},
+            {"-pix_fmt", "yuv422p10le", "-c:v", "prores_ks", "-profile:v", "3"},
+            {"-pix_fmt", "yuv444p10le", "-c:v", "prores_ks", "-profile:v", "4"},
+            {"-pix_fmt", "yuv444p10le", "-c:v", "prores_ks", "-profile:v", "5"},
+            {"-pix_fmt", "yuv422p", "-c:v", "dnxhd", "-profile:v", "dnxhr_lb"},
+            {"-pix_fmt", "yuv422p", "-c:v", "dnxhd", "-profile:v", "dnxhr_sq"},
+            {"-pix_fmt", "yuv422p", "-c:v", "dnxhd", "-profile:v", "dnxhr_hq"},
+            {"-pix_fmt", "yuv422p10le", "-c:v", "dnxhd", "-profile:v", "dnxhr_hqx"},
+            {"-pix_fmt", "yuv444p10le", "-c:v", "dnxhd", "-profile:v", "dnxhr_444"},
+            {"-pix_fmt", "yuv422p", "-c:v", "mpeg2video", "-profile:v", "0", "-flags", "ilme", "-top", "1",
+             "-metadata", "creation_time=now", "-vtag", "xd5c", "-timecode", "01:00:00:00"},
+            {"-pix_fmt", "yuv422p", "-c:v", "libx264", "-me_method", "tesa", "-subq", "9", "-partitions", "all",
+             "-direct-pred", "auto", "-psy", "0", "-g", "0", "-keyint_min", "0", "-x264opts", "filler",
+             "-x264opts", "force-cfr", "-tune", "fastdecode"},
+            {"-movflags", "+write_colr", "-c:v", "copy"},
+            {"-pix_fmt", "yuv420p10le", "-c:v", "libsvtav1"}
+        };
+        return row >= 0 && row < NUMBER_PRESETS ? codecArgs[row] : QStringList{};
+    }
+
+    [[nodiscard]] QStringList getHwaccelArgs(int row) const
+    {
+#if defined (Q_OS_WIN64)
+        const QStringList qsvHwaccel = {"-hwaccel", "dxva2", "-hwaccel_output_format", "dxva2_vld"};
+        const QStringList vaapiHwaccelArgs = {"-hwaccel", "dxva2", "-hwaccel_output_format", "dxva2_vld"};
+#elif defined (Q_OS_UNIX)
+        const QStringList qsvHwaccel = {"-hwaccel", "vaapi", "-hwaccel_output_format", "vaapi"};
+        const QStringList vaapiHwaccelArgs = {"-hwaccel", "vaapi", "-hwaccel_output_format", "vaapi"};
+#else
+        const QStringList qsvHwaccel;
+        const QStringList vaapiHwaccelArgs;
+#endif
+        const QStringList cudaHwaccel = {"-hwaccel", "cuda"};
+        const QStringList hwaccelArgs[NUMBER_PRESETS] = {
+            {}, {}, {}, {}, {}, {},
+            qsvHwaccel, qsvHwaccel, qsvHwaccel, qsvHwaccel, qsvHwaccel, qsvHwaccel,
+            vaapiHwaccelArgs,
+            cudaHwaccel, cudaHwaccel, cudaHwaccel,
+            {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
+        };
+        return row >= 0 && row < NUMBER_PRESETS ? hwaccelArgs[row] : QStringList{};
+    }
+
     const QString arr_mode[NUMBER_PRESETS][5] = {
         {"CBR",      "ABR",    "VBR", "CRF", "CQP"}, // H265
         {"CBR",      "ABR",    "VBR", "CRF", "CQP"}, // H265
@@ -204,9 +269,9 @@ public:
         {tr("None"), "",              "",              "",             "",           "",         "",           "",             "",           ""},
         {tr("None"), tr("Veryfast"),  tr("Faster"),    tr("Fast"),     tr("Medium"), tr("Slow"), tr("Slower"), tr("Veryslow"), "",           ""},
         {tr("None"), tr("Veryfast"),  tr("Faster"),    tr("Fast"),     tr("Medium"), tr("Slow"), tr("Slower"), tr("Veryslow"), "",           ""}, // Intel VAAPI h264
-        {tr("None"), tr("Slow"),      tr("Quality"),   tr("Balanced"), tr("Speed"),  "",         "",           "",             "",           ""},
-        {tr("None"), tr("Slow"),      tr("Quality"),   tr("Balanced"), tr("Speed"),  "",         "",           "",             "",           ""},
-        {tr("None"), tr("Slow"),      tr("Quality"),   tr("Balanced"), tr("Speed"),  "",         "",           "",             "",           ""},
+        {tr("None"), tr("Fastest (p1)"), tr("Faster (p2)"), tr("Fast (p3)"), tr("Medium (p4)"), tr("Slow (p5)"), tr("Slower (p6)"), tr("Slowest (p7)"), "", ""},
+        {tr("None"), tr("Fastest (p1)"), tr("Faster (p2)"), tr("Fast (p3)"), tr("Medium (p4)"), tr("Slow (p5)"), tr("Slower (p6)"), tr("Slowest (p7)"), "", ""},
+        {tr("None"), tr("Fastest (p1)"), tr("Faster (p2)"), tr("Fast (p3)"), tr("Medium (p4)"), tr("Slow (p5)"), tr("Slower (p6)"), tr("Slowest (p7)"), "", ""},
         {tr("None"), "",              "",              "",             "",           "",         "",           "",             "",           ""},
         {tr("None"), "",              "",              "",             "",           "",         "",           "",             "",           ""},
         {tr("None"), "",              "",              "",             "",           "",         "",           "",             "",           ""},
@@ -272,9 +337,9 @@ public:
         {tr("Auto"),   ""},
         {tr("Auto"),   ""},
         {tr("Auto"),   ""}, // Intel VAAPI h264
-        {tr("2 Pass Optimisation"), ""},
-        {tr("2 Pass Optimisation"), ""},
-        {tr("2 Pass Optimisation"), ""},
+        {tr("Auto"),   ""},
+        {tr("Auto"),   ""},
+        {tr("Auto"),   ""},
         {tr("Auto"),   ""},
         {tr("Auto"),   ""},
         {tr("Auto"),   ""},
@@ -424,6 +489,11 @@ public:
             if (pos != -1) {
                 preset = preset.left(pos - 1);
             }
+            const int nvencPresetStart = preset.lastIndexOf("(");
+            const int nvencPresetEnd = preset.lastIndexOf(")");
+            if (nvencPresetStart != -1 && nvencPresetEnd > nvencPresetStart) {
+                preset = preset.mid(nvencPresetStart + 1, nvencPresetEnd - nvencPresetStart - 1);
+            }
             if (presetImpl.contains(preset)) {
                 preset = presetImpl[preset];
             }
@@ -449,10 +519,11 @@ public:
     {
         if (row >= 0 && row < NUMBER_PRESETS && column >= 0 && column < 5) {
             QString mode = arr_mode[row][column];
-            const int pos = mode.indexOf("_");
-            if (pos != -1) {
-                mode = mode.left(pos);
+            if (getModeDisplayName(mode) != mode) {
+                return mode;
             }
+            const int pos = mode.indexOf("_");
+            if (pos != -1) mode = mode.left(pos);
             return mode;
         }
         return {};
@@ -509,30 +580,37 @@ private:
     {
         Q_ASSERT(row < r);
         QStringList list;
-        const QMap<QString, QString> modeImpl = {
-            {"CBR", tr("Constant Bitrate")},
-            {"ABR", tr("Average Bitrate")},
-            {"VBR", tr("Variable Bitrate")},
-            {"VBR_NV", tr("Variable Bitrate (NVENC)")},
-            {"CRF", tr("Constant Rate Factor")},
-            {"CQP", tr("Constant QP")},
-            {"CQ_NV", tr("Constant Quality (NVENC)")},
-            {"CQP_QS", tr("Constant QP (QSV)")},
-            {"CQP_VA", tr("Constant QP (VAAPI)" )}
-        };
         for (int i = 0; i < c; i++) {
             QString val = arr[row][i];
             if (val != "") {
+                const QString modeDisplayName = getModeDisplayName(val);
+                if (modeDisplayName != val) {
+                    list << modeDisplayName;
+                    continue;
+                }
                 const int pos = val.indexOf("_");
                 if (pos != -1) {
                     val = val.left(pos);
                 }
-                if (modeImpl.contains(val)) {
-                    list << modeImpl[val];
-                } else list << val;
+                list << val;
             }
         }
         return list;
+    }
+
+    [[nodiscard]] QString getModeDisplayName(const QString &mode) const
+    {
+        const QMap<QString, QString> modeImpl = {
+            {"CBR", tr("Constant Bitrate")},
+            {"ABR", tr("Average Bitrate")},
+            {"VBR", tr("Variable Bitrate")},
+            {"CRF", tr("Constant Rate Factor")},
+            {"CQP", tr("Constant QP")},
+            {"CQ_NV", tr("Constant QP (NVENC)")},
+            {"CQP_QS", tr("Constant QP (QSV)")},
+            {"CQP_VA", tr("Constant QP (VAAPI)" )}
+        };
+        return modeImpl.value(mode, mode);
     }
 
 };

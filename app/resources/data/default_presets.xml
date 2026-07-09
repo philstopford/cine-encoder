@@ -115,19 +115,19 @@
             <TYPE>ChildItem</TYPE>
         </preset1>
         <preset2>
-            <OUTPUT_PARAM>NVENC H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 10 bit, VBR 50 MBps, Preset: Slow, 2 Pass Optimisation, HDR: Enabled, Audio: AC3, 448k, MKV</OUTPUT_PARAM>
+            <OUTPUT_PARAM>NVENC H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 10 bit, Constant QP (NVENC) 25, Preset: Slow (p5), HDR: Enabled, Audio: Source, MKV</OUTPUT_PARAM>
             <CODEC>13</CODEC>
-            <MODE>0</MODE>
+            <MODE>1</MODE>
             <CONTAINER>0</CONTAINER>
-            <BQR>50</BQR>
-            <MAXRATE>50</MAXRATE>
-            <BUFSIZE>50</BUFSIZE>
+            <BQR>25</BQR>
+            <MAXRATE></MAXRATE>
+            <BUFSIZE></BUFSIZE>
             <FRAME_RATE>0</FRAME_RATE>
             <BLENDING>0</BLENDING>
             <WIDTH>0</WIDTH>
             <HEIGHT>0</HEIGHT>
             <PASS>0</PASS>
-            <PRESET>1</PRESET>
+            <PRESET>5</PRESET>
             <COLOR_RANGE>0</COLOR_RANGE>
             <MIN_LUM></MIN_LUM>
             <MAX_LUM></MAX_LUM>
@@ -136,9 +136,9 @@
             <MASTER_DISPLAY>0</MASTER_DISPLAY>
             <CHROMA_COORD>From source</CHROMA_COORD>
             <WHITE_COORD>From source</WHITE_COORD>
-            <AUDIO_CODEC>1</AUDIO_CODEC>
-            <AUDIO_BITRATE>1</AUDIO_BITRATE>
-            <MINRATE>50</MINRATE>
+            <AUDIO_CODEC>3</AUDIO_CODEC>
+            <AUDIO_BITRATE>0</AUDIO_BITRATE>
+            <MINRATE></MINRATE>
             <LEVEL>0</LEVEL>
             <ASAMPLE_RATE>0</ASAMPLE_RATE>
             <ACHANNELS>0</ACHANNELS>
@@ -263,19 +263,19 @@
             <TYPE>ChildItem</TYPE>
         </preset5>
         <preset6>
-            <OUTPUT_PARAM>NVENC H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, VBR 50 MBps, Preset: Slow, 2 Pass Optimisation, Audio: AC3, 448k, MKV</OUTPUT_PARAM>
+            <OUTPUT_PARAM>NVENC H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, Variable Bitrate (NVENC) 6 MBps, Preset: Slow (p5), Audio: Source, MKV</OUTPUT_PARAM>
             <CODEC>14</CODEC>
             <MODE>0</MODE>
             <CONTAINER>0</CONTAINER>
-            <BQR>50</BQR>
-            <MAXRATE>50</MAXRATE>
-            <BUFSIZE>50</BUFSIZE>
+            <BQR>6</BQR>
+            <MAXRATE>7.2</MAXRATE>
+            <BUFSIZE>12</BUFSIZE>
             <FRAME_RATE>0</FRAME_RATE>
             <BLENDING>0</BLENDING>
             <WIDTH>0</WIDTH>
             <HEIGHT>0</HEIGHT>
             <PASS>0</PASS>
-            <PRESET>1</PRESET>
+            <PRESET>5</PRESET>
             <COLOR_RANGE>0</COLOR_RANGE>
             <MIN_LUM></MIN_LUM>
             <MAX_LUM></MAX_LUM>
@@ -284,9 +284,9 @@
             <MASTER_DISPLAY>0</MASTER_DISPLAY>
             <CHROMA_COORD>From source</CHROMA_COORD>
             <WHITE_COORD>From source</WHITE_COORD>
-            <AUDIO_CODEC>1</AUDIO_CODEC>
-            <AUDIO_BITRATE>1</AUDIO_BITRATE>
-            <MINRATE>50</MINRATE>
+            <AUDIO_CODEC>3</AUDIO_CODEC>
+            <AUDIO_BITRATE>0</AUDIO_BITRATE>
+            <MINRATE>4.8</MINRATE>
             <LEVEL>0</LEVEL>
             <ASAMPLE_RATE>0</ASAMPLE_RATE>
             <ACHANNELS>0</ACHANNELS>
@@ -411,19 +411,19 @@
             <TYPE>ChildItem</TYPE>
         </preset9>
         <preset10>
-            <OUTPUT_PARAM>NVENC H.264/AVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, VBR 50 MBps, Preset: Slow, 2 Pass Optimisation, Audio: AC3, 448k, MKV</OUTPUT_PARAM>
+            <OUTPUT_PARAM>NVENC H.264/AVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, Variable Bitrate (NVENC) 6 MBps, Preset: Slow (p5), Audio: Source, MKV</OUTPUT_PARAM>
             <CODEC>15</CODEC>
             <MODE>0</MODE>
             <CONTAINER>0</CONTAINER>
-            <BQR>50</BQR>
-            <MAXRATE>50</MAXRATE>
-            <BUFSIZE>50</BUFSIZE>
+            <BQR>6</BQR>
+            <MAXRATE>7.2</MAXRATE>
+            <BUFSIZE>12</BUFSIZE>
             <FRAME_RATE>0</FRAME_RATE>
             <BLENDING>0</BLENDING>
             <WIDTH>0</WIDTH>
             <HEIGHT>0</HEIGHT>
             <PASS>0</PASS>
-            <PRESET>1</PRESET>
+            <PRESET>5</PRESET>
             <COLOR_RANGE>0</COLOR_RANGE>
             <MIN_LUM></MIN_LUM>
             <MAX_LUM></MAX_LUM>
@@ -432,9 +432,9 @@
             <MASTER_DISPLAY>0</MASTER_DISPLAY>
             <CHROMA_COORD>From source</CHROMA_COORD>
             <WHITE_COORD>From source</WHITE_COORD>
-            <AUDIO_CODEC>1</AUDIO_CODEC>
-            <AUDIO_BITRATE>1</AUDIO_BITRATE>
-            <MINRATE>50</MINRATE>
+            <AUDIO_CODEC>3</AUDIO_CODEC>
+            <AUDIO_BITRATE>0</AUDIO_BITRATE>
+            <MINRATE>4.8</MINRATE>
             <LEVEL>0</LEVEL>
             <ASAMPLE_RATE>0</ASAMPLE_RATE>
             <ACHANNELS>0</ACHANNELS>

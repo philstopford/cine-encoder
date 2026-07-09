@@ -62,8 +62,8 @@ QString Helper::makeFileStringFFMPEGFilterReady(const QString& fileString)
     // Order matters! Backslash must be escaped first to avoid double-escaping
     file_substitute.replace("\\", "\\\\");      // \ -> \\ (one backslash becomes two)
     file_substitute.replace("'", "\\'");        // ' -> \' (ASCII apostrophe U+0027)
-    file_substitute.replace("'", "\\'");        // ' -> \' (Unicode right single quote U+2019)
-    file_substitute.replace("'", "\\'");        // ' -> \' (Unicode left single quote U+2018)
+    file_substitute.replace(QChar(0x2019), "\\'"); // Unicode right single quote
+    file_substitute.replace(QChar(0x2018), "\\'"); // Unicode left single quote
     file_substitute.replace(":", "\\:");        // : -> \: (colon becomes backslash-colon)
     file_substitute.replace(",", "\\,");        // , -> \, (comma becomes backslash-comma)
     file_substitute.replace(";", "\\;");        // ; -> \; (semicolon becomes backslash-semicolon)
