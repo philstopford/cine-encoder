@@ -55,15 +55,16 @@ QString Helper::makeFileStringFFMPEGFilterReady(const QString& fileString)
      * 
      * FFmpeg's filter parser requires backslash escaping for special characters.
      * The filename is NOT wrapped in quotes, so we escape directly with backslashes.
+     * A literal ASCII apostrophe needs an extra escaping level because the
+     * filtergraph parser and the subtitles filter option parser both consume
+     * backslashes before it reaches libass.
      * 
      * Reference: https://ffmpeg.org/ffmpeg-filters.html#Notes-on-filtergraph-escaping
      */
     QString file_substitute = fileString;
     // Order matters! Backslash must be escaped first to avoid double-escaping
     file_substitute.replace("\\", "\\\\");      // \ -> \\ (one backslash becomes two)
-    file_substitute.replace("'", "\\'");        // ' -> \' (ASCII apostrophe U+0027)
-    file_substitute.replace(QChar(0x2019), "\\'"); // Unicode right single quote
-    file_substitute.replace(QChar(0x2018), "\\'"); // Unicode left single quote
+    file_substitute.replace("'", QString(3, QLatin1Char('\\')) + QLatin1Char('\'')); // ' -> \\\'
     file_substitute.replace(":", "\\:");        // : -> \: (colon becomes backslash-colon)
     file_substitute.replace(",", "\\,");        // , -> \, (comma becomes backslash-comma)
     file_substitute.replace(";", "\\;");        // ; -> \; (semicolon becomes backslash-semicolon)

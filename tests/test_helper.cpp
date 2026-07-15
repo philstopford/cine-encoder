@@ -19,6 +19,8 @@ class TestHelper : public QObject
 
 private slots:
     void testMakeFileStringFFMPEGFilterReady_singleQuote();
+    void testMakeFileStringFFMPEGFilterReady_pathWithSingleQuote();
+    void testMakeFileStringFFMPEGFilterReady_unicodeSingleQuotes();
     void testMakeFileStringFFMPEGFilterReady_colon();
     void testMakeFileStringFFMPEGFilterReady_backslash();
     void testMakeFileStringFFMPEGFilterReady_space();
@@ -32,13 +34,28 @@ void TestHelper::testMakeFileStringFFMPEGFilterReady_singleQuote()
     // Test filename with single quote for filter usage
     QString input1 = "Don't.mkv";  // ASCII apostrophe
     QString result1 = Helper::makeFileStringFFMPEGFilterReady(input1);
-    QString expected1 = "Don\\'t.mkv";
+    QString expected1 = QString("Don") + QString(3, QLatin1Char('\\')) + "'t.mkv";
     QCOMPARE(result1, expected1);
-    
-    // Test Unicode right single quotation mark
+}
+
+void TestHelper::testMakeFileStringFFMPEGFilterReady_pathWithSingleQuote()
+{
+    QString input = "/home/phil/Downloads/X-Men '97 (2024)/X-Men '97 - S01E05.mkv";
+    QString result = Helper::makeFileStringFFMPEGFilterReady(input);
+
+    QString escapedQuote = QString(3, QLatin1Char('\\')) + QLatin1Char('\'');
+    QString expected = "/home/phil/Downloads/X-Men\\ " + escapedQuote +
+                       "97\\ (2024)/X-Men\\ " + escapedQuote +
+                       "97\\ -\\ S01E05.mkv";
+    QCOMPARE(result, expected);
+}
+
+void TestHelper::testMakeFileStringFFMPEGFilterReady_unicodeSingleQuotes()
+{
+    // Unicode quote-like characters are valid filename characters, not FFmpeg quotes.
     QString input2 = QString("Don%1t.mkv").arg(QChar(0x2019));
     QString result2 = Helper::makeFileStringFFMPEGFilterReady(input2);
-    QString expected2 = "Don\\'t.mkv";
+    QString expected2 = input2;
     QCOMPARE(result2, expected2);
 }
 
@@ -93,8 +110,8 @@ void TestHelper::testMakeFileStringFFMPEGFilterReady_complex()
     QString result = Helper::makeFileStringFFMPEGFilterReady(input);
     
     // All special characters should be properly escaped
-    // Single quote: \'  Space: \  Brackets: \[ \]
-    QString expected = "Don\\'t\\ Test\\ \\[2023\\].mkv";
+    // Single quote: \\\'  Space: \  Brackets: \[ \]
+    QString expected = QString("Don") + QString(3, QLatin1Char('\\')) + "'t\\ Test\\ \\[2023\\].mkv";
     QCOMPARE(result, expected);
 }
 
