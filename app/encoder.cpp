@@ -13,6 +13,7 @@
 #include "encoder.h"
 #include "tables.h"
 #include "helper.h"
+#include "ffmpegcompatibility.h"
 #include <QDir>
 #include <QFileInfo>
 #include <QMap>
@@ -1056,11 +1057,11 @@ QStringList Encoder::modeModule(const Tables &t, int CE_CODEC, int _CE_MODE, con
     else
     if (selected_mode == "VBR_NV") {
         mode.append({"-rc", "vbr", "-b:v", bitrate, "-minrate", minrate, "-maxrate", maxrate, "-bufsize", bufsize,
-                     "-bf", "2", "-spatial_aq", "1", "-temporal_aq", "1"});
+                     "-bf", "2", "-spatial-aq", "1", "-temporal-aq", "1"});
     }
     else
     if (selected_mode == "CQ_NV") {
-        mode.append({"-rc", "constqp", "-qp", CE_BQR, "-bf", "2", "-spatial_aq", "0", "-temporal_aq", "0"});
+        mode.append({"-rc", "constqp", "-qp", CE_BQR, "-bf", "2", "-spatial-aq", "0", "-temporal-aq", "0"});
     }
     else
     if (selected_mode == "CQ_NV") {
@@ -1629,6 +1630,7 @@ void Encoder::encode()   // Encode
     // Clean up empty slots.
     arguments.removeAll("");
     arguments.removeAll(" ");
+    arguments = FFmpegCompatibility::adaptArgumentsToHost(arguments);
 
     // Debug
     std::string args = arguments.join(" ").toStdString();

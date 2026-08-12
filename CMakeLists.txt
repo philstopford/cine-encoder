@@ -70,6 +70,7 @@ add_executable(cine_encoder WIN32 MACOSX_BUNDLE
     app/logger.cpp app/logger.h
     app/inputvalidator.cpp app/inputvalidator.h
     app/errorhandler.cpp app/errorhandler.h
+    app/ffmpegcompatibility.cpp app/ffmpegcompatibility.h
     app/encodingmanager.cpp app/encodingmanager.h
     app/configurationmanager.cpp app/configurationmanager.h
     app/interfaces.h

@@ -49,6 +49,7 @@ add_cine_test(logger test_logger.cpp "../app/logger.cpp")
 add_cine_test(settings_data test_settings_data.cpp "../app/settingsdata.cpp")
 add_cine_test(service_container test_service_container.cpp "../app/servicecontainer.cpp")
 add_cine_test(helper test_helper.cpp "../app/helper.cpp")
+add_cine_test(ffmpeg_compatibility test_ffmpeg_compatibility.cpp "../app/ffmpegcompatibility.cpp")
 
 # Note: Configuration and input validator tests are disabled due to external dependencies
 # They can be re-enabled when those dependencies are properly abstracted
@@ -56,6 +57,6 @@ add_cine_test(helper test_helper.cpp "../app/helper.cpp")
 # Test runner script
 add_custom_target(run_tests
     COMMAND ${CMAKE_CTEST_COMMAND} --verbose
-    DEPENDS test_logger test_settings_data test_service_container test_helper
+    DEPENDS test_logger test_settings_data test_service_container test_helper test_ffmpeg_compatibility
     COMMENT "Running all tests"
 )
