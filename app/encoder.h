@@ -204,6 +204,7 @@ private slots:
                          const QString &hwaccel_filter_vf, const QStringList &colorprim_vf,
                          const QStringList &colormatrix_vf, const QStringList &transfer_vf,
                          const QString &deinterlace_vf, 
+                         const QStringList &effectFilters,
                          const QString &chaptersFile, int chaptersInputIndex) const;
 
     void getPresets(const QStringList &_splitStartParam, const QStringList &_splitParam, const QStringList &hwaccel,

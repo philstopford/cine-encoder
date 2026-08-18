@@ -354,7 +354,8 @@ void Encoder::initEncoding(const QString  &temp_file,
 
     QStringList codec = getCodec(t, CE_CODEC, resize_vf, fps_vf, _videoMetadataParam, _audioMapParam, _audioMetadataParam,
                                  burn_subt_vf, _subtitleMapParam, _subtitleMetadataParam, _subtitleFormatParam, hwaccel_filter_vf,
-                                 colorprim_vf, colormatrix_vf, transfer_vf, deinterlace_vf, data.chaptersFile, chaptersInputIndex);
+                                 colorprim_vf, colormatrix_vf, transfer_vf, deinterlace_vf, data.videoEffects,
+                                 data.chaptersFile, chaptersInputIndex);
 
     /************************************* HDR module ***************************************/
 
@@ -596,6 +597,7 @@ QStringList Encoder::getCodec(const Tables &t, int CE_CODEC, const QString &resi
                               const QString &hwaccel_filter_vf, const QStringList &colorprim_vf,
                               const QStringList &colormatrix_vf, const QStringList &transfer_vf,
                               const QString &deinterlace_vf, 
+                              const QStringList &effectFilters,
                               const QString &chaptersFile, int chaptersInputIndex) const {
     QStringList codec;
     // Need to pay attention to whether the complex filter is being used. It seems to be incompatible with these arguments.
@@ -658,6 +660,13 @@ QStringList Encoder::getCodec(const Tables &t, int CE_CODEC, const QString &resi
     // Add transfer filter if present
     if (!transfer_vf.isEmpty()) {
         all_vf_filters.append(transfer_vf);
+    }
+
+    // Effects are ordinary FFmpeg filters and deliberately join the same -vf
+    // chain as resize, deinterlace and color conversion.
+    for (const QString &filter : effectFilters) {
+        if (!filter.startsWith("#disabled:") && !filter.trimmed().isEmpty())
+            all_vf_filters.append(filter);
     }
     
     // Determine if we're using complex filter for subtitle burning

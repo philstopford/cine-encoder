@@ -33,10 +33,10 @@ set(CMAKE_AUTOUIC ON)
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
 # On Windows, skip Svg component since qtsvg causes build issues
 if(WIN32)
-    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Multimedia)
+    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Multimedia MultimediaWidgets)
     find_package(Qt${QT_VERSION_MAJOR} OPTIONAL_COMPONENTS Widgets Svg)
 else()
-    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Multimedia Svg)
+    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Multimedia MultimediaWidgets Svg)
     find_package(Qt${QT_VERSION_MAJOR} OPTIONAL_COMPONENTS Widgets)
 endif()
 
@@ -59,6 +59,8 @@ add_executable(cine_encoder WIN32 MACOSX_BUNDLE
     app/notification.cpp app/notification.h app/notification.ui
     app/popupmessage.cpp app/popupmessage.h app/popupmessage.ui
     app/preset.cpp app/preset.h app/preset.ui
+    app/previewdialog.cpp app/previewdialog.h
+    app/widgets/qabvideowidget.cpp app/widgets/qabvideowidget.h
     app/progress.cpp app/progress.h app/progress.ui
     app/report.cpp app/report.h app/report.ui
     app/settings.cpp app/settings.h app/settings.ui
@@ -77,6 +79,7 @@ add_executable(cine_encoder WIN32 MACOSX_BUNDLE
     app/servicecontainer.cpp app/servicecontainer.h
     app/widgets/qanimatedsvg.cpp app/widgets/qanimatedsvg.h
     app/widgets/qdoublebutton.cpp app/widgets/qdoublebutton.h
+    app/widgets/qeffectstack.cpp app/widgets/qeffectstack.h
     app/widgets/qstreamview.cpp app/widgets/qstreamview.h
     app/files.qrc
 )
@@ -84,6 +87,7 @@ target_link_libraries(cine_encoder PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Multimedia
+    Qt::MultimediaWidgets
 )
 
 # Link Qt::Svg conditionally based on availability

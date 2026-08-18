@@ -24,6 +24,8 @@
 #include "streamconverter.h"
 #include "fileiconprovider.h"
 #include "configurationmanager.h"
+#include "previewdialog.h"
+#include "widgets/qeffectstack.h"
 #include <QDragEnterEvent>
 #include <QMimeDatabase>
 #include <QMimeData>
@@ -540,6 +542,8 @@ MainWindow::MainWindow(QWidget *parent):
     m_input_file(""),
     m_output_file(""),
     m_presetFileVersion(0),
+    m_pEffectStack(nullptr),
+    m_effectsTabIndex(-1),
     m_windowActivated(false),
     m_expandWindowsState(false),
     m_rowHeight(ROWHEIGHTDFLT)
@@ -631,6 +635,12 @@ MainWindow::MainWindow(QWidget *parent):
 
     ui->streamAudio->setContentType(QStreamView::Content::Audio);
     ui->streamSubtitle->setContentType(QStreamView::Content::Subtitle);
+    auto *effectsPage = new QWidget(ui->tabWidgetStreams);
+    auto *effectsLayout = new QVBoxLayout(effectsPage);
+    effectsLayout->setContentsMargins(6, 6, 6, 6);
+    m_pEffectStack = new QEffectStack(effectsPage);
+    effectsLayout->addWidget(m_pEffectStack);
+    m_effectsTabIndex = ui->tabWidgetStreams->addTab(effectsPage, tr("Effects"));
     /*ui->switchCutting->setIcons(QIcon(QPixmap(":/resources/icons/svg/shortest.svg")),
                                 QIcon(QPixmap(":/resources/icons/svg/not_shortest.svg")));
     ui->switchViewMode->setIcons(QIcon(QPixmap(":/resources/icons/svg/view_list.svg")),
@@ -990,6 +1000,7 @@ void MainWindow::createConnections()
     connect(ui->streamSubtitle, &QStreamView::streamSelectionChanged, this, [this]() {
         updateFileWarnings(ui->tableWidget->currentRow());
     });
+    connect(m_pEffectStack, &QEffectStack::previewRequested, this, &MainWindow::onPreviewSettings);
 
     // Table and UI controls
     UIConnectionHelper::connectSafely(ui->tableWidget, &QTableWidget::itemSelectionChanged,
@@ -1088,6 +1099,8 @@ void MainWindow::createConnections()
     m_pActSplitVideo = new QAction(tr("Split video"), menuTools);
     m_pActExportChapters = new QAction(tr("Export chapters to file"), menuTools);
     m_pActImportChapters = new QAction(tr("Import chapters from file"), menuTools);
+    m_pActEffects = new QAction(tr("Video effects…"), menuTools);
+    m_pActPreview = new QAction(tr("Preview current settings…"), menuTools);
     connect(m_pActEditMetadata, &QAction::triggered, this, &MainWindow::showMetadataEditor);
     connect(m_pActSelectAudio, &QAction::triggered, this, &MainWindow::showAudioStreams);
     connect(m_pActSelectSubtitles, &QAction::triggered, this, &MainWindow::showSubtitles);
@@ -1096,6 +1109,8 @@ void MainWindow::createConnections()
     connect(m_pActSplitVideo, &QAction::triggered, this, &MainWindow::showVideoSplitter);
     connect(m_pActExportChapters, &QAction::triggered, this, &MainWindow::onExportChapters);
     connect(m_pActImportChapters, &QAction::triggered, this, &MainWindow::onImportChapters);
+    connect(m_pActEffects, &QAction::triggered, this, &MainWindow::onEffects);
+    connect(m_pActPreview, &QAction::triggered, this, &MainWindow::onPreviewSettings);
     menuTools->addAction(m_pActEditMetadata);
     menuTools->addSeparator();
     menuTools->addAction(m_pActSelectAudio);
@@ -1108,6 +1123,9 @@ void MainWindow::createConnections()
     menuTools->addSeparator();
     menuTools->addAction(m_pActExportChapters);
     menuTools->addAction(m_pActImportChapters);
+    menuTools->addSeparator();
+    menuTools->addAction(m_pActEffects);
+    menuTools->addAction(m_pActPreview);
 
     m_pActResetView = new QAction(tr("Reset state"), menuView);
     connect(m_pActResetView, &QAction::triggered, this, &MainWindow::resetView);
@@ -1156,6 +1174,9 @@ void MainWindow::createConnections()
     m_pItemMenu->addSeparator();
     m_pItemMenu->addAction(m_pActExportChapters);
     m_pItemMenu->addAction(m_pActImportChapters);
+    m_pItemMenu->addSeparator();
+    m_pItemMenu->addAction(m_pActEffects);
+    m_pItemMenu->addAction(m_pActPreview);
     connect(ui->tableWidget, &QTableWidget::customContextMenuRequested, this, &MainWindow::provideContextMenu);
     
     // Setup header context menu for column visibility
@@ -1261,6 +1282,39 @@ void MainWindow::createConnections()
     m_pAudioLabel->setVisible(true);
     //******* Subtitle Elements ************//
     m_pSubtitleLabel->setVisible(true);
+}
+
+void MainWindow::onEffects()
+{
+    if (m_row < 0 || m_row >= m_data.size()) {
+        showInfoMessage(tr("Select an input file before editing effects."));
+        return;
+    }
+    m_pDocks[DockIndex::STREAMS_DOCK]->show();
+    m_pDocks[DockIndex::STREAMS_DOCK]->raise();
+    ui->tabWidgetStreams->setCurrentIndex(m_effectsTabIndex);
+    m_pEffectStack->setFilters(&m_data[m_row].videoEffects);
+}
+
+void MainWindow::onPreviewSettings()
+{
+    if (m_row < 0 || m_row >= m_data.size() || m_input_file.isEmpty()) {
+        showInfoMessage(tr("Select an input file before creating a preview."));
+        return;
+    }
+
+    PreviewRequest request;
+    request.inputFile = m_input_file;
+    request.videoFilters = QEffectStack::enabledFilters(m_data[m_row].videoEffects);
+    request.startSeconds = qMax(0.0, m_curTime - 4.0);
+    request.sourceDurationSeconds = m_dur;
+    request.durationSeconds = 8;
+    request.title = tr("Preview current settings");
+    PreviewDialog preview(request, this);
+    if (preview.exec() == QDialog::Accepted) {
+        m_data[m_row].videoEffects = preview.filters();
+        m_pEffectStack->setFilters(&m_data[m_row].videoEffects);
+    }
 }
 
 void MainWindow::setParameters()    // Set parameters
@@ -3252,6 +3306,7 @@ void MainWindow::onTableSelectionChanged()
     m_pSubtitleLabel->setVisible(true);
 
     m_row = ui->tableWidget->currentRow();
+    m_pEffectStack->setFilters(nullptr);
     qDebug() << "Table selection changed - current row:" << m_row << "total rows:" << ui->tableWidget->rowCount();
     if (m_row != -1) {
         qDebug() << "Files present, hiding table label and removing event filter";
@@ -3259,6 +3314,8 @@ void MainWindow::onTableSelectionChanged()
         // Remove event filter when files are present to avoid interfering with header drag operations
         m_pTableLabel->removeEventFilter(this);
         get_current_data();
+        if (m_row < m_data.size())
+            m_pEffectStack->setFilters(&m_data[m_row].videoEffects);
         
         // Load per-file preset parameters if available
         if (m_row < m_data.size() && !m_data[m_row].presetParams.isEmpty()) {
@@ -3360,9 +3417,11 @@ void MainWindow::resetView()
 
 void MainWindow::provideContextMenu(const QPoint &pos)     // Call table items menu
 {
-    QTableWidgetItem *item = ui->tableWidget->itemAt(0, pos.y());
-    if (item)
-        m_pItemMenu->exec(ui->tableWidget->mapToGlobal(pos + QPoint(0, 35)));
+    QTableWidgetItem *item = ui->tableWidget->itemAt(pos);
+    if (item) {
+        ui->tableWidget->selectRow(item->row());
+        m_pItemMenu->exec(ui->tableWidget->viewport()->mapToGlobal(pos));
+    }
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent* event)     // Drag enter event

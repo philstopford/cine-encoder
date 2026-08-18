@@ -13,6 +13,7 @@
 QT += core
 QT += gui
 QT += multimedia
+QT += multimediawidgets
 QT += svg
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 CONFIG += c++11
@@ -42,6 +43,7 @@ SOURCES += \
     widgets/qstreamview.cpp \
     widgets/qanimatedsvg.cpp \
     widgets/qdoublebutton.cpp \
+    widgets/qeffectstack.cpp \
     basedialog.cpp \
     encoder.cpp \
     encoderstream.cpp \
@@ -61,7 +63,9 @@ SOURCES += \
     inputvalidator.cpp \
     errorhandler.cpp \
     encodingmanager.cpp \
-    configurationmanager.cpp
+    configurationmanager.cpp \
+    previewdialog.cpp \
+    widgets/qabvideowidget.cpp
 
 HEADERS += \
     fileiconprovider.h \
@@ -70,6 +74,7 @@ HEADERS += \
     widgets/qstreamview.h \
     widgets/qanimatedsvg.h \
     widgets/qdoublebutton.h \
+    widgets/qeffectstack.h \
     basedialog.h \
     constants.h \
     encoder.h \
@@ -90,7 +95,9 @@ HEADERS += \
     inputvalidator.h \
     errorhandler.h \
     encodingmanager.h \
-    configurationmanager.h
+    configurationmanager.h \
+    previewdialog.h \
+    widgets/qabvideowidget.h
 
 FORMS += \
     mainwindow.ui \

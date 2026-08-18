@@ -164,6 +164,10 @@ namespace Constants {
         // Per-file preset parameters
         QVector<QString> presetParams;
         QString presetName;
+
+        // User-selected FFmpeg video filters.  Stored per input so a batch can
+        // contain files with different looks without changing the preset format.
+        QStringList videoEffects;
         
         // Chapter metadata file path for import
         QString chaptersFile;
@@ -176,6 +180,7 @@ namespace Constants {
                 field.clear();
             presetParams.clear();
             presetName.clear();
+            videoEffects.clear();
             chaptersFile.clear();
         }
     };

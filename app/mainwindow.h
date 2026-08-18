@@ -30,6 +30,8 @@
 #include "widgets/qanimatedsvg.h"
 #include "widgets/qstreamview.h"
 
+class QEffectStack;
+
 #ifdef WM_CUSTOM
     #include "basewindow_cwm.h"
 #else
@@ -131,6 +133,9 @@ private:
                 *m_pAudioLabel,
                 *m_pSubtitleLabel;
 
+    QEffectStack *m_pEffectStack;
+    int m_effectsTabIndex;
+
     // ============= Progress animation =============
     QAnimatedSvg    *m_pAnimation;
 
@@ -153,6 +158,8 @@ private:
                 *m_pActSplitVideo,
                 *m_pActExportChapters,
                 *m_pActImportChapters,
+                *m_pActEffects,
+                *m_pActPreview,
                 *m_pActSettings,
                 *m_pActResetView,
                 *m_pActAbout,
@@ -364,6 +371,8 @@ private slots:
     void onExtract(QStreamView::Content type, int num);
     void onExportChapters();
     void onImportChapters();
+    void onEffects();
+    void onPreviewSettings();
     void updateFileIncompatibilityStatus(int fileRow);
     void updateFileWarnings(int fileRow);
     
