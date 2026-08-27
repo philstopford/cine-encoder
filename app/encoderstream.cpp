@@ -149,10 +149,14 @@ void EncoderStream::initEncoding(StreamData *data,
             acodec.append("pcm_s32le");
         } else if (selected_acodec == tr("Source")) {
             acodec.append("-c:a");
-            acodec.append("copy");
+            acodec.append(data->audioProcessing.isActive() ? "aac" : "copy");
         }
     }
     QStringList aparam = QStringList("-sn");
+    if (data->cont_type == ContentType::Audio && data->audioProcessing.isActive()) {
+        aparam.append("-af");
+        aparam.append(data->audioProcessing.filterChain());
+    }
     if (!sampling.empty()) {
         aparam.append(sampling);
     }

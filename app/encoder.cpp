@@ -316,6 +316,16 @@ void Encoder::initEncoding(const QString  &temp_file,
 
     /************************************* Audio module ***************************************/
     QStringList audio_param = audioModule(t, CE_CODEC, CE_AUDIO_CODEC, CE_AUDIO_BITRATE, CE_AUDIO_SAMPLING, CE_AUDIO_CHANNELS);
+    bool processedAudio = false;
+    for (const auto &p : data.audioProcessing) processedAudio |= p.isActive();
+    for (const auto &p : data.externAudioProcessing) processedAudio |= p.isActive();
+    if (processedAudio) {
+        // A stream-copy codec is invalid after filtering.  Keep the preset's
+        // requested codec where possible, with AAC as the safe fallback for
+        // the legacy "Source" choice.
+        for (int i = 0; i + 1 < audio_param.size(); ++i)
+            if (audio_param[i] == "-c:a" && audio_param[i + 1] == "copy") audio_param[i + 1] = "aac";
+    }
 
     /************************************ Subtitle module *************************************/
     // QStringList sub_param = subModule(container);
@@ -942,6 +952,8 @@ Encoder::audio(Data &data, QStringList &_audioMapParam, QStringList &_audioMetad
     for (int k = 0; k < length; k++) {
         if (data.checks[Data::audioChecks][k]) {
             _audioMapParam.append({"-map", "0:a:"+numToStr(k)+"?" });
+            if (k < data.audioProcessing.size() && data.audioProcessing[k].isActive())
+                _audioMapParam.append({"-filter:a:"+numToStr(audioNum), data.audioProcessing[k].filterChain()});
             _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"language="+Helper::makeFileStringFFMPEGReady(data.fields[Data::audioLangs][k])});
             _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"title="+Helper::makeFileStringFFMPEGReady(data.fields[Data::audioTitles][k])});
             _audioMetadataParam.append({"-disposition:a:"+numToStr(audioNum),data.checks[Data::audioDef][k] ? "default" : "0"});
@@ -958,6 +970,8 @@ int Encoder::extAudio(Data &data, QStringList &_audioMapParam, QStringList &_aud
         if (data.checks[Data::externAudioChecks][k]) {
             _extAudioPaths << "-i" << Helper::makeFileStringFFMPEGReady(data.fields[Data::externAudioPath][k]);
             _audioMapParam.append({"-map", numToStr(extTrackNum) + ":a?" });
+            if (k < data.externAudioProcessing.size() && data.externAudioProcessing[k].isActive())
+                _audioMapParam.append({"-filter:a:"+numToStr(audioNum), data.externAudioProcessing[k].filterChain()});
             _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"language="+Helper::makeFileStringFFMPEGReady(data.fields[Data::externAudioLangs][k])});
             _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"title="+Helper::makeFileStringFFMPEGReady(data.fields[Data::externAudioTitles][k])});
             _audioMetadataParam.append({"-disposition:a:"+numToStr(audioNum),data.checks[Data::externAudioDef][k] ? "default" : "0"});

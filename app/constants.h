@@ -108,6 +108,34 @@ namespace Constants {
         QString title;  // Stream title for metadata export
         float duration;
         int stream;
+        struct AudioTrackProcessing {
+            bool enabled = false;
+            QStringList filters;
+            double delayMs = 0.0;
+            double tempo = 1.0;
+            double cropStartSeconds = 0.0;
+            double cropEndSeconds = 0.0;
+            bool isActive() const { return enabled && (!filters.isEmpty() || delayMs != 0.0 || tempo != 1.0 || cropStartSeconds != 0.0 || cropEndSeconds != 0.0); }
+            QString filterChain() const {
+                QStringList out;
+                if (delayMs > 0.0) out << QString("adelay=%1:all=1").arg(qRound(delayMs));
+                else if (delayMs < 0.0) out << QString("atrim=start=%1").arg(QString::number(-delayMs / 1000.0, 'f', 3));
+                if (cropStartSeconds > 0.0 || cropEndSeconds > 0.0) {
+                    QString f = "atrim=";
+                    if (cropStartSeconds > 0.0) f += QString("start=%1").arg(cropStartSeconds, 0, 'f', 3);
+                    if (cropEndSeconds > 0.0) f += QString("%1end=%2").arg(cropStartSeconds > 0.0 ? ":" : "").arg(cropEndSeconds, 0, 'f', 3);
+                    out << f << "asetpts=PTS-STARTPTS";
+                }
+                if (tempo > 0.0 && tempo != 1.0) {
+                    double value = tempo;
+                    while (value > 2.0) { out << "atempo=2.0"; value /= 2.0; }
+                    while (value < 0.5) { out << "atempo=0.5"; value /= 0.5; }
+                    out << QString("atempo=%1").arg(value, 0, 'f', 6);
+                }
+                out << filters;
+                return out.join(',');
+            }
+        } audioProcessing;
         StreamData() :
             cont_type(ContentType::Audio),
             input_file(QString()),
@@ -168,6 +196,8 @@ namespace Constants {
         // User-selected FFmpeg video filters.  Stored per input so a batch can
         // contain files with different looks without changing the preset format.
         QStringList videoEffects;
+        QVector<StreamData::AudioTrackProcessing> audioProcessing;
+        QVector<StreamData::AudioTrackProcessing> externAudioProcessing;
         
         // Chapter metadata file path for import
         QString chaptersFile;
@@ -181,6 +211,8 @@ namespace Constants {
             presetParams.clear();
             presetName.clear();
             videoEffects.clear();
+            audioProcessing.clear();
+            externAudioProcessing.clear();
             chaptersFile.clear();
         }
     };

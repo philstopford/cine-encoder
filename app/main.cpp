@@ -39,7 +39,8 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName(QString::fromUtf8("CineEncoder"));
     QCoreApplication::setApplicationName(QString::fromUtf8("Cine Encoder"));
     QApplication::setApplicationDisplayName("Cine Encoder");
-    QGuiApplication::setDesktopFileName("Cine Encoder");
+    QCoreApplication::setApplicationVersion("3.7");
+    QGuiApplication::setDesktopFileName("CineEncoder");
     QApplication app(argc, argv);
     QApplication::setStyle(QStyleFactory::create("Fusion"));
     /*const int id = QFontDatabase::addApplicationFont(":/resources/fonts/interregular.otf");

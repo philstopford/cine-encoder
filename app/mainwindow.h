@@ -159,6 +159,7 @@ private:
                 *m_pActExportChapters,
                 *m_pActImportChapters,
                 *m_pActEffects,
+                *m_pActAudioEffects,
                 *m_pActPreview,
                 *m_pActSettings,
                 *m_pActResetView,
@@ -346,6 +347,7 @@ private slots:
     void clearAudioStreams();
     void clearSubtitleStreams();
     void showVideoSplitter();
+    void onAudioEffects();
     void repeatHandler_Type_1();
     void repeatHandler_Type_2();
     void onApplyPreset();

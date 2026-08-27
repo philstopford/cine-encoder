@@ -557,7 +557,7 @@ void QStreamView::resetFlags(FlagType type, const int excludeIndex)
     }
 }
 
-void QStreamView::onDefaultStreamClicked(QWidget* cell, bool checked, bool& deflt, bool& state, bool& burn)
+void QStreamView::onDefaultStreamClicked(QWidget* cell, bool checked, bool& deflt, bool& state, bool& burn, bool burnOnly)
 {
     const int cellIndex = m_pLayout->indexOf(cell);
     resetFlags(FlagType::Burn, cellIndex);
@@ -567,11 +567,24 @@ void QStreamView::onDefaultStreamClicked(QWidget* cell, bool checked, bool& defl
     QLayoutItem *item = m_pLayout->itemAt(cellIndex);
     if (item && item->widget()) {
         if (deflt) {
-            // When marking as default, ensure the stream is selected
-            auto *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
-            if (chkBox && !chkBox->isChecked()) {
-                chkBox->setChecked(true);
-                state = true;
+            // When marking a copyable stream as default, ensure it is selected.
+            // Burn-only subtitles cannot be copied, so their checkbox must stay
+            // clear; default and burn are the only applicable flags.
+            if (!burnOnly) {
+                auto *chkBox = item->widget()->findChild<QCheckBox*>("checkStream");
+                if (chkBox && !chkBox->isChecked()) {
+                    chkBox->setChecked(true);
+                    state = true;
+                }
+            }
+
+            // A burn-only subtitle cannot be copied, so making it the default
+            // also implicitly selects it for hard-burning.
+            if (burnOnly) {
+                auto *brn_rbtn = item->widget()->findChild<QRadioButton*>("burnInto");
+                if (brn_rbtn)
+                    brn_rbtn->setChecked(true);
+                burn = true;
             }
         } else {
             // When un-marking as default, also clear burn flag
@@ -700,6 +713,8 @@ QWidget *QStreamView::createCell(bool &state,
     lut->setVerticalSpacing(4 * Helper::scaling());
     cell->setLayout(lut);
 
+    bool burn_only = false;
+
     // Radio button 'Default stream'
     QRadioButton *rbtn = QStreamViewPrivate::createRadio(cell, "defaultStream", "", deflt);
     rbtn->setFixedSize(QSize(12,12) * Helper::scaling());
@@ -707,7 +722,8 @@ QWidget *QStreamView::createCell(bool &state,
     // Install event filter on default radio button to forward context menu events to parent cell
     rbtn->installEventFilter(this);
     connect(rbtn, &QRadioButton::clicked, this, [this, cell, &burn, &deflt, &state](bool checked) {
-        onDefaultStreamClicked(cell, checked, deflt, state, burn);
+        onDefaultStreamClicked(cell, checked, deflt, state, burn,
+                               cell->property("burnOnly").toBool());
     });
     lut->addWidget(rbtn, 0, 0, Qt::AlignLeft);
 
@@ -743,7 +759,6 @@ QWidget *QStreamView::createCell(bool &state,
     labDuration->setFixedHeight(ROW_HEIGHT * Helper::scaling());
     infoLut->addWidget(labDuration, 0, 0);
 
-    bool burn_only = false;
     bool isIncompatible = false; // Track incompatibility for visual styling
     
     // Label channels
@@ -783,6 +798,7 @@ QWidget *QStreamView::createCell(bool &state,
             state = false;  // Cannot copy incompatible streams
             isIncompatible = true;
         }
+        cell->setProperty("burnOnly", burn_only);
         QRadioButton *brn_rbtn = QStreamViewPrivate::createRadio(info, "burnInto", tr("Burn into video"), burn);
         brn_rbtn->setFixedHeight(12 * Helper::scaling());
         brn_rbtn->setToolTip(tr("Burn into video"));
@@ -793,7 +809,7 @@ QWidget *QStreamView::createCell(bool &state,
         }
         // Install event filter on burn radio button to forward context menu events to parent cell
         brn_rbtn->installEventFilter(this);
-        connect(brn_rbtn, &QRadioButton::clicked, this, [this, cell, &burn, &deflt, &state, &burn_only](bool checked) {
+        connect(brn_rbtn, &QRadioButton::clicked, this, [this, cell, &burn, &deflt, &state, burn_only](bool checked) {
             onBurnIntoClicked(cell, checked, burn, deflt, state, burn_only);
         });
         infoLut->addWidget(brn_rbtn, 0, 1, Qt::AlignLeft);

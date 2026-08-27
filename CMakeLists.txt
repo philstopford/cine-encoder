@@ -60,6 +60,7 @@ add_executable(cine_encoder WIN32 MACOSX_BUNDLE
     app/popupmessage.cpp app/popupmessage.h app/popupmessage.ui
     app/preset.cpp app/preset.h app/preset.ui
     app/previewdialog.cpp app/previewdialog.h
+    app/audioeffectsdialog.cpp app/audioeffectsdialog.h
     app/widgets/qabvideowidget.cpp app/widgets/qabvideowidget.h
     app/progress.cpp app/progress.h app/progress.ui
     app/report.cpp app/report.h app/report.ui
@@ -81,6 +82,7 @@ add_executable(cine_encoder WIN32 MACOSX_BUNDLE
     app/widgets/qdoublebutton.cpp app/widgets/qdoublebutton.h
     app/widgets/qeffectstack.cpp app/widgets/qeffectstack.h
     app/widgets/qstreamview.cpp app/widgets/qstreamview.h
+    app/widgets/qaudiotimeline.cpp app/widgets/qaudiotimeline.h
     app/files.qrc
 )
 target_link_libraries(cine_encoder PRIVATE

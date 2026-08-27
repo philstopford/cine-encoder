@@ -45,7 +45,7 @@ private:
     void updateIncompatibleStreamStyling(QWidget* cell, QCheckBox* chkBox, bool isIncompatible, bool isSelected);
     
     // Event handlers for UI interactions
-    void onDefaultStreamClicked(QWidget* cell, bool checked, bool& deflt, bool& state, bool& burn);
+    void onDefaultStreamClicked(QWidget* cell, bool checked, bool& deflt, bool& state, bool& burn, bool burnOnly);
     void onBurnIntoClicked(QWidget* cell, bool checked, bool& burn, bool& deflt, bool& state, bool burnOnly);
     void onStreamCheckboxClicked(QWidget* cell, QCheckBox* chkBox, bool& state, bool& deflt, bool& burn, bool burnOnly, bool isIncompatible);
     

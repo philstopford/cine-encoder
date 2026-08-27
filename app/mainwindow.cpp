@@ -22,6 +22,7 @@
 #include "helper.h"
 #include "report.h"
 #include "streamconverter.h"
+#include "audioeffectsdialog.h"
 #include "fileiconprovider.h"
 #include "configurationmanager.h"
 #include "previewdialog.h"
@@ -1100,6 +1101,7 @@ void MainWindow::createConnections()
     m_pActExportChapters = new QAction(tr("Export chapters to file"), menuTools);
     m_pActImportChapters = new QAction(tr("Import chapters from file"), menuTools);
     m_pActEffects = new QAction(tr("Video effects…"), menuTools);
+    m_pActAudioEffects = new QAction(tr("Audio effects / timing…"), menuTools);
     m_pActPreview = new QAction(tr("Preview current settings…"), menuTools);
     connect(m_pActEditMetadata, &QAction::triggered, this, &MainWindow::showMetadataEditor);
     connect(m_pActSelectAudio, &QAction::triggered, this, &MainWindow::showAudioStreams);
@@ -1110,6 +1112,7 @@ void MainWindow::createConnections()
     connect(m_pActExportChapters, &QAction::triggered, this, &MainWindow::onExportChapters);
     connect(m_pActImportChapters, &QAction::triggered, this, &MainWindow::onImportChapters);
     connect(m_pActEffects, &QAction::triggered, this, &MainWindow::onEffects);
+    connect(m_pActAudioEffects, &QAction::triggered, this, &MainWindow::onAudioEffects);
     connect(m_pActPreview, &QAction::triggered, this, &MainWindow::onPreviewSettings);
     menuTools->addAction(m_pActEditMetadata);
     menuTools->addSeparator();
@@ -1125,6 +1128,7 @@ void MainWindow::createConnections()
     menuTools->addAction(m_pActImportChapters);
     menuTools->addSeparator();
     menuTools->addAction(m_pActEffects);
+    menuTools->addAction(m_pActAudioEffects);
     menuTools->addAction(m_pActPreview);
 
     m_pActResetView = new QAction(tr("Reset state"), menuView);
@@ -1294,6 +1298,19 @@ void MainWindow::onEffects()
     m_pDocks[DockIndex::STREAMS_DOCK]->raise();
     ui->tabWidgetStreams->setCurrentIndex(m_effectsTabIndex);
     m_pEffectStack->setFilters(&m_data[m_row].videoEffects);
+}
+
+void MainWindow::onAudioEffects()
+{
+    if (m_row < 0 || m_row >= m_data.size()) {
+        showInfoMessage(tr("Select an input file before editing audio effects."));
+        return;
+    }
+    auto &d = m_data[m_row];
+    d.audioProcessing.resize(d.fields[Data::audioFormats].size());
+    d.externAudioProcessing.resize(d.fields[Data::externAudioFormats].size());
+    AudioEffectsDialog dialog(d, m_input_file, this);
+    dialog.exec();
 }
 
 void MainWindow::onPreviewSettings()
@@ -4355,6 +4372,8 @@ void MainWindow::onExtract(QStreamView::Content type, int num)
     data.title = streamTitle;  // Include stream title for metadata
     data.duration = 0.001f * duration;
     data.stream = num;
+    if (type == QStreamView::Content::Audio && num < m_data[m_row].audioProcessing.size())
+        data.audioProcessing = m_data[m_row].audioProcessing[num];
     StreamConverter ext(this,
                         StreamConverter::Mode::Extract,
                         &data,
