@@ -602,7 +602,8 @@ void QStreamView::onBurnIntoClicked(QWidget* cell, bool checked, bool& burn, boo
     const int cellIndex = m_pLayout->indexOf(cell);
     resetFlags(FlagType::Burn, cellIndex);
     resetFlags(FlagType::Default, cellIndex);
-    resetFlags(FlagType::Check, cellIndex);
+    // Keep normal subtitle selections intact.  The selected burn track is
+    // deselected from copying below, but other tracks must not be cleared.
     
     // For format-incompatible subtitles, burn must always be true (burnOnly mode)
     // Otherwise, burn follows the user's selection

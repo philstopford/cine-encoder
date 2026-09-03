@@ -1444,8 +1444,10 @@ void Encoder::subtVF(const QString &input_file, const QString &subtitle_font, in
     // Keep with a QString here as there are no spaces in the parameters.
     QString  burn_string;
     // Hard-coding UTF-8. Not very elegant....
-    burn_string = "charenc=utf-8:force_style=\"'FontName='" + subtitle_font +
-                          "',Fontsize=" + numToStr(subtitle_font_size) +
+    // force_style is a single ASS style list.  Keep the whole list quoted for
+    // the filter parser, but do not quote individual key/value fragments.
+    burn_string = "charenc=utf-8:force_style='FontName=" + subtitle_font +
+                          ",Fontsize=" + numToStr(subtitle_font_size) +
                           ",PrimaryColour=&H" + subtitle_font_color +
                           ",BorderStyle=4";
     if (burn_background) {
@@ -1477,7 +1479,7 @@ void Encoder::subtVF(const QString &input_file, const QString &subtitle_font, in
         burn_string += QString(",Alignment="+ numToStr(location));
     }
 
-    burn_string += QString("'\"");
+    burn_string += QString("'");
     for (int k = 0; k < data.checks[Data::subtBurn].size(); k++) {
         if (data.checks[Data::subtBurn][k]) {
             std::string subtitleFormat = data.fields[Data::subtFormats][k].toStdString();

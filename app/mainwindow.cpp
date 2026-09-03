@@ -109,6 +109,38 @@ using namespace Constants;
 #define SINFO(a, b) QString::fromStdWString(MI.Get(Stream_Text, a, __T(b)))
 #define GETTEXT(row, col) ui->tableWidget->item(row, ColumnIndex::col)->text()
 
+namespace {
+QString probeFrameRate(const QString &file)
+{
+    QProcess probe;
+    probe.start(QStringLiteral("ffprobe"), {QStringLiteral("-v"), QStringLiteral("error"),
+                                             QStringLiteral("-select_streams"), QStringLiteral("v:0"),
+                                             QStringLiteral("-show_entries"), QStringLiteral("stream=avg_frame_rate,r_frame_rate"),
+                                             QStringLiteral("-of"), QStringLiteral("csv=p=0"), file});
+    if (!probe.waitForFinished(5000))
+        return {};
+
+    const auto lines = QString::fromLocal8Bit(probe.readAllStandardOutput()).split('\n', Qt::SkipEmptyParts);
+    for (const QString &line : lines) {
+        for (const QString &value : line.trimmed().split(',')) {
+            const QStringList parts = value.trimmed().split('/');
+            bool numeratorOk = false;
+            bool denominatorOk = false;
+            const double numerator = parts.value(0).toDouble(&numeratorOk);
+            const double denominator = parts.size() == 2 ? parts.at(1).toDouble(&denominatorOk) : 1.0;
+            const double fps = denominatorOk || parts.size() == 1 ? numerator / denominator : 0.0;
+            if (numeratorOk && denominator > 0.0 && fps > 0.0 && fps <= 240.0) {
+                QString result = QString::number(fps, 'f', 3);
+                while (result.endsWith('0')) result.chop(1);
+                if (result.endsWith('.')) result.chop(1);
+                return result;
+            }
+        }
+    }
+    return {};
+}
+}
+
 typedef void(MainWindow::*FnVoidVoid)();
 typedef void(MainWindow::*FnVoidInt)(int);
 
@@ -3091,6 +3123,13 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             double duration_double = 0.001 * VINFO(0, "Duration").toDouble();
             QString durationTime = Helper::timeConverter(static_cast<float>(duration_double));
             QString fps_qstr = VINFO(0, "FrameRate");
+            bool fps_ok = false;
+            fps_qstr.toDouble(&fps_ok);
+            if (!fps_ok || fps_qstr.toDouble() <= 0.0) {
+                const QString probed_fps = probeFrameRate(file);
+                if (!probed_fps.isEmpty())
+                    fps_qstr = probed_fps;
+            }
             const QString status("");
             int bitrate_int = static_cast<int>(0.001 * VINFO(0, "BitRate").toDouble());
             QString coeff = VINFO(0, "matrix_coefficients");
