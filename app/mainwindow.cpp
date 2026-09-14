@@ -26,6 +26,7 @@
 #include "fileiconprovider.h"
 #include "configurationmanager.h"
 #include "previewdialog.h"
+#include "inputvalidator.h"
 #include "widgets/qeffectstack.h"
 #include <QDragEnterEvent>
 #include <QMimeDatabase>
@@ -42,6 +43,7 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QDirIterator>
 #include <QProcess>
 #include <QSizePolicy>
 #include <QDialog>
@@ -65,6 +67,52 @@
 #include <QXmlStreamWriter>
 #include <QString>
 #include <utility>
+
+namespace {
+
+bool isSupportedDropFile(const QString &path)
+{
+    const QFileInfo fileInfo(path);
+    if (!fileInfo.isFile())
+        return false;
+
+    const QString extension = fileInfo.suffix().toLower();
+    return InputValidator::isValidVideoExtension(extension) ||
+           InputValidator::isValidAudioExtension(extension);
+}
+
+QStringList collectDroppedFiles(const QList<QUrl> &urls)
+{
+    QStringList files;
+    QSet<QString> seen;
+
+    const auto appendFile = [&files, &seen](const QString &path) {
+        const QString absolutePath = QFileInfo(path).absoluteFilePath();
+        if (isSupportedDropFile(absolutePath) && !seen.contains(absolutePath)) {
+            seen.insert(absolutePath);
+            files.append(absolutePath);
+        }
+    };
+
+    for (const QUrl &url : urls) {
+        if (!url.isLocalFile())
+            continue;
+
+        const QFileInfo fileInfo(url.toLocalFile());
+        if (fileInfo.isDir()) {
+            QDirIterator iterator(fileInfo.absoluteFilePath(), QDir::Files,
+                                  QDirIterator::Subdirectories);
+            while (iterator.hasNext())
+                appendFile(iterator.next());
+        } else {
+            appendFile(fileInfo.absoluteFilePath());
+        }
+    }
+
+    return files;
+}
+
+}
 
 #if defined (Q_OS_UNIX)
     #ifndef UNICODE
@@ -3485,18 +3533,8 @@ void MainWindow::dragEnterEvent(QDragEnterEvent* event)     // Drag enter event
     // Only accept external file drops, not internal Qt drag operations (like column reordering)
     // For external drags, event->source() will be null or from outside our application
     if (event->source() == nullptr && event->mimeData()->hasUrls()) {
-        // Check if this is an external file drop by verifying the URLs are actual file paths
-        QList<QUrl> urlList = event->mimeData()->urls();
-        bool hasValidFiles = false;
-        for (const QUrl& url : urlList) {
-            if (url.isLocalFile() && QFileInfo::exists(url.toLocalFile())) {
-                hasValidFiles = true;
-                break;
-            }
-        }
-        if (hasValidFiles) {
+        if (!collectDroppedFiles(event->mimeData()->urls()).isEmpty())
             event->acceptProposedAction();
-        }
     }
 }
 
@@ -3507,24 +3545,10 @@ void MainWindow::dropEvent(QDropEvent* event)     // Drag & Drop
     // Only process external file drops, not internal Qt drag operations (like column reordering)
     // For external drags, event->source() will be null or from outside our application
     if (event->source() == nullptr && mimeData->hasUrls()) {
-        QStringList formats;
-        QStringList pathList;
-        QList<QUrl> urlList = mimeData->urls();
-        
-        // Only process external file drops with valid files
-        bool hasValidFiles = false;
-        for (int i = 0; i < urlList.size(); ++i) {
-            QString filePath = urlList.at(i).toLocalFile();
-            if (QFileInfo::exists(filePath)) {
-                pathList.append(filePath);
-                formats.append(QMimeDatabase().mimeTypeForFile(pathList.at(i)).name());
-                hasValidFiles = true;
-            }
-        }
-        
-        if (hasValidFiles && (!formats.filter("audio/").empty() || !formats.filter("video/").empty())) {
+        const QStringList pathList = collectDroppedFiles(mimeData->urls());
+        if (!pathList.isEmpty())
             openFiles(pathList);
-        }
+        event->acceptProposedAction();
     }
 }
 
