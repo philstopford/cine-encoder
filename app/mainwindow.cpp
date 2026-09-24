@@ -2193,12 +2193,33 @@ void MainWindow::showSubtitles()
 
 void MainWindow::clearAudioStreams()
 {
-    ui->streamAudio->deselectTitles();
+    const QModelIndexList selected = ui->tableWidget->selectionModel()->selectedRows();
+    for (const QModelIndex &index : selected) {
+        if (index.row() >= 0 && index.row() < m_data.size()) {
+            m_data[index.row()].checks[Data::audioChecks].fill(false);
+            m_data[index.row()].checks[Data::externAudioChecks].fill(false);
+            m_data[index.row()].checks[Data::audioDef].fill(false);
+        }
+    }
+    if (m_row != -1)
+        ui->streamAudio->deselectTitles();
 }
 
 void MainWindow::clearSubtitleStreams()
 {
-    ui->streamSubtitle->deselectTitles();
+    const QModelIndexList selected = ui->tableWidget->selectionModel()->selectedRows();
+    for (const QModelIndex &index : selected) {
+        if (index.row() >= 0 && index.row() < m_data.size()) {
+            m_data[index.row()].checks[Data::subtChecks].fill(false);
+            m_data[index.row()].checks[Data::externSubtChecks].fill(false);
+            m_data[index.row()].checks[Data::subtDef].fill(false);
+            m_data[index.row()].checks[Data::externSubtDef].fill(false);
+            m_data[index.row()].checks[Data::subtBurn].fill(false);
+            m_data[index.row()].checks[Data::externSubtBurn].fill(false);
+        }
+    }
+    if (m_row != -1)
+        ui->streamSubtitle->deselectTitles();
 }
 
 void MainWindow::showVideoSplitter()
@@ -2901,14 +2922,25 @@ void MainWindow::onAddFiles() // Add files
 
 void MainWindow::onRemoveFile()  // Remove file from table
 {
-    const int row = ui->tableWidget->currentRow();
-    if (row != -1) {
-        ui->tableWidget->blockSignals(true);
+    QList<int> rows;
+    for (const QModelIndex &index : ui->tableWidget->selectionModel()->selectedRows())
+        rows.append(index.row());
+
+    // Keep the button useful when the table has a current row without an
+    // explicit selection.
+    if (rows.isEmpty() && ui->tableWidget->currentRow() != -1)
+        rows.append(ui->tableWidget->currentRow());
+    if (rows.isEmpty())
+        return;
+
+    std::sort(rows.begin(), rows.end(), std::greater<int>());
+    ui->tableWidget->blockSignals(true);
+    for (const int row : rows) {
         ui->tableWidget->removeRow(row);
         Helper::eraseRow(m_data, row);
-        ui->tableWidget->blockSignals(false);
-        onTableSelectionChanged();
     }
+    ui->tableWidget->blockSignals(false);
+    onTableSelectionChanged();
 }
 
 void MainWindow::onRemoveAllFiles()  // Remove all files from table
@@ -3523,7 +3555,10 @@ void MainWindow::provideContextMenu(const QPoint &pos)     // Call table items m
 {
     QTableWidgetItem *item = ui->tableWidget->itemAt(pos);
     if (item) {
-        ui->tableWidget->selectRow(item->row());
+        // Keep a multi-selection when the menu is opened on one of its rows.
+        // A right-click on an unselected row starts a new single-row selection.
+        if (!ui->tableWidget->selectionModel()->isRowSelected(item->row(), QModelIndex()))
+            ui->tableWidget->selectRow(item->row());
         m_pItemMenu->exec(ui->tableWidget->viewport()->mapToGlobal(pos));
     }
 }
