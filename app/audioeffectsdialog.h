@@ -9,6 +9,7 @@ class AudioEffectsDialog : public QDialog {
     Q_OBJECT
 public:
     AudioEffectsDialog(Constants::Data &data, const QString &source, QWidget *parent = nullptr);
+    ~AudioEffectsDialog() override;
 private slots:
     void trackChanged(int index);
     void acceptChanges();

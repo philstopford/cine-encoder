@@ -66,6 +66,23 @@ AudioEffectsDialog::AudioEffectsDialog(Constants::Data &data, const QString &sou
     connect(previewButton, &QPushButton::clicked, this, &AudioEffectsDialog::preview);
     if (m_track->count()) load(0);
 }
+AudioEffectsDialog::~AudioEffectsDialog() {
+    if (m_renderDebounce) m_renderDebounce->stop();
+    if (m_waveformProcess) {
+        disconnect(m_waveformProcess, nullptr, this, nullptr);
+        if (m_waveformProcess->state() != QProcess::NotRunning) {
+            m_waveformProcess->kill();
+            m_waveformProcess->waitForFinished(500);
+        }
+    }
+    if (m_previewProcess) {
+        disconnect(m_previewProcess, nullptr, this, nullptr);
+        if (m_previewProcess->state() != QProcess::NotRunning) {
+            m_previewProcess->kill();
+            m_previewProcess->waitForFinished(500);
+        }
+    }
+}
 void AudioEffectsDialog::save() { if (m_current < 0) return; auto &p = m_current < 1000 ? m_data.audioProcessing[m_current] : m_data.externAudioProcessing[m_current - 1000]; p.enabled=m_enabled->isChecked(); p.delayMs=m_delay->value(); p.tempo=m_tempo->value(); p.cropStartSeconds=m_start->value(); p.cropEndSeconds=m_end->value(); p.filters=m_filters->text().split(',', Qt::SkipEmptyParts); for (auto &f:p.filters) f=f.trimmed(); }
 void AudioEffectsDialog::load(int i) { if (m_current >= 0) save(); m_current=m_track->itemData(i).toInt(); auto &p=m_current<1000?m_data.audioProcessing[m_current]:m_data.externAudioProcessing[m_current-1000]; m_enabled->setChecked(p.enabled);m_delay->setValue(p.delayMs);m_tempo->setValue(p.tempo);m_start->setValue(p.cropStartSeconds);m_end->setValue(p.cropEndSeconds);m_filters->setText(p.filters.join(',')); if(m_timeline && m_current<1000){m_timeline->setOffset(m_current,p.delayMs);m_timeline->setTrim(m_current,p.cropStartSeconds,p.cropEndSeconds);loadWaveform(m_current);} }
 void AudioEffectsDialog::loadWaveform(int track) {
