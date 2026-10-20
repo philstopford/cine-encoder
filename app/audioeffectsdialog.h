@@ -18,6 +18,8 @@ private:
     Constants::Data &m_data;
     QString m_source;
     QComboBox *m_track;
+    QComboBox *m_videoReference;
+    QComboBox *m_syncReference;
     QCheckBox *m_enabled;
     QDoubleSpinBox *m_delay, *m_tempo, *m_start, *m_end;
     QLineEdit *m_filters;
@@ -37,9 +39,23 @@ private:
     QDoubleSpinBox *m_loopEnd = nullptr;
     QSlider *m_zoom = nullptr;
     QLabel *m_timeLabel = nullptr;
+    QLabel *m_syncResult = nullptr;
+    QPushButton *m_applySuggestedOffset = nullptr;
+    QPushButton *m_copyTiming = nullptr;
+    QPushButton *m_pasteTiming = nullptr;
     int m_current = -1;
+    double m_suggestedOffsetMs = 0.0;
+    QVector<float> m_analysisTarget;
+    QVector<float> m_analysisReference;
     void load(int index);
     void save();
     void loadWaveform(int track);
+    int timelineTrack(int track) const;
+    int logicalTrack(int timelineTrack) const;
+    QString trackFile(int logicalTrack) const;
+    QString trackMap(int logicalTrack) const;
+    void analyzeSync();
+    void decodeAnalysisWaveform(const QString &file, const QString &map, bool target);
+    void finishSyncAnalysis();
 };
 #endif
