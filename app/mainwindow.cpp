@@ -1153,6 +1153,16 @@ void MainWindow::createConnections()
     m_pTimerSetThumbnail->setInterval(800);
     connect(m_pTimerSetThumbnail, SIGNAL(timeout()), this, SLOT(repeatHandler_Type_2()));
 
+    // Application activation (e.g. clicking macOS dock icon)
+    qApp->installEventFilter(this);
+    connect(qApp, &QGuiApplication::applicationStateChanged, this, [this](Qt::ApplicationState state) {
+        if (state == Qt::ApplicationActive) {
+            if (isMinimized() || !isVisible()) {
+                onRestoreWindowState();
+            }
+        }
+    });
+
     // Legacy combo box connection (keeping for compatibility)  
     connect(ui->comboBoxMode, SIGNAL(currentIndexChanged(int)), this, SLOT(onComboModeChanged(int)));
 
@@ -1369,7 +1379,7 @@ void MainWindow::createConnections()
 
     for (int i = VIDEO_TITLE; i < VIDEO_DESCRIPTION + 1; i++) {
         Q_ASSERT(i < 6);
-        connect(videoMetadata[i], &QLineEdit::editingFinished, this, [=, this](){
+        connect(videoMetadata[i], &QLineEdit::editingFinished, this, [this, i, videoMetadata](){
             if (m_row != -1) {
                 if (videoMetadata[i]->isModified()) {
                     videoMetadata[i]->setModified(false);
@@ -2136,7 +2146,22 @@ void MainWindow::onReport()
 
 void MainWindow::onRestoreWindowState()
 {
-    m_expandWindowsState ? showMaximized() : showNormal();
+    if (isMinimized() || !isVisible()) {
+        m_expandWindowsState ? showMaximized() : showNormal();
+    } else {
+        m_expandWindowsState ? showMaximized() : showNormal();
+    }
+    raise();
+    activateWindow();
+
+    QWidget *activeModal = QApplication::activeModalWidget();
+    if (activeModal) {
+        if (activeModal->isMinimized() || !activeModal->isVisible()) {
+            activeModal->showNormal();
+        }
+        activeModal->raise();
+        activeModal->activateWindow();
+    }
 }
 
 void MainWindow::onActionAbout()   // About
@@ -2529,13 +2554,24 @@ void MainWindow::changeEvent(QEvent *event)
 {
     BaseWindow::changeEvent(event);
     if (event->type() == QEvent::WindowStateChange) {
-        m_expandWindowsState = isMaximized();
+        if (!isMinimized()) {
+            m_expandWindowsState = isMaximized();
+        }
         setExpandIcon();
     }
 }
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
+    if (watched == qApp) {
+        if (event->type() == QEvent::ApplicationActivate) {
+            if (isMinimized() || !isVisible()) {
+                onRestoreWindowState();
+            }
+        }
+        return false;
+    }
+
     // Safety check to ensure UI is fully initialized before processing any events
     if (!ui || !ui->tableWidget) {
         return BaseWindow::eventFilter(watched, event);

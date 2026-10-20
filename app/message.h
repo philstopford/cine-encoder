@@ -50,7 +50,7 @@ private:
     void setMessage();
     void show_message();
     void repeatHandler();
-    void onExpandWindow() {};
+    void onExpandWindow() override {};
 
     Ui::Message *ui;
     QTimer      *m_timer;

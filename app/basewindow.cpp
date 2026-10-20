@@ -32,7 +32,7 @@ BaseWindow::BaseWindow(QWidget *parent, bool isResizable) :
     m_borderWidth(BORDER)
 {
     setAttribute(Qt::WA_TranslucentBackground);
-    setAttribute(Qt::WA_ShowModal);
+    setWindowTitle(QStringLiteral("Cine Encoder"));
     auto *ui_widget = new QWidget(this);
     setCentralWidget(ui_widget);
     setMaskWidget(ui_widget);

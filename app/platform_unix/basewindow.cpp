@@ -29,7 +29,6 @@ BaseWindow::BaseWindow(QWidget *parent, bool isReizable) :
     m_isResizable(isReizable)
 {
     setAttribute(Qt::WA_TranslucentBackground);
-    setAttribute(Qt::WA_ShowModal);
     auto *ui_widget = new QWidget(this);
     setCentralWidget(ui_widget);
     setMaskWidget(ui_widget);

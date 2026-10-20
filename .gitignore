@@ -39,3 +39,4 @@ moc_*
 qrc_*
 ui_*
 *.log
+.DS_Store

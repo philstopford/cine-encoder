@@ -136,12 +136,18 @@ if(FALSE) # Disabled - using unified implementation
 endif()
 
 if(APPLE)
+    set(MACOSX_ICON "${CMAKE_CURRENT_SOURCE_DIR}/app/cine-encoder.icns")
+    set_source_files_properties(${MACOSX_ICON} PROPERTIES
+        MACOSX_PACKAGE_LOCATION "Resources"
+    )
+    target_sources(cine_encoder PRIVATE ${MACOSX_ICON})
     set_target_properties(cine_encoder PROPERTIES
         MACOSX_BUNDLE TRUE
         MACOSX_BUNDLE_BUNDLE_NAME "Cine Encoder"
         MACOSX_BUNDLE_GUI_IDENTIFIER "com.cineencoder.app"
         MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
+        MACOSX_BUNDLE_ICON_FILE "cine-encoder.icns"
     )
 endif()
 

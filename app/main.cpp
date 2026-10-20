@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationVersion("3.7");
     QGuiApplication::setDesktopFileName("CineEncoder");
     QApplication app(argc, argv);
+    QApplication::setWindowIcon(QIcon(":/resources/icons/svg/cine-encoder.svg"));
     QApplication::setStyle(QStyleFactory::create("Fusion"));
     /*const int id = QFontDatabase::addApplicationFont(":/resources/fonts/interregular.otf");
     QString sysFamily = app.font().family();

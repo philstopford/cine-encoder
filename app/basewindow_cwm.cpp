@@ -33,7 +33,6 @@ BaseWindow::BaseWindow(QWidget *parent, bool isReizable) :
     m_clickPressedToResizeFlag(8, false)
 {
     setAttribute(Qt::WA_TranslucentBackground);
-    setAttribute(Qt::WA_ShowModal);
     setAttribute(Qt::WA_Hover, true);
     QWidget *ui_widget = new QWidget(this);
     setCentralWidget(ui_widget);

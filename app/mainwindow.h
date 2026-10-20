@@ -295,12 +295,12 @@ private slots:
     bool readXMLPresetFile(const QString& file);
     void setDocksParameters(const QList<int>& dockSizesX, const QList<int>& dockSizesY);
 
-    void showEvent(QShowEvent*);
-    void closeEvent(QCloseEvent*);
-    void changeEvent(QEvent*);
-    bool eventFilter(QObject*, QEvent*);
-    void dragEnterEvent(QDragEnterEvent*);
-    void dropEvent(QDropEvent*);
+    void showEvent(QShowEvent*) override;
+    void closeEvent(QCloseEvent*) override;
+    void changeEvent(QEvent*) override;
+    bool eventFilter(QObject*, QEvent*) override;
+    void dragEnterEvent(QDragEnterEvent*) override;
+    void dropEvent(QDropEvent*) override;
 
     void onTableSelectionChanged();
 
@@ -363,7 +363,7 @@ private slots:
     void onTreeDblClicked(QTreeWidgetItem *item, int column);
     void onSliderResizeChanged(int value);
     void onSetOutFolder();
-    void paintEvent(QPaintEvent *event);
+    void paintEvent(QPaintEvent *event) override;
     void onComboModeChanged(int index);
     void onResetLabels();
     void onTreeDirsClicked(const QModelIndex&);
