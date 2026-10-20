@@ -117,7 +117,7 @@ cd build
 
 # Configure with CMake
 echo "Configuring with CMake..."
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_PREFIX_PATH="$QT6_DIR" -DQt6_DIR="$QT6_DIR" ..
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_PREFIX_PATH="$QT6_DIR" -DQt6_DIR="$QT6_DIR" ..
 
 # Build the application
 echo "Building application..."

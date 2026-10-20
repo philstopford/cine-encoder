@@ -27,6 +27,10 @@ using namespace Constants;
 #include <windows.h>
 #include <tlhelp32.h>
 #endif
+#if defined(Q_OS_MACOS)
+#include <sys/resource.h>
+#include <unistd.h>
+#endif
 
 #define rnd(num) static_cast<int>(round(num))
 
@@ -333,6 +337,8 @@ void EncoderStream::encode()   // Encode
 
 #if defined(Q_OS_WIN64)
     set_process_prio_win();
+#elif defined(Q_OS_MACOS)
+    set_process_prio_macos();
 #endif
 }
 
@@ -375,6 +381,43 @@ void EncoderStream::set_process_prio_win()
 
     // Close the process handle
     CloseHandle(hProcess);
+}
+#endif
+
+#if defined(Q_OS_MACOS)
+void EncoderStream::set_process_prio_macos()
+{
+    QString nicelevel;
+    switch (_prio)
+    {
+        case Constants::lowest:
+            nicelevel = "19";
+            break;
+        case Constants::low:
+            nicelevel = "9";
+            break;
+        case Constants::normal:
+        default:
+            nicelevel = "0";
+            break;
+        case Constants::high:
+            nicelevel = "-9";
+            break;
+        case Constants::highest:
+            nicelevel = "-19";
+            break;
+    }
+
+    // Use renice command to set priority after process has started
+    auto program = "renice";
+    auto arguments = QStringList{"-n", nicelevel, "-p", QString::number(m_pProcessEncoding->processId())};
+
+    try {
+        QProcess::startDetached(program, arguments);
+    }
+    catch (...) {
+        Print("renice command not found on macOS!!!");
+    }
 }
 #endif
 

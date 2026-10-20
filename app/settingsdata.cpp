@@ -26,7 +26,7 @@ SettingsData::SettingsData()
     , m_ffmpegPrio(normal)
     , m_theme(0)
     , m_language("en")
-    , m_fontSize(10)
+    , m_fontSize(FONTSIZE)
     , m_hideInTrayFlag(false)
     , m_prefixType(0)
     , m_prefixName(defaultPrefix())
@@ -37,7 +37,7 @@ SettingsData::SettingsData()
     , m_subtitlesColor(Qt::white)
     , m_subtitlesBackgroundColor(Qt::black)
     , m_subtitlesLocation(0)
-    , m_subtitlesFontSize(10)
+    , m_subtitlesFontSize(FONTSIZE)
     , m_deinterlaceEnabled(false)
     , m_deinterlaceFilter(Constants::DEINTERLACE_NONE)
     , m_requiresRestart(false)
@@ -364,7 +364,7 @@ void SettingsData::resetToDefaults()
     m_ffmpegPrio = normal;
     m_theme = 0;
     m_language = "en";
-    m_fontSize = 8;
+    m_fontSize = FONTSIZE;
     m_hideInTrayFlag = false;
     m_prefixType = 0;
     m_prefixName = defaultPrefix();
@@ -375,7 +375,7 @@ void SettingsData::resetToDefaults()
     m_subtitlesColor = Qt::white;
     m_subtitlesBackgroundColor = Qt::black;
     m_subtitlesLocation = 0;
-    m_subtitlesFontSize = 8;
+    m_subtitlesFontSize = FONTSIZE;
     m_deinterlaceEnabled = false;
     m_deinterlaceFilter = Constants::DEINTERLACE_NONE;
     m_requiresRestart = true;

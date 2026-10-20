@@ -20,17 +20,23 @@
 #include <QTranslator>
 #include <iostream>
 #include <QXmlStreamReader>
+#include <QLockFile>
+#include <QDir>
 #include "mainwindow.h"
 #include "helper.h"
 
-
-int checkForDuplicates();
 
 QString readXMLSettingFromFile(const QString& tagToFind);
 
 int main(int argc, char *argv[])
 {
-#ifdef Q_OS_UNIX
+#if defined(Q_OS_MACOS)
+    const QString currentPath = QString::fromLocal8Bit(qgetenv("PATH"));
+    const QString extraPaths = QStringLiteral("/opt/homebrew/bin:/usr/local/bin");
+    if (!currentPath.contains(QStringLiteral("/opt/homebrew/bin"))) {
+        qputenv("PATH", (extraPaths + QStringLiteral(":") + currentPath).toLocal8Bit());
+    }
+#elif defined(Q_OS_UNIX)
     qputenv("LC_ALL", "en_US.UTF8");
     qputenv("QT_QPA_PLATFORM", "xcb");
     qputenv("QT_LOGGING_RULES", "*.debug=false;qt.qpa.*=false");
@@ -65,8 +71,15 @@ int main(int argc, char *argv[])
     const QString currLang = readXMLSettingFromFile("language");
 
     /**************** Check for duplicates ************************/
+    QLockFile lockFile(QDir::tempPath() + "/cine_encoder.lock");
     if (!allowDuplicates) {
-        if (checkForDuplicates() == 1) {
+        if (!lockFile.tryLock(100)) {
+            QMessageBox msgBox(nullptr);
+            msgBox.setWindowTitle("Cine Encoder");
+            msgBox.setWindowIcon(QIcon(":/resources/icons/64x64/cine-encoder.png"));
+            msgBox.setIcon(QMessageBox::Critical);
+            msgBox.setText(QObject::tr("The program is already running!"));
+            msgBox.exec();
             return 1;
         }
     }
@@ -83,7 +96,9 @@ int main(int argc, char *argv[])
         fnt.setFamily(fntFamily);
     }
     fnt.setPointSize(fntSize);
+#if !defined(Q_OS_MACOS)
     fnt.setWeight(QFont::Medium);
+#endif
     QApplication::setFont(fnt);
 
     /******************* Set Splash *******************************/
@@ -147,39 +162,4 @@ QString readXMLSettingFromFile(const QString& tagToFind) {
     }
     xmlFile.close();
     return value;
-}
-
-int checkForDuplicates()
-{
-    const int PROCESS_TIMEOUT_MS = 1000;
-    
-    QProcess process;
-    process.setProcessChannelMode(QProcess::MergedChannels);
-    QString cmd;
-    QStringList arguments;
-#if defined (Q_OS_WIN64)
-    cmd = "cmd";
-    arguments << "/C" << "echo" << "process" << "get" << "caption" << "|" << "wmic";
-#elif defined (Q_OS_UNIX)
-    cmd = "ps";
-    arguments << "-A";
-#endif
-    process.start(cmd,  arguments);
-    if (process.waitForFinished(PROCESS_TIMEOUT_MS)) {
-        const QString list = QString(process.readAllStandardOutput());
-        const int lindex = list.indexOf("cine_encoder");
-        const int rindex = list.lastIndexOf("cine_encoder");
-        if (lindex != rindex) {
-            QMessageBox msgBox(nullptr);
-            msgBox.setWindowTitle("Cine Encoder");
-            msgBox.setWindowIcon(QIcon(":/resources/icons/64x64/cine-encoder.png"));
-            msgBox.setIcon(QMessageBox::Critical);
-            msgBox.setText(QObject::tr("The program is already running!"));
-            msgBox.exec();
-            return 1;
-        }
-    } else {
-        Print("Command \""<< cmd.toStdString() << "\" not found.");
-    }
-    return 0;
 }

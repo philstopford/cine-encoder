@@ -47,15 +47,21 @@ For automated GitHub Actions builds, see `docs/WINDOWS_BUILD.md` for detailed in
 
 ### macOS
 ```bash
-# Run the automated build script
+# Run the automated build script (builds standalone .app and creates .dmg installer)
 ./build-macos.sh
 ```
 
-Requirements:
-- Xcode Command Line Tools
-- Qt6 (install via `brew install qt@6`)
-- MediaInfo (install via `brew install mediainfo`)
-- CMake 3.16+
+Requirements (installable via Homebrew):
+- Xcode Command Line Tools (`xcode-select --install`)
+- CMake 3.16+ (`brew install cmake`)
+- Qt6 (`brew install qt@6`)
+- MediaInfo library (`brew install mediainfo`)
+- FFmpeg & MKVToolNix runtime tools (`brew install ffmpeg mkvtoolnix`)
+- DMG creation tool for packaging (`brew install create-dmg`)
+
+Apple Silicon / VideoToolbox Support:
+- Native ARM64 and universal binary builds supported.
+- Native Apple VideoToolbox hardware encoding (`hevc_videotoolbox`, `h264_videotoolbox`, `prores_videotoolbox`) with quality-based (`-q:v`) and bitrate control.
 
 ### Linux
 ```bash

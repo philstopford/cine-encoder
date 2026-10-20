@@ -399,6 +399,10 @@ static QVector<PresetSectionDiff> collectPresetDiffs(const PresetRows &currentRo
     QVector<PresetSectionDiff> diffs;
 
     for (const QString &section : referenceOrder) {
+        if (!Tables::isPresetSectionSupported(section)) {
+            continue;
+        }
+
         const auto referenceSectionIt = referenceSections.find(section);
         if (referenceSectionIt == referenceSections.end()) {
             continue;
@@ -416,6 +420,11 @@ static QVector<PresetSectionDiff> collectPresetDiffs(const PresetRows &currentRo
         }
 
         for (const auto &child : referenceSectionIt->children) {
+            const int codecIndex = child.values.size() > CurParamIndex::CODEC ? child.values[CurParamIndex::CODEC].toInt() : -1;
+            Tables t;
+            if (codecIndex >= 0 && !t.isCodecSupported(codecIndex)) {
+                continue;
+            }
             const QString name = presetName(child);
             const auto currentChildIt = currentChildren.find(name);
             if (currentChildIt == currentChildren.end()) {
@@ -571,9 +580,18 @@ static PresetRows applyPresetSelection(const PresetRows &currentRows,
 
     PresetRows updated = currentRows;
     for (const QString &section : referenceOrder) {
+        if (!Tables::isPresetSectionSupported(section)) {
+            continue;
+        }
+
         const PresetSectionData &referenceSection = referenceSections.value(section);
         QVector<PresetRowData> selectedRows;
         for (const auto &child : referenceSection.children) {
+            const int codecIndex = child.values.size() > CurParamIndex::CODEC ? child.values[CurParamIndex::CODEC].toInt() : -1;
+            Tables t;
+            if (codecIndex >= 0 && !t.isCodecSupported(codecIndex)) {
+                continue;
+            }
             if (selectedKeys.contains(changeKey(section, presetName(child)))) {
                 selectedRows.append(child);
             }
@@ -1595,10 +1613,10 @@ void MainWindow::setParameters()    // Set parameters
     m_hideInTrayFlag = false;
     m_language = nullptr;
     m_font = "";
-    m_fontSize = 8;
+    m_fontSize = FONTSIZE;
     m_rowHeight = 0;
     m_subtitles_font = "";
-    m_subtitles_fontSize = 8;
+    m_subtitles_fontSize = FONTSIZE;
     m_subtitles_color = 0xffffff;
     m_subtitles_background = false;
     m_subtitles_deselectall = true;
@@ -1993,21 +2011,32 @@ void MainWindow::rebuildPresetTreeFromTable()
     QFont parentFont;
     parentFont.setBold(true);
     parentFont.setItalic(true);
+    QTreeWidgetItem *currentParent = nullptr;
     for (int i = 0; i < numRows; i++) {
         type = m_preset_table[PARAMETERS_COUNT][i];
         if ((type == "TopLewelItem") || (type == "TopLevelItem")) {
+            const QString sectionName = m_preset_table[0][i];
+            if (!Tables::isPresetSectionSupported(sectionName)) {
+                currentParent = nullptr;
+                continue;
+            }
             auto *root = new QTreeWidgetItem();
-            root->setText(0, m_preset_table[0][i]);
+            root->setText(0, sectionName);
             root->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
             root->setFont(0, parentFont);
             setPresetIcon(root, true);
             ui->treeWidget->addTopLevelItem(root);
             ui->treeWidget->setCurrentItem(root);
             root->setFirstColumnSpanned(true);
+            currentParent = root;
         }
         if (type == "ChildItem") {
-            auto *item = ui->treeWidget->currentItem();
-            if (!item) {
+            if (!currentParent) {
+                continue;
+            }
+            const int codecIndex = m_preset_table[1][i].toInt();
+            Tables t;
+            if (codecIndex >= 0 && !t.isCodecSupported(codecIndex)) {
                 continue;
             }
             auto *child = new QTreeWidgetItem();
@@ -2026,7 +2055,7 @@ void MainWindow::rebuildPresetTreeFromTable()
                              m_preset_table[21][i],
                              child, false);
             setItemStyle(child);
-            item->addChild(child);
+            currentParent->addChild(child);
         }
     }
     if (m_pos_top != -1 && m_pos_cld != -1 && m_pos_top < ui->treeWidget->topLevelItemCount()) {

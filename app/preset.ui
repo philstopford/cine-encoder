@@ -2679,6 +2679,26 @@
                                 <string>SVT-AV1 4:2:0 10 bit</string>
                                </property>
                               </item>
+                              <item>
+                               <property name="text">
+                                <string>Apple VideoToolbox H.265/HEVC 4:2:0 10 bit</string>
+                               </property>
+                              </item>
+                              <item>
+                               <property name="text">
+                                <string>Apple VideoToolbox H.265/HEVC 4:2:0 8 bit</string>
+                               </property>
+                              </item>
+                              <item>
+                               <property name="text">
+                                <string>Apple VideoToolbox H.264/AVC 4:2:0 8 bit</string>
+                               </property>
+                              </item>
+                              <item>
+                               <property name="text">
+                                <string>Apple VideoToolbox ProRes HQ</string>
+                               </property>
+                              </item>
                              </widget>
                             </item>
                             <item row="1" column="4">

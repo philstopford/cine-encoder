@@ -24,6 +24,7 @@
 #include <QColorDialog>
 #include <QFontDatabase>
 #include <QStringListModel>
+#include <QStandardItemModel>
 
 #define SLT(method) &Preset::method
 
@@ -180,6 +181,19 @@ void Preset::showEvent(QShowEvent *event)
             combo->setView(_view);
         }
 
+        Tables t;
+        auto *codecModel = qobject_cast<QStandardItemModel*>(ui->comboBox_codec->model());
+        if (codecModel) {
+            for (int i = 0; i < ui->comboBox_codec->count(); ++i) {
+                auto *item = codecModel->item(i);
+                if (item) {
+                    const bool supported = t.isCodecSupported(i);
+                    item->setEnabled(supported);
+                    item->setSelectable(supported);
+                }
+            }
+        }
+
         auto *doubleValidator = new QDoubleValidator(0.0, 10000.0, 3, this);
         doubleValidator->setNotation(QDoubleValidator::StandardNotation);
         ui->lineEdit_bitrate->setValidator(doubleValidator);
@@ -207,6 +221,7 @@ void Preset::showEvent(QShowEvent *event)
         ui->textBrowser_presetname->setText((*m_pNew_param)[CurParamIndex::OUTPUT_PARAM]);
         ui->comboBox_codec->setCurrentIndex((*m_pNew_param)[CurParamIndex::CODEC].toInt());
         ui->comboBox_mode->setCurrentIndex((*m_pNew_param)[CurParamIndex::MODE].toInt());
+        onComboBox_mode_textChanged(ui->comboBox_mode->currentText());
         ui->comboBox_container->setCurrentIndex((*m_pNew_param)[CurParamIndex::CONTAINER].toInt());
         ui->lineEdit_bitrate->setText((*m_pNew_param)[CurParamIndex::BQR]);
         ui->lineEdit_minrate->setText((*m_pNew_param)[CurParamIndex::MINRATE]);
@@ -365,10 +380,11 @@ void Preset::change_preset_name()
     /************************************* Mode module ***************************************/    
     QString mode("");
     const QString selected_mode = t.getCurrentMode(_ind_codec, _ind_mode);
-    if ((selected_mode != "" && selected_mode != tr("Auto")) && (selected_mode == "CRF" || selected_mode == "CQP" || selected_mode == "CQ_NV")) {
-        mode = (selected_mode == "CQ_NV" ? tr("Constant QP (NVENC)") : selected_mode) + " " + ui->lineEdit_bitrate->text() + ", ";
+    if ((selected_mode != "" && selected_mode != tr("Auto")) && (selected_mode == "CRF" || selected_mode == "CQP" || selected_mode == "CQ_NV" || selected_mode == "CQ_VT")) {
+        mode = (selected_mode == "CQ_NV" ? tr("Constant QP (NVENC)") :
+                selected_mode == "CQ_VT" ? tr("Quality (VideoToolbox)") : selected_mode) + " " + ui->lineEdit_bitrate->text() + ", ";
     }
-    else if ((selected_mode != "" && selected_mode != tr("Auto")) && (selected_mode != "CRF" && selected_mode != "CQP")) {
+    else if ((selected_mode != "" && selected_mode != tr("Auto")) && (selected_mode != "CRF" && selected_mode != "CQP" && selected_mode != "CQ_VT")) {
         const QString modeLabel = selected_mode == "VBR_NV" ? tr("Variable Bitrate (NVENC)") : selected_mode;
         mode = modeLabel + " " + ui->lineEdit_bitrate->text() + tr(" MBps, ");
     }
@@ -963,6 +979,49 @@ void Preset::onComboBox_codec_textChanged(const QString &arg1)  // Change curren
             ui->comboBox_preset->setEnabled(true);
             ui->comboBox_level->setEnabled(false);
         }
+
+        else if (arg1 == tr("Apple VideoToolbox H.265/HEVC 4:2:0 10 bit")) {
+            ui->comboBox_container->setCurrentIndex(0);
+            ui->comboBox_profile->setCurrentIndex(Profile::MAIN10);
+            ui->comboBox_preset->setEnabled(false);
+            ui->comboBox_level->setCurrentIndex(0);
+            ui->comboBox_pixfmt->setCurrentIndex(Pixformat::P010LE);
+            ui->comboBox_mode->setEnabled(true);
+            ui->comboBox_pass->setEnabled(false);
+        }
+
+        else if (arg1 == tr("Apple VideoToolbox H.265/HEVC 4:2:0 8 bit")) {
+            ui->comboBox_container->setCurrentIndex(2);
+            ui->comboBox_profile->setCurrentIndex(Profile::MAIN);
+            ui->comboBox_preset->setEnabled(false);
+            ui->comboBox_level->setCurrentIndex(0);
+            ui->comboBox_pixfmt->setCurrentIndex(Pixformat::YUV420P);
+            ui->comboBox_mode->setEnabled(true);
+            ui->comboBox_pass->setEnabled(false);
+            disableHDR();
+        }
+
+        else if (arg1 == tr("Apple VideoToolbox H.264/AVC 4:2:0 8 bit")) {
+            ui->comboBox_container->setCurrentIndex(2);
+            ui->comboBox_profile->setCurrentIndex(Profile::HIGH);
+            ui->comboBox_preset->setEnabled(false);
+            ui->comboBox_level->setCurrentIndex(0);
+            ui->comboBox_pixfmt->setCurrentIndex(Pixformat::YUV420P);
+            ui->comboBox_mode->setEnabled(true);
+            ui->comboBox_pass->setEnabled(false);
+            disableHDR();
+        }
+
+        else if (arg1 == tr("Apple VideoToolbox ProRes HQ")) {
+            ui->comboBox_container->setCurrentIndex(1);
+            ui->comboBox_profile->setCurrentIndex(Profile::PROFILE_3);
+            ui->comboBox_level->setEnabled(false);
+            ui->comboBox_pixfmt->setCurrentIndex(Pixformat::YUV422P10LE);
+            ui->comboBox_preset->setEnabled(false);
+            ui->comboBox_container->setEnabled(false);
+            ui->comboBox_mode->setEnabled(false);
+            ui->comboBox_pass->setEnabled(false);
+        }
         lockSignals(false);
     }
 
@@ -974,6 +1033,7 @@ void Preset::onComboBox_mode_textChanged(const QString &arg1)  // Change curret 
     //Print("Change current mode...");
     const bool nvencVbrMode = arg1 == tr("Variable Bitrate (NVENC)");
     const bool nvencCqMode = arg1 == tr("Constant QP (NVENC)") || arg1 == tr("Constant Quality (NVENC)");
+    const bool vtCqMode = arg1 == tr("Quality (VideoToolbox)") || arg1 == tr("Constant Quality (VideoToolbox)");
     ui->lineEdit_bitrate->clear();
     ui->lineEdit_minrate->clear();
     ui->lineEdit_maxrate->clear();
@@ -988,6 +1048,8 @@ void Preset::onComboBox_mode_textChanged(const QString &arg1)  // Change curret 
     ui->comboBox_pass->setEnabled(true);
     if (arg1 == tr("Auto")) {
         ui->label_bitrate->setText(tr("Bitrate"));
+        ui->label_bitrate->setToolTip("");
+        ui->lineEdit_bitrate->setToolTip("");
         ui->label_minrate->show();
         ui->label_maxrate->show();
         ui->label_bufsize->show();
@@ -1009,6 +1071,9 @@ void Preset::onComboBox_mode_textChanged(const QString &arg1)  // Change curret 
     }
     else if (arg1 == tr("Constant Bitrate")) {
         ui->label_bitrate->setText(tr("Bitrate"));
+        const QString cbrTooltip = tr("Target video bitrate in megabytes per second (MBps).");
+        ui->label_bitrate->setToolTip(cbrTooltip);
+        ui->lineEdit_bitrate->setToolTip(cbrTooltip);
         ui->label_bitrate_prefix->setText(tr("MBps"));
         ui->label_minrate->hide();
         ui->label_maxrate->hide();
@@ -1024,6 +1089,9 @@ void Preset::onComboBox_mode_textChanged(const QString &arg1)  // Change curret 
     }
     else if (arg1 == tr("Average Bitrate")) {
         ui->label_bitrate->setText(tr("Bitrate"));
+        const QString abrTooltip = tr("Average video bitrate in megabytes per second (MBps).");
+        ui->label_bitrate->setToolTip(abrTooltip);
+        ui->lineEdit_bitrate->setToolTip(abrTooltip);
         ui->label_minrate->hide();
         ui->label_maxrate->hide();
         ui->label_bufsize->hide();
@@ -1038,6 +1106,9 @@ void Preset::onComboBox_mode_textChanged(const QString &arg1)  // Change curret 
     }
     else if (arg1 == tr("Variable Bitrate") || nvencVbrMode) {
         ui->label_bitrate->setText(tr("Bitrate"));
+        const QString vbrTooltip = tr("Target video bitrate in megabytes per second (MBps).");
+        ui->label_bitrate->setToolTip(vbrTooltip);
+        ui->lineEdit_bitrate->setToolTip(vbrTooltip);
         ui->label_bitrate_prefix->setText(tr("MBps"));
         ui->label_minrate->show();
         ui->label_maxrate->show();
@@ -1062,8 +1133,32 @@ void Preset::onComboBox_mode_textChanged(const QString &arg1)  // Change curret 
             ui->lineEdit_bufsize->setText("50");
         }
     }
-    else if (arg1 == tr("Constant Rate Factor") || nvencCqMode) {
-        ui->label_bitrate->setText(nvencCqMode ? tr("Quantizer") : tr("Rate factor"));
+    else if (arg1 == tr("Constant Rate Factor") || nvencCqMode || vtCqMode) {
+        ui->label_bitrate->setText(vtCqMode ? tr("Quality") : (nvencCqMode ? tr("Quantizer") : tr("Rate factor")));
+        if (vtCqMode) {
+            const QString vtTooltip = tr("Apple VideoToolbox Quality (1–100, default 65):\n"
+                                         "Controls encoder quality (-q:v). Higher values yield higher visual quality.\n"
+                                         "• 75–85: Very high quality / archival (comparable to CRF 14–18)\n"
+                                         "• 60–70: High quality default range (65 recommended, comparable to CRF 19–22)\n"
+                                         "• 50–60: Medium / web distribution quality (comparable to CRF 23–26)");
+            ui->label_bitrate->setToolTip(vtTooltip);
+            ui->lineEdit_bitrate->setToolTip(vtTooltip);
+        } else if (nvencCqMode) {
+            const QString nvencTooltip = tr("NVENC Constant Quality / Quantizer (0–51, default 25):\n"
+                                            "Lower values yield higher visual quality.\n"
+                                            "• 18–22: High quality\n"
+                                            "• 23–28: Standard quality");
+            ui->label_bitrate->setToolTip(nvencTooltip);
+            ui->lineEdit_bitrate->setToolTip(nvencTooltip);
+        } else {
+            const QString crfTooltip = tr("Constant Rate Factor (CRF 0–51, default 19):\n"
+                                          "Lower values yield higher visual quality.\n"
+                                          "• 15–18: Visually lossless / near-lossless\n"
+                                          "• 19–23: Recommended default sweet spot\n"
+                                          "• 24–28: Lower bitrate / smaller file size");
+            ui->label_bitrate->setToolTip(crfTooltip);
+            ui->lineEdit_bitrate->setToolTip(crfTooltip);
+        }
         ui->label_minrate->hide();
         ui->label_maxrate->hide();
         ui->label_bufsize->hide();
@@ -1074,12 +1169,18 @@ void Preset::onComboBox_mode_textChanged(const QString &arg1)  // Change curret 
         ui->lineEdit_minrate->hide();
         ui->lineEdit_maxrate->hide();
         ui->lineEdit_bufsize->hide();
-        ui->lineEdit_bitrate->setText(nvencCqMode ? "25" : "19");
+        ui->lineEdit_bitrate->setText(vtCqMode ? "65" : (nvencCqMode ? "25" : "19"));
         ui->comboBox_pass->setEnabled(false);
         ui->comboBox_pass->setCurrentIndex(0);
     }
     else if (arg1 == tr("Constant QP")) {
         ui->label_bitrate->setText(tr("Quantizer"));
+        const QString qpTooltip = tr("Constant Quantizer Parameter (QP 0–51, default 19):\n"
+                                     "Lower values yield higher visual quality.\n"
+                                     "• 15–18: High quality\n"
+                                     "• 19–23: Standard quality");
+        ui->label_bitrate->setToolTip(qpTooltip);
+        ui->lineEdit_bitrate->setToolTip(qpTooltip);
         ui->label_minrate->hide();
         ui->label_maxrate->hide();
         ui->label_bufsize->hide();

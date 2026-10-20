@@ -35,16 +35,18 @@ inline QString numToStr(long num) { return QString::number(num); }
                             QSettings::IniFormat);
 
 // ******************* Constants *****************************//
-constexpr int PRESETS_VERSION = 202605;
+constexpr int PRESETS_VERSION = 202607;
 constexpr int SETTINGS_VERSION = 202602;
 
 constexpr int PARAMETERS_COUNT = 45;
-constexpr int NUMBER_PRESETS = 31;
+constexpr int NUMBER_PRESETS = 35;
 
 constexpr int CODEC_QSV_FIRST = 6;
 constexpr int CODEC_QSV_LAST = 11;
 constexpr int CODEC_VAAPI_FIRST = 12;
 constexpr int CODEC_VAAPI_LAST = 12;
+constexpr int CODEC_VIDEOTOOLBOX_FIRST = 31;
+constexpr int CODEC_VIDEOTOOLBOX_LAST = 34;
 
 // Default values - using inline functions for QString construction
 inline QString defaultPrefix() { return QString("output"); }
@@ -61,7 +63,11 @@ constexpr int MAX_AUDIO_STREAMS = 100;
 constexpr int MAX_SUBTITLES = 100;
 
 constexpr float MAXIMUM_ALLOWED_TIME = 359999.0f;
+#if defined(Q_OS_MACOS)
+constexpr int FONTSIZE = 12;
+#else
 constexpr int FONTSIZE = 8;
+#endif
 
 
 namespace Constants {

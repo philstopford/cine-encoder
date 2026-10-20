@@ -32,8 +32,21 @@ function(add_cine_test test_name test_source additional_sources)
         Qt6::Widgets
     )
     
-    # Only link mediainfo on Linux
-    if(UNIX AND NOT APPLE)
+    # Link mediainfo
+    if(APPLE)
+        find_path(MEDIAINFO_INCLUDE_DIR "MediaInfo/MediaInfo.h"
+            PATHS /opt/homebrew/include /usr/local/include
+        )
+        find_library(MEDIAINFO_LIBRARY NAMES mediainfo
+            PATHS /opt/homebrew/lib /usr/local/lib
+        )
+        if(MEDIAINFO_LIBRARY)
+            target_link_libraries(${target_name} PRIVATE ${MEDIAINFO_LIBRARY})
+            if(MEDIAINFO_INCLUDE_DIR)
+                target_include_directories(${target_name} PRIVATE ${MEDIAINFO_INCLUDE_DIR})
+            endif()
+        endif()
+    elseif(UNIX)
         target_link_libraries(${target_name} PRIVATE mediainfo)
     endif()
     

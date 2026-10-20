@@ -101,7 +101,11 @@ public:
         {"XDCAM HD422",                           tr("YUV, 4:2:2, 8 bit"),  ""},
         {"XAVC 4:2:2",                            tr("YUV, 4:2:2, 8 bit"),  ""},
         {tr("Source"),                            "",                       "HDR: "},
-        {tr("SVT-AV1 4:2:0 10 bit"),              tr("YUV, 4:2:0, 10 bit"), "HDR: "}
+        {tr("SVT-AV1 4:2:0 10 bit"),              tr("YUV, 4:2:0, 10 bit"), "HDR: "},
+        {tr("Apple VideoToolbox H.265/HEVC 4:2:0 10 bit"), tr("YUV, 4:2:0, 10 bit"), "HDR: "},
+        {tr("Apple VideoToolbox H.265/HEVC 4:2:0 8 bit"),  tr("YUV, 4:2:0, 8 bit"),  ""},
+        {tr("Apple VideoToolbox H.264/AVC 4:2:0 8 bit"),   tr("YUV, 4:2:0, 8 bit"),  ""},
+        {tr("Apple VideoToolbox ProRes HQ"),               tr("YUV, 4:2:2, 10 bit"), "HDR: "}
     };
 
     /*********************************** Intel QSV presets ************************************/
@@ -110,6 +114,9 @@ public:
 #if defined (Q_OS_WIN64)
     const QString intelQSVhwaccel = " -hwaccel dxva2 -hwaccel_output_format dxva2_vld";
     const QString vaapiHwaccel = " -hwaccel dxva2 -hwaccel_output_format dxva2_vld";
+#elif defined (Q_OS_MACOS)
+    const QString intelQSVhwaccel = "";
+    const QString vaapiHwaccel = "";
 #elif defined (Q_OS_UNIX)
     const QString intelQSVhwaccel = " -hwaccel vaapi -hwaccel_output_format vaapi";
     const QString vaapiHwaccel = " -hwaccel vaapi -hwaccel_output_format vaapi";
@@ -154,7 +161,11 @@ public:
         {xdcam_preset,                                                  "",                     "0", ""},
         {xavc_preset,                                                   " -guess_layout_max 0", "0", ""},
         {"-movflags +write_colr -c:v copy ",                            "",                     "1", ""},
-        {"-pix_fmt yuv420p10le -c:v libsvtav1 ",                        "",                     "1", ""}
+        {"-pix_fmt yuv420p10le -c:v libsvtav1 ",                        "",                     "1", ""},
+        {"-pix_fmt p010le -c:v hevc_videotoolbox -profile:v main10 ",  " -hwaccel videotoolbox", "1", ""},
+        {"-pix_fmt nv12 -c:v hevc_videotoolbox -profile:v main ",     " -hwaccel videotoolbox", "0", ""},
+        {"-pix_fmt nv12 -c:v h264_videotoolbox -profile:v high ",     " -hwaccel videotoolbox", "0", ""},
+        {"-c:v prores_videotoolbox -profile:v hq ",                   " -hwaccel videotoolbox", "1", ""}
     };
 
     [[nodiscard]] QStringList getCodecArgs(int row) const
@@ -193,7 +204,11 @@ public:
              "-direct-pred", "auto", "-psy", "0", "-g", "0", "-keyint_min", "0", "-x264opts", "filler",
              "-x264opts", "force-cfr", "-tune", "fastdecode"},
             {"-movflags", "+write_colr", "-c:v", "copy"},
-            {"-pix_fmt", "yuv420p10le", "-c:v", "libsvtav1"}
+            {"-pix_fmt", "yuv420p10le", "-c:v", "libsvtav1"},
+            {"-pix_fmt", "p010le", "-c:v", "hevc_videotoolbox", "-profile:v", "main10"},
+            {"-pix_fmt", "nv12", "-c:v", "hevc_videotoolbox", "-profile:v", "main"},
+            {"-pix_fmt", "nv12", "-c:v", "h264_videotoolbox", "-profile:v", "high"},
+            {"-c:v", "prores_videotoolbox", "-profile:v", "hq"}
         };
         return row >= 0 && row < NUMBER_PRESETS ? codecArgs[row] : QStringList{};
     }
@@ -203,12 +218,19 @@ public:
 #if defined (Q_OS_WIN64)
         const QStringList qsvHwaccel = {"-hwaccel", "dxva2", "-hwaccel_output_format", "dxva2_vld"};
         const QStringList vaapiHwaccelArgs = {"-hwaccel", "dxva2", "-hwaccel_output_format", "dxva2_vld"};
+        const QStringList vtHwaccel;
+#elif defined (Q_OS_MACOS)
+        const QStringList qsvHwaccel;
+        const QStringList vaapiHwaccelArgs;
+        const QStringList vtHwaccel = {"-hwaccel", "videotoolbox"};
 #elif defined (Q_OS_UNIX)
         const QStringList qsvHwaccel = {"-hwaccel", "vaapi", "-hwaccel_output_format", "vaapi"};
         const QStringList vaapiHwaccelArgs = {"-hwaccel", "vaapi", "-hwaccel_output_format", "vaapi"};
+        const QStringList vtHwaccel;
 #else
         const QStringList qsvHwaccel;
         const QStringList vaapiHwaccelArgs;
+        const QStringList vtHwaccel;
 #endif
         const QStringList cudaHwaccel = {"-hwaccel", "cuda"};
         const QStringList hwaccelArgs[NUMBER_PRESETS] = {
@@ -216,7 +238,8 @@ public:
             qsvHwaccel, qsvHwaccel, qsvHwaccel, qsvHwaccel, qsvHwaccel, qsvHwaccel,
             vaapiHwaccelArgs,
             cudaHwaccel, cudaHwaccel, cudaHwaccel,
-            {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
+            {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
+            vtHwaccel, vtHwaccel, vtHwaccel, vtHwaccel
         };
         return row >= 0 && row < NUMBER_PRESETS ? hwaccelArgs[row] : QStringList{};
     }
@@ -252,7 +275,11 @@ public:
         {"VBR",      "",       "",    "",    ""}, // XDCAM
         {"CBR",      "",       "",    "",    ""}, // XAVC
         {tr("Auto"), "",       "",    "",    ""}, // Source
-        {"ABR",      "CRF",    "",    "",    ""}  // SVT-AV1
+        {"ABR",      "CRF",    "",    "",      ""}, // SVT-AV1
+        {"VBR",      "CBR",    "ABR", "CQ_VT", ""}, // VideoToolbox H265 10bit
+        {"VBR",      "CBR",    "ABR", "CQ_VT", ""}, // VideoToolbox H265 8bit
+        {"VBR",      "CBR",    "ABR", "CQ_VT", ""}, // VideoToolbox H264 8bit
+        {tr("Auto"), "",       "",    "",      ""}  // VideoToolbox ProRes HQ
     };
 
     const QString arr_preset[NUMBER_PRESETS][10] = {
@@ -286,7 +313,11 @@ public:
         {tr("None"), "",              "",              "",             "",           "",         "",           "",             "",           ""},
         {tr("None"), tr("Ultrafast"), tr("Superfast"), tr("Veryfast"), tr("Faster"), tr("Fast"), tr("Medium"), tr("Slow"),     tr("Slower"), tr("Veryslow")},
         {tr("None"), "",              "",              "",             "",           "",         "",           "",             "",           ""},
-        {tr("None"), tr("Ultrafast"), tr("Superfast"), tr("Veryfast"), tr("Faster"), tr("Fast"), tr("Medium"), tr("Slow"), tr("Slower"), tr("Veryslow")}  // SVT-AV1
+        {tr("None"), tr("Ultrafast"), tr("Superfast"), tr("Veryfast"), tr("Faster"), tr("Fast"), tr("Medium"), tr("Slow"), tr("Slower"), tr("Veryslow")}, // SVT-AV1
+        {tr("None"), "",              "",              "",             "",           "",         "",           "",             "",           ""}, // VideoToolbox H265 10bit
+        {tr("None"), "",              "",              "",             "",           "",         "",           "",             "",           ""}, // VideoToolbox H265 8bit
+        {tr("None"), "",              "",              "",             "",           "",         "",           "",             "",           ""}, // VideoToolbox H264 8bit
+        {tr("None"), "",              "",              "",             "",           "",         "",           "",             "",           ""}  // VideoToolbox ProRes HQ
     };
 
     const QString arr_level[NUMBER_PRESETS][21] = {
@@ -320,7 +351,11 @@ public:
         {"2",        "",  "",   "",    "",    "",    "",  "",    "",    "",    "",    "",    "",    "",    "",    "",  "",    "",    "",  "",    ""}, // XDCAM
         {"5.2",      "",  "",   "",    "",    "",    "",  "",    "",    "",    "",    "",    "",    "",    "",    "",  "",    "",    "",  "",    ""}, // XAVC
         {tr("Auto"), "",  "",   "",    "",    "",    "",  "",    "",    "",    "",    "",    "",    "",    "",    "",  "",    "",    "",  "",    ""}, // Source
-        {tr("Auto"), "",  "",   "",    "",    "",    "",  "",    "",    "",    "",    "",    "",    "",    "",    "",  "",    "",    "",  "",    ""}  // SVT-AV1
+        {tr("Auto"), "",  "",   "",    "",    "",    "",  "",    "",    "",    "",    "",    "",    "",    "",    "",  "",    "",    "",  "",    ""}, // SVT-AV1
+        {tr("Auto"), "1", "2",  "2.1", "3",   "3.1", "4", "4.1", "5",   "5.1", "5.2", "6",   "6.1", "6.2", "",    "",  "",    "",    "",  "",    ""}, // VideoToolbox H265 10bit
+        {tr("Auto"), "1", "2",  "2.1", "3",   "3.1", "4", "4.1", "5",   "5.1", "5.2", "6",   "6.1", "6.2", "",    "",  "",    "",    "",  "",    ""}, // VideoToolbox H265 8bit
+        {tr("Auto"), "1", "1b", "1.1", "1.2", "1.3", "2", "2.1", "2.2", "3",   "3.1", "3.2", "4",   "4.1", "4.2", "5", "5.1", "5.2", "6", "6.1", "6.2"}, // VideoToolbox H264 8bit
+        {tr("Auto"), "",  "",   "",    "",    "",    "",  "",    "",    "",    "",    "",    "",    "",    "",    "",  "",    "",    "",  "",    ""}  // VideoToolbox ProRes HQ
     };
 
     const QString arr_pass[NUMBER_PRESETS][2] = {
@@ -354,7 +389,11 @@ public:
         {tr("Auto"),   ""},
         {tr("Auto"),   ""},
         {tr("Auto"),   ""},
-        {tr("1 Pass"), tr("2 Pass")} // SVT-AV1
+        {tr("1 Pass"), tr("2 Pass")}, // SVT-AV1
+        {tr("Auto"),   ""}, // VideoToolbox H265 10bit
+        {tr("Auto"),   ""}, // VideoToolbox H265 8bit
+        {tr("Auto"),   ""}, // VideoToolbox H264 8bit
+        {tr("Auto"),   ""}  // VideoToolbox ProRes HQ
     };
 
     const QString arr_acodec[NUMBER_PRESETS][6] = {
@@ -388,7 +427,11 @@ public:
         {"PCM 16 bit", "",           "",           "",           "",     ""},
         {"PCM 16 bit", "PCM 24 bit", "PCM 32 bit", "",           "",     ""},
         {"AAC",        "AC3",        "DTS",        "Vorbis",     "Opus", tr("Source")},
-        {"Opus",       "Vorbis",     tr("Source"), "",           "",     ""}  // SVT-AV1
+        {"Opus",       "Vorbis",     tr("Source"), "",           "",     ""}, // SVT-AV1
+        {"AAC",        "AC3",        "DTS",        tr("Source"), "",     ""}, // VideoToolbox H265 10bit
+        {"AAC",        "AC3",        "DTS",        tr("Source"), "",     ""}, // VideoToolbox H265 8bit
+        {"AAC",        "AC3",        "DTS",        tr("Source"), "",     ""}, // VideoToolbox H264 8bit
+        {"PCM 16 bit", "PCM 24 bit", "PCM 32 bit", "",           "",     ""}  // VideoToolbox ProRes HQ
     };
 
     const QString arr_bitrate[5][17] = {
@@ -439,7 +482,11 @@ public:
         {"MXF",  "",    "",    "",     ""},
         {"MXF",  "",    "",    "",     ""},
         {"MKV",  "MOV", "MP4", "M2TS", "TS"},
-        {"WebM", "MKV", "",    "",     ""}  // SVT-AV1
+        {"WebM", "MKV", "",    "",     ""}, // SVT-AV1
+        {"MKV",  "MOV", "MP4", "",     ""}, // VideoToolbox H265 10bit
+        {"MKV",  "MOV", "MP4", "",     ""}, // VideoToolbox H265 8bit
+        {"MKV",  "MOV", "MP4", "",     ""}, // VideoToolbox H264 8bit
+        {"MOV",  "MKV", "",    "",     ""}  // VideoToolbox ProRes HQ
     };
 
     const QString arr_acodec_sep[9] = {
@@ -574,6 +621,53 @@ public:
         return getListByRow<NUMBER_PRESETS, 6>(row, arr_acodec);
     }
 
+    [[nodiscard]] bool isCodecSupported(int row) const
+    {
+        if (row < 0 || row >= NUMBER_PRESETS) return false;
+#if defined(Q_OS_MACOS)
+        // On macOS: Intel QSV (6..11), Intel VAAPI (12), NVENC (13..15) are unsupported hardware
+        if ((row >= 6 && row <= 11) || row == 12 || (row >= 13 && row <= 15)) {
+            return false;
+        }
+        return true;
+#elif defined(Q_OS_WIN64)
+        // On Windows: VAAPI (12) and VideoToolbox (31..34) are unsupported
+        if (row == 12 || (row >= 31 && row <= 34)) {
+            return false;
+        }
+        return true;
+#else // Linux / UNIX
+        // On Linux: VideoToolbox (31..34) is unsupported
+        if (row >= 31 && row <= 34) {
+            return false;
+        }
+        return true;
+#endif
+    }
+
+    [[nodiscard]] static bool isPresetSectionSupported(const QString &sectionName)
+    {
+#if defined(Q_OS_MACOS)
+        if (sectionName.contains("NVENC", Qt::CaseInsensitive) ||
+            sectionName.contains("QSV", Qt::CaseInsensitive) ||
+            sectionName.contains("VAAPI", Qt::CaseInsensitive)) {
+            return false;
+        }
+        return true;
+#elif defined(Q_OS_WIN64)
+        if (sectionName.contains("VAAPI", Qt::CaseInsensitive) ||
+            sectionName.contains("VideoToolbox", Qt::CaseInsensitive)) {
+            return false;
+        }
+        return true;
+#else // Linux
+        if (sectionName.contains("VideoToolbox", Qt::CaseInsensitive)) {
+            return false;
+        }
+        return true;
+#endif
+    }
+
 private:
     template<const int r, const int c>
     [[nodiscard]] QStringList getListByRow(const int row, const QString (&arr)[r][c]) const
@@ -608,7 +702,8 @@ private:
             {"CQP", tr("Constant QP")},
             {"CQ_NV", tr("Constant QP (NVENC)")},
             {"CQP_QS", tr("Constant QP (QSV)")},
-            {"CQP_VA", tr("Constant QP (VAAPI)" )}
+            {"CQP_VA", tr("Constant QP (VAAPI)" )},
+            {"CQ_VT", tr("Quality (VideoToolbox)")}
         };
         return modeImpl.value(mode, mode);
     }

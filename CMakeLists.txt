@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
 project(cine_encoder VERSION 3.5.5 LANGUAGES C CXX)
 
+if(APPLE)
+    if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
+        set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum OS X version")
+    endif()
+endif()
+
 if(WIN32)
     set(CMAKE_PREFIX_PATH "C:\\Qt\\6.9.2\\mingw_64\\")
 endif()
@@ -129,6 +135,16 @@ if(FALSE) # Disabled - using unified implementation
     endif()
 endif()
 
+if(APPLE)
+    set_target_properties(cine_encoder PROPERTIES
+        MACOSX_BUNDLE TRUE
+        MACOSX_BUNDLE_BUNDLE_NAME "Cine Encoder"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.cineencoder.app"
+        MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
+    )
+endif()
+
 if(WIN32)
     target_link_libraries(cine_encoder PRIVATE
         dwmapi
@@ -165,7 +181,23 @@ if(WIN32)
     endif()
 endif()
 
-if(UNIX AND NOT APPLE)
+if(APPLE)
+    # Support Homebrew on Apple Silicon (/opt/homebrew) and Intel (/usr/local)
+    find_path(MEDIAINFO_INCLUDE_DIR "MediaInfo/MediaInfo.h"
+        PATHS /opt/homebrew/include /usr/local/include
+    )
+    find_library(MEDIAINFO_LIBRARY NAMES mediainfo
+        PATHS /opt/homebrew/lib /usr/local/lib
+    )
+    if(MEDIAINFO_LIBRARY)
+        target_link_libraries(cine_encoder PRIVATE ${MEDIAINFO_LIBRARY})
+        if(MEDIAINFO_INCLUDE_DIR)
+            target_include_directories(cine_encoder PRIVATE ${MEDIAINFO_INCLUDE_DIR})
+        endif()
+    else()
+        message(WARNING "MediaInfo library not found on macOS. Some features may not work.")
+    endif()
+elseif(UNIX)
     target_link_libraries(cine_encoder PRIVATE
         # Removed X11 dependencies - now using public Qt6 APIs only
         # X11

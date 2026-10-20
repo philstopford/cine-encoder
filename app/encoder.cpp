@@ -1107,6 +1107,10 @@ QStringList Encoder::modeModule(const Tables &t, int CE_CODEC, int _CE_MODE, con
     if (selected_mode == "CQP_VA") {
         mode.append({"-qp", CE_BQR, "-rc_mode", "4"});
     }
+    else
+    if (selected_mode == "CQ_VT") {
+        mode.append({"-q:v", CE_BQR});
+    }
     return mode;
 }
 

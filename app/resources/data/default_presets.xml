@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <cineencoder>
-    <version>202605</version>
+    <version>202607</version>
     <m_pos_top>5</m_pos_top>
     <m_pos_cld>3</m_pos_cld>
     <params>
@@ -189,6 +189,80 @@
             <TYPE>ChildItem</TYPE>
         </preset3>
         <preset4>
+            <OUTPUT_PARAM>Apple VideoToolbox H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 10 bit, VBR 50 MBps, HDR: Enabled, Audio: AC3, 448k, MKV</OUTPUT_PARAM>
+            <CODEC>31</CODEC>
+            <MODE>0</MODE>
+            <CONTAINER>0</CONTAINER>
+            <BQR>50</BQR>
+            <MAXRATE>50</MAXRATE>
+            <BUFSIZE>50</BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>1</AUDIO_CODEC>
+            <AUDIO_BITRATE>1</AUDIO_BITRATE>
+            <MINRATE>50</MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox H.265/HEVC 4:2:0 10 bit</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset4>
+        <preset5>
+            <OUTPUT_PARAM>Apple VideoToolbox H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 10 bit, Quality (VideoToolbox) 65, HDR: Enabled, Audio: AC3, 448k, MKV</OUTPUT_PARAM>
+            <CODEC>31</CODEC>
+            <MODE>3</MODE>
+            <CONTAINER>0</CONTAINER>
+            <BQR>65</BQR>
+            <MAXRATE></MAXRATE>
+            <BUFSIZE></BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>1</AUDIO_CODEC>
+            <AUDIO_BITRATE>1</AUDIO_BITRATE>
+            <MINRATE></MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox H.265/HEVC 4:2:0 10 bit (Quality)</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset5>
+        <preset6>
             <OUTPUT_PARAM>High Quality H265 8 bit</OUTPUT_PARAM>
             <CODEC>6</CODEC>
             <MODE>0</MODE>
@@ -224,8 +298,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>TopLewelItem</TYPE>
-        </preset4>
-        <preset5>
+        </preset6>
+        <preset7>
             <OUTPUT_PARAM>H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, VBR 50 MBps, Preset: Slow, 2 Pass, Audio: AC3, 448k, MKV</OUTPUT_PARAM>
             <CODEC>2</CODEC>
             <MODE>2</MODE>
@@ -261,8 +335,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset5>
-        <preset6>
+        </preset7>
+        <preset8>
             <OUTPUT_PARAM>NVENC H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, Variable Bitrate (NVENC) 6 MBps, Preset: Slow (p5), Audio: Source, MKV</OUTPUT_PARAM>
             <CODEC>14</CODEC>
             <MODE>0</MODE>
@@ -298,8 +372,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset6>
-        <preset7>
+        </preset8>
+        <preset9>
             <OUTPUT_PARAM>Intel QSV H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, VBR 50 MBps, Preset: Slow, Audio: AC3, 448k, MKV</OUTPUT_PARAM>
             <CODEC>7</CODEC>
             <MODE>0</MODE>
@@ -335,8 +409,119 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset7>
-        <preset8>
+        </preset9>
+        <preset10>
+            <OUTPUT_PARAM>Apple VideoToolbox H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, VBR 50 MBps, Audio: AC3, 448k, MKV</OUTPUT_PARAM>
+            <CODEC>32</CODEC>
+            <MODE>0</MODE>
+            <CONTAINER>0</CONTAINER>
+            <BQR>50</BQR>
+            <MAXRATE>50</MAXRATE>
+            <BUFSIZE>50</BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>1</AUDIO_CODEC>
+            <AUDIO_BITRATE>1</AUDIO_BITRATE>
+            <MINRATE>50</MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox H.265/HEVC 4:2:0 8 bit (MKV)</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset10>
+        <preset11>
+            <OUTPUT_PARAM>Apple VideoToolbox H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, VBR 25 MBps, Audio: AAC, 320k, MP4</OUTPUT_PARAM>
+            <CODEC>32</CODEC>
+            <MODE>0</MODE>
+            <CONTAINER>2</CONTAINER>
+            <BQR>25</BQR>
+            <MAXRATE>25</MAXRATE>
+            <BUFSIZE>25</BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>0</AUDIO_CODEC>
+            <AUDIO_BITRATE>0</AUDIO_BITRATE>
+            <MINRATE>25</MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox H.265/HEVC 4:2:0 8 bit</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset11>
+        <preset12>
+            <OUTPUT_PARAM>Apple VideoToolbox H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, Quality (VideoToolbox) 65, Audio: AAC, 320k, MP4</OUTPUT_PARAM>
+            <CODEC>32</CODEC>
+            <MODE>3</MODE>
+            <CONTAINER>2</CONTAINER>
+            <BQR>65</BQR>
+            <MAXRATE></MAXRATE>
+            <BUFSIZE></BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>0</AUDIO_CODEC>
+            <AUDIO_BITRATE>0</AUDIO_BITRATE>
+            <MINRATE></MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox H.265/HEVC 4:2:0 8 bit (Quality)</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset12>
+        <preset13>
             <OUTPUT_PARAM>High Quality H264 8 bit</OUTPUT_PARAM>
             <CODEC>7</CODEC>
             <MODE>0</MODE>
@@ -372,8 +557,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>TopLewelItem</TYPE>
-        </preset8>
-        <preset9>
+        </preset13>
+        <preset14>
             <OUTPUT_PARAM>H.264/AVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, VBR 50 MBps, Preset: Slow, 2 Pass, Audio: AC3, 448k, MKV</OUTPUT_PARAM>
             <CODEC>3</CODEC>
             <MODE>2</MODE>
@@ -409,8 +594,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset9>
-        <preset10>
+        </preset14>
+        <preset15>
             <OUTPUT_PARAM>NVENC H.264/AVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, Variable Bitrate (NVENC) 6 MBps, Preset: Slow (p5), Audio: Source, MKV</OUTPUT_PARAM>
             <CODEC>15</CODEC>
             <MODE>0</MODE>
@@ -446,8 +631,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset10>
-        <preset11>
+        </preset15>
+        <preset16>
             <OUTPUT_PARAM>Intel QSV H.264/AVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, VBR 50 MBps, Preset: Slow, Audio: AC3, 448k, MKV</OUTPUT_PARAM>
             <CODEC>8</CODEC>
             <MODE>0</MODE>
@@ -483,8 +668,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset11>
-        <preset12>
+        </preset16>
+        <preset17>
             <OUTPUT_PARAM>Intel VAAPI H.264/AVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, VBR 50 MBps, Preset: Slow, Audio: AC3, 448k, MKV</OUTPUT_PARAM>
             <CODEC>12</CODEC>
             <MODE>0</MODE>
@@ -520,8 +705,119 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset12>
-        <preset13>
+        </preset17>
+        <preset18>
+            <OUTPUT_PARAM>Apple VideoToolbox H.264/AVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, VBR 50 MBps, Audio: AC3, 448k, MKV</OUTPUT_PARAM>
+            <CODEC>33</CODEC>
+            <MODE>0</MODE>
+            <CONTAINER>0</CONTAINER>
+            <BQR>50</BQR>
+            <MAXRATE>50</MAXRATE>
+            <BUFSIZE>50</BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>1</AUDIO_CODEC>
+            <AUDIO_BITRATE>1</AUDIO_BITRATE>
+            <MINRATE>50</MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox H.264/AVC 4:2:0 8 bit (MKV)</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset18>
+        <preset19>
+            <OUTPUT_PARAM>Apple VideoToolbox H.264/AVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, VBR 20 MBps, Audio: AAC, 320k, MP4</OUTPUT_PARAM>
+            <CODEC>33</CODEC>
+            <MODE>0</MODE>
+            <CONTAINER>2</CONTAINER>
+            <BQR>20</BQR>
+            <MAXRATE>20</MAXRATE>
+            <BUFSIZE>20</BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>0</AUDIO_CODEC>
+            <AUDIO_BITRATE>0</AUDIO_BITRATE>
+            <MINRATE>20</MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox H.264/AVC 4:2:0 8 bit</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset19>
+        <preset20>
+            <OUTPUT_PARAM>Apple VideoToolbox H.264/AVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, Quality (VideoToolbox) 65, Audio: AAC, 320k, MP4</OUTPUT_PARAM>
+            <CODEC>33</CODEC>
+            <MODE>3</MODE>
+            <CONTAINER>2</CONTAINER>
+            <BQR>65</BQR>
+            <MAXRATE></MAXRATE>
+            <BUFSIZE></BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>0</AUDIO_CODEC>
+            <AUDIO_BITRATE>0</AUDIO_BITRATE>
+            <MINRATE></MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox H.264/AVC 4:2:0 8 bit (Quality)</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset20>
+        <preset21>
             <OUTPUT_PARAM>Web High Quality VP9 HDR 10 bit</OUTPUT_PARAM>
             <CODEC>29</CODEC>
             <MODE>0</MODE>
@@ -557,8 +853,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>TopLewelItem</TYPE>
-        </preset13>
-        <preset14>
+        </preset21>
+        <preset22>
             <OUTPUT_PARAM>VP9, Res: Source, Fps: Source, YUV, 4:2:0, 10 bit, ABR 50 MBps, 2 Pass, HDR: Enabled, Audio: Opus, 256k, WebM</OUTPUT_PARAM>
             <CODEC>4</CODEC>
             <MODE>0</MODE>
@@ -594,8 +890,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset14>
-        <preset15>
+        </preset22>
+        <preset23>
             <OUTPUT_PARAM>VP9, Res: Source, Fps: Source, YUV, 4:2:0, 10 bit, CRF 19, 1 Pass, HDR: Enabled, Audio: Opus, 256k, WebM</OUTPUT_PARAM>
             <CODEC>4</CODEC>
             <MODE>1</MODE>
@@ -631,8 +927,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset15>
-        <preset16>
+        </preset23>
+        <preset24>
             <OUTPUT_PARAM>Intel QSV VP9, Res: Source, Fps: Source, YUV, 4:2:0, 10 bit, ABR 50 MBps, HDR: Enabled, Audio: Opus, 256k, WebM</OUTPUT_PARAM>
             <CODEC>9</CODEC>
             <MODE>0</MODE>
@@ -668,8 +964,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset16>
-        <preset17>
+        </preset24>
+        <preset25>
             <OUTPUT_PARAM>Web High Quality VP9 8 bit</OUTPUT_PARAM>
             <CODEC>9</CODEC>
             <MODE>0</MODE>
@@ -705,8 +1001,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>TopLewelItem</TYPE>
-        </preset17>
-        <preset18>
+        </preset25>
+        <preset26>
             <OUTPUT_PARAM>VP9, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, ABR 50 MBps, 2 Pass, Audio: Opus, 256k, WebM</OUTPUT_PARAM>
             <CODEC>5</CODEC>
             <MODE>0</MODE>
@@ -742,8 +1038,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset18>
-        <preset19>
+        </preset26>
+        <preset27>
             <OUTPUT_PARAM>VP9, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, CRF 19, 1 Pass, Audio: Opus, 256k, WebM</OUTPUT_PARAM>
             <CODEC>5</CODEC>
             <MODE>1</MODE>
@@ -779,8 +1075,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset19>
-        <preset20>
+        </preset27>
+        <preset28>
             <OUTPUT_PARAM>Intel QSV VP9, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, ABR 50 MBps, Audio: Opus, 256k, WebM</OUTPUT_PARAM>
             <CODEC>10</CODEC>
             <MODE>0</MODE>
@@ -816,8 +1112,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset20>
-        <preset21>
+        </preset28>
+        <preset29>
             <OUTPUT_PARAM>Studio Quality HDR 10 bit</OUTPUT_PARAM>
             <CODEC>10</CODEC>
             <MODE>0</MODE>
@@ -853,8 +1149,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>TopLewelItem</TYPE>
-        </preset21>
-        <preset22>
+        </preset29>
+        <preset30>
             <OUTPUT_PARAM>ProRes Proxy, Res: Source, Fps: Source, YUV, 4:2:2, 10 bit, HDR: Enabled, Audio: PCM 16 bit, MOV</OUTPUT_PARAM>
             <CODEC>16</CODEC>
             <MODE>0</MODE>
@@ -890,8 +1186,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset22>
-        <preset23>
+        </preset30>
+        <preset31>
             <OUTPUT_PARAM>ProRes LT, Res: Source, Fps: Source, YUV, 4:2:2, 10 bit, HDR: Enabled, Audio: PCM 16 bit, MOV</OUTPUT_PARAM>
             <CODEC>17</CODEC>
             <MODE>0</MODE>
@@ -927,8 +1223,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset23>
-        <preset24>
+        </preset31>
+        <preset32>
             <OUTPUT_PARAM>ProRes Standard, Res: Source, Fps: Source, YUV, 4:2:2, 10 bit, HDR: Enabled, Audio: PCM 16 bit, MOV</OUTPUT_PARAM>
             <CODEC>18</CODEC>
             <MODE>0</MODE>
@@ -964,8 +1260,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset24>
-        <preset25>
+        </preset32>
+        <preset33>
             <OUTPUT_PARAM>ProRes HQ, Res: Source, Fps: Source, YUV, 4:2:2, 10 bit, HDR: Enabled, Audio: PCM 16 bit, MOV</OUTPUT_PARAM>
             <CODEC>19</CODEC>
             <MODE>0</MODE>
@@ -1001,8 +1297,45 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset25>
-        <preset26>
+        </preset33>
+        <preset34>
+            <OUTPUT_PARAM>Apple VideoToolbox ProRes HQ, Res: Source, Fps: Source, YUV, 4:2:2, 10 bit, HDR: Enabled, Audio: PCM 16 bit, MOV</OUTPUT_PARAM>
+            <CODEC>34</CODEC>
+            <MODE>0</MODE>
+            <CONTAINER>1</CONTAINER>
+            <BQR>Auto</BQR>
+            <MAXRATE>Auto</MAXRATE>
+            <BUFSIZE>Auto</BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>0</AUDIO_CODEC>
+            <AUDIO_BITRATE>0</AUDIO_BITRATE>
+            <MINRATE>Auto</MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox ProRes HQ</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset34>
+        <preset35>
             <OUTPUT_PARAM>ProRes 4444, Res: Source, Fps: Source, YUV, 4:4:4, 10 bit, HDR: Enabled, Audio: PCM 16 bit, MOV</OUTPUT_PARAM>
             <CODEC>20</CODEC>
             <MODE>0</MODE>
@@ -1038,8 +1371,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset26>
-        <preset27>
+        </preset35>
+        <preset36>
             <OUTPUT_PARAM>ProRes 4444XQ, Res: Source, Fps: Source, YUV, 4:4:4, 10 bit, HDR: Enabled, Audio: PCM 16 bit, MOV</OUTPUT_PARAM>
             <CODEC>21</CODEC>
             <MODE>0</MODE>
@@ -1075,8 +1408,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset27>
-        <preset28>
+        </preset36>
+        <preset37>
             <OUTPUT_PARAM>DNxHR HQX, Res: Source, Fps: Source, YUV, 4:2:2, 10 bit, HDR: Enabled, Audio: PCM 16 bit, MOV</OUTPUT_PARAM>
             <CODEC>25</CODEC>
             <MODE>0</MODE>
@@ -1112,8 +1445,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset28>
-        <preset29>
+        </preset37>
+        <preset38>
             <OUTPUT_PARAM>DNxHR 444, Res: Source, Fps: Source, YUV, 4:4:4, 10 bit, HDR: Enabled, Audio: PCM 16 bit, MOV</OUTPUT_PARAM>
             <CODEC>26</CODEC>
             <MODE>0</MODE>
@@ -1149,8 +1482,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset29>
-        <preset30>
+        </preset38>
+        <preset39>
             <OUTPUT_PARAM>Studio Quality 8 bit</OUTPUT_PARAM>
             <CODEC>26</CODEC>
             <MODE>0</MODE>
@@ -1186,8 +1519,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>TopLewelItem</TYPE>
-        </preset30>
-        <preset31>
+        </preset39>
+        <preset40>
             <OUTPUT_PARAM>DNxHR LB, Res: Source, Fps: Source, YUV, 4:2:2, 8 bit, Audio: PCM 16 bit, MOV</OUTPUT_PARAM>
             <CODEC>22</CODEC>
             <MODE>0</MODE>
@@ -1223,8 +1556,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset31>
-        <preset32>
+        </preset40>
+        <preset41>
             <OUTPUT_PARAM>DNxHR SQ, Res: Source, Fps: Source, YUV, 4:2:2, 8 bit, Audio: PCM 16 bit, MOV</OUTPUT_PARAM>
             <CODEC>23</CODEC>
             <MODE>0</MODE>
@@ -1260,8 +1593,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset32>
-        <preset33>
+        </preset41>
+        <preset42>
             <OUTPUT_PARAM>DNxHR HQ, Res: Source, Fps: Source, YUV, 4:2:2, 8 bit, Audio: PCM 16 bit, MOV</OUTPUT_PARAM>
             <CODEC>24</CODEC>
             <MODE>0</MODE>
@@ -1297,8 +1630,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset33>
-        <preset34>
+        </preset42>
+        <preset43>
             <OUTPUT_PARAM>High Quality MPEG-2 8 bit</OUTPUT_PARAM>
             <CODEC>24</CODEC>
             <MODE>0</MODE>
@@ -1334,8 +1667,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>TopLewelItem</TYPE>
-        </preset34>
-        <preset35>
+        </preset43>
+        <preset44>
             <OUTPUT_PARAM>XDCAM HD422, Res: Source, 25 fps, YUV, 4:2:2, 8 bit, VBR 50 MBps, Audio: PCM 16 bit, MXF</OUTPUT_PARAM>
             <CODEC>27</CODEC>
             <MODE>0</MODE>
@@ -1371,8 +1704,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset35>
-        <preset36>
+        </preset44>
+        <preset45>
             <OUTPUT_PARAM>XAVC 4:2:2, Res: Source, 25 fps, YUV, 4:2:2, 8 bit, CBR 480 MBps, Audio: PCM 16 bit, MXF</OUTPUT_PARAM>
             <CODEC>28</CODEC>
             <MODE>0</MODE>
@@ -1408,8 +1741,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset36>
-        <preset37>
+        </preset45>
+        <preset46>
             <OUTPUT_PARAM>Web High Quality AV1 HDR 10 bit</OUTPUT_PARAM>
             <CODEC>30</CODEC>
             <MODE>0</MODE>
@@ -1445,8 +1778,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>TopLewelItem</TYPE>
-        </preset37>
-        <preset38>
+        </preset46>
+        <preset47>
             <OUTPUT_PARAM>AV1, Res: Source, Fps: Source, YUV, 4:2:0, 10 bit, ABR 20 MBps, Preset: Medium, 2 Pass, HDR: Enabled, Audio: Opus, 256k, WebM</OUTPUT_PARAM>
             <CODEC>30</CODEC>
             <MODE>0</MODE>
@@ -1482,8 +1815,8 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset38>
-        <preset39>
+        </preset47>
+        <preset48>
             <OUTPUT_PARAM>AV1, Res: Source, Fps: Source, YUV, 4:2:0, 10 bit, CRF 28, Preset: Medium, 1 Pass, HDR: Enabled, Audio: Opus, 256k, WebM</OUTPUT_PARAM>
             <CODEC>30</CODEC>
             <MODE>1</MODE>
@@ -1519,6 +1852,413 @@
             <REP_MATRIX>0</REP_MATRIX>
             <REP_TRC>0</REP_TRC>
             <TYPE>ChildItem</TYPE>
-        </preset39>
+        </preset48>
+        <preset49>
+            <OUTPUT_PARAM>Hardware accelerated Apple VideoToolbox</OUTPUT_PARAM>
+            <CODEC></CODEC>
+            <MODE></MODE>
+            <CONTAINER></CONTAINER>
+            <BQR></BQR>
+            <MAXRATE></MAXRATE>
+            <BUFSIZE></BUFSIZE>
+            <FRAME_RATE></FRAME_RATE>
+            <BLENDING></BLENDING>
+            <WIDTH></WIDTH>
+            <HEIGHT></HEIGHT>
+            <PASS></PASS>
+            <PRESET></PRESET>
+            <COLOR_RANGE></COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY></MASTER_DISPLAY>
+            <CHROMA_COORD></CHROMA_COORD>
+            <WHITE_COORD></WHITE_COORD>
+            <AUDIO_CODEC></AUDIO_CODEC>
+            <AUDIO_BITRATE></AUDIO_BITRATE>
+            <MINRATE></MINRATE>
+            <LEVEL></LEVEL>
+            <ASAMPLE_RATE></ASAMPLE_RATE>
+            <ACHANNELS></ACHANNELS>
+            <MATRIX></MATRIX>
+            <PRIMARY></PRIMARY>
+            <TRC></TRC>
+            <PRESET_NAME></PRESET_NAME>
+            <REP_PRIM></REP_PRIM>
+            <REP_MATRIX></REP_MATRIX>
+            <REP_TRC></REP_TRC>
+            <TYPE>TopLewelItem</TYPE>
+        </preset49>
+        <preset50>
+            <OUTPUT_PARAM>Apple VideoToolbox H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 10 bit, VBR 50 MBps, HDR: Enabled, Audio: AC3, 448k, MKV</OUTPUT_PARAM>
+            <CODEC>31</CODEC>
+            <MODE>0</MODE>
+            <CONTAINER>0</CONTAINER>
+            <BQR>50</BQR>
+            <MAXRATE>50</MAXRATE>
+            <BUFSIZE>50</BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>1</AUDIO_CODEC>
+            <AUDIO_BITRATE>1</AUDIO_BITRATE>
+            <MINRATE>50</MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox H.265/HEVC 4:2:0 10 bit</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset50>
+        <preset51>
+            <OUTPUT_PARAM>Apple VideoToolbox H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 10 bit, VBR 50 MBps, HDR: Enabled, Audio: AAC, 320k, MP4</OUTPUT_PARAM>
+            <CODEC>31</CODEC>
+            <MODE>0</MODE>
+            <CONTAINER>2</CONTAINER>
+            <BQR>50</BQR>
+            <MAXRATE>50</MAXRATE>
+            <BUFSIZE>50</BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>0</AUDIO_CODEC>
+            <AUDIO_BITRATE>0</AUDIO_BITRATE>
+            <MINRATE>50</MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox H.265/HEVC 4:2:0 10 bit (MP4)</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset51>
+        <preset52>
+            <OUTPUT_PARAM>Apple VideoToolbox H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 10 bit, Quality (VideoToolbox) 65, HDR: Enabled, Audio: AC3, 448k, MKV</OUTPUT_PARAM>
+            <CODEC>31</CODEC>
+            <MODE>3</MODE>
+            <CONTAINER>0</CONTAINER>
+            <BQR>65</BQR>
+            <MAXRATE></MAXRATE>
+            <BUFSIZE></BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>1</AUDIO_CODEC>
+            <AUDIO_BITRATE>1</AUDIO_BITRATE>
+            <MINRATE></MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox H.265/HEVC 4:2:0 10 bit (Quality)</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset52>
+        <preset53>
+            <OUTPUT_PARAM>Apple VideoToolbox H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, VBR 50 MBps, Audio: AC3, 448k, MKV</OUTPUT_PARAM>
+            <CODEC>32</CODEC>
+            <MODE>0</MODE>
+            <CONTAINER>0</CONTAINER>
+            <BQR>50</BQR>
+            <MAXRATE>50</MAXRATE>
+            <BUFSIZE>50</BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>1</AUDIO_CODEC>
+            <AUDIO_BITRATE>1</AUDIO_BITRATE>
+            <MINRATE>50</MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox H.265/HEVC 4:2:0 8 bit (MKV)</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset53>
+        <preset54>
+            <OUTPUT_PARAM>Apple VideoToolbox H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, VBR 25 MBps, Audio: AAC, 320k, MP4</OUTPUT_PARAM>
+            <CODEC>32</CODEC>
+            <MODE>0</MODE>
+            <CONTAINER>2</CONTAINER>
+            <BQR>25</BQR>
+            <MAXRATE>25</MAXRATE>
+            <BUFSIZE>25</BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>0</AUDIO_CODEC>
+            <AUDIO_BITRATE>0</AUDIO_BITRATE>
+            <MINRATE>25</MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox H.265/HEVC 4:2:0 8 bit</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset54>
+        <preset55>
+            <OUTPUT_PARAM>Apple VideoToolbox H.265/HEVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, Quality (VideoToolbox) 65, Audio: AAC, 320k, MP4</OUTPUT_PARAM>
+            <CODEC>32</CODEC>
+            <MODE>3</MODE>
+            <CONTAINER>2</CONTAINER>
+            <BQR>65</BQR>
+            <MAXRATE></MAXRATE>
+            <BUFSIZE></BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>0</AUDIO_CODEC>
+            <AUDIO_BITRATE>0</AUDIO_BITRATE>
+            <MINRATE></MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox H.265/HEVC 4:2:0 8 bit (Quality)</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset55>
+        <preset56>
+            <OUTPUT_PARAM>Apple VideoToolbox H.264/AVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, VBR 50 MBps, Audio: AC3, 448k, MKV</OUTPUT_PARAM>
+            <CODEC>33</CODEC>
+            <MODE>0</MODE>
+            <CONTAINER>0</CONTAINER>
+            <BQR>50</BQR>
+            <MAXRATE>50</MAXRATE>
+            <BUFSIZE>50</BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>1</AUDIO_CODEC>
+            <AUDIO_BITRATE>1</AUDIO_BITRATE>
+            <MINRATE>50</MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox H.264/AVC 4:2:0 8 bit (MKV)</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset56>
+        <preset57>
+            <OUTPUT_PARAM>Apple VideoToolbox H.264/AVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, VBR 20 MBps, Audio: AAC, 320k, MP4</OUTPUT_PARAM>
+            <CODEC>33</CODEC>
+            <MODE>0</MODE>
+            <CONTAINER>2</CONTAINER>
+            <BQR>20</BQR>
+            <MAXRATE>20</MAXRATE>
+            <BUFSIZE>20</BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>0</AUDIO_CODEC>
+            <AUDIO_BITRATE>0</AUDIO_BITRATE>
+            <MINRATE>20</MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox H.264/AVC 4:2:0 8 bit</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset57>
+        <preset58>
+            <OUTPUT_PARAM>Apple VideoToolbox H.264/AVC, Res: Source, Fps: Source, YUV, 4:2:0, 8 bit, Quality (VideoToolbox) 65, Audio: AAC, 320k, MP4</OUTPUT_PARAM>
+            <CODEC>33</CODEC>
+            <MODE>3</MODE>
+            <CONTAINER>2</CONTAINER>
+            <BQR>65</BQR>
+            <MAXRATE></MAXRATE>
+            <BUFSIZE></BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>0</AUDIO_CODEC>
+            <AUDIO_BITRATE>0</AUDIO_BITRATE>
+            <MINRATE></MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox H.264/AVC 4:2:0 8 bit (Quality)</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset58>
+        <preset59>
+            <OUTPUT_PARAM>Apple VideoToolbox ProRes HQ, Res: Source, Fps: Source, YUV, 4:2:2, 10 bit, HDR: Enabled, Audio: PCM 16 bit, MOV</OUTPUT_PARAM>
+            <CODEC>34</CODEC>
+            <MODE>0</MODE>
+            <CONTAINER>1</CONTAINER>
+            <BQR>Auto</BQR>
+            <MAXRATE>Auto</MAXRATE>
+            <BUFSIZE>Auto</BUFSIZE>
+            <FRAME_RATE>0</FRAME_RATE>
+            <BLENDING>0</BLENDING>
+            <WIDTH>0</WIDTH>
+            <HEIGHT>0</HEIGHT>
+            <PASS>0</PASS>
+            <PRESET>0</PRESET>
+            <COLOR_RANGE>0</COLOR_RANGE>
+            <MIN_LUM></MIN_LUM>
+            <MAX_LUM></MAX_LUM>
+            <MAX_CLL></MAX_CLL>
+            <MAX_FALL></MAX_FALL>
+            <MASTER_DISPLAY>0</MASTER_DISPLAY>
+            <CHROMA_COORD>From source</CHROMA_COORD>
+            <WHITE_COORD>From source</WHITE_COORD>
+            <AUDIO_CODEC>0</AUDIO_CODEC>
+            <AUDIO_BITRATE>0</AUDIO_BITRATE>
+            <MINRATE>Auto</MINRATE>
+            <LEVEL>0</LEVEL>
+            <ASAMPLE_RATE>0</ASAMPLE_RATE>
+            <ACHANNELS>0</ACHANNELS>
+            <MATRIX>0</MATRIX>
+            <PRIMARY>0</PRIMARY>
+            <TRC>0</TRC>
+            <PRESET_NAME>Apple VideoToolbox ProRes HQ</PRESET_NAME>
+            <REP_PRIM>0</REP_PRIM>
+            <REP_MATRIX>0</REP_MATRIX>
+            <REP_TRC>0</REP_TRC>
+            <TYPE>ChildItem</TYPE>
+        </preset59>
     </presettable>
 </cineencoder>

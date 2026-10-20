@@ -19,10 +19,10 @@
 #include "constants.h"
 
 
-#if defined (__linux__)
+#if defined (Q_OS_UNIX)
     #include <unistd.h>
     #include <csignal>
-#elif defined(__WIN64__)
+#elif defined(Q_OS_WIN64)
     #include <windows.h>
 #endif
 
@@ -74,6 +74,8 @@ private slots:
     void abort();
 #if defined(Q_OS_WIN64)
     void set_process_prio_win();
+#elif defined(Q_OS_MACOS)
+    void set_process_prio_macos();
 #endif
 };
 

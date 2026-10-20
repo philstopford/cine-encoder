@@ -458,12 +458,22 @@ void Helper::nonBlockDelay(int msec)
 
 double Helper::scaling()
 {
-    QScreen *scrn = QApplication::screens().at(0);
-    double scale = double(scrn->logicalDotsPerInchX()) / 96;
+#if defined(Q_OS_MACOS)
+    return 1.0;
+#else
+    if (QApplication::screens().isEmpty()) {
+        return 1.0;
+    }
+    QScreen *scrn = QApplication::primaryScreen();
+    if (!scrn) {
+        scrn = QApplication::screens().at(0);
+    }
+    double scale = double(scrn->logicalDotsPerInchX()) / 96.0;
     return (scale < 1.25) ? 1.00 :
            (scale < 1.50) ? 1.25 :
            (scale < 1.75) ? 1.50 :
            (scale < 2.00) ? 1.75 : 2.00;
+#endif
 }
 
 QByteArray Helper::readFile(const QString &path)
