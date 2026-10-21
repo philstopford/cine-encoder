@@ -1938,6 +1938,7 @@ bool MainWindow::loadXMLPresetFileData(const QString& file,
 
     QList<QString> ptable_list[PARAMETERS_COUNT + 1];
     int presets_added = 0;
+    bool skipLegacyVideoToolboxSection = false;
 
     while (!stream.atEnd()) {
         stream.readNextStartElement();
@@ -1989,6 +1990,15 @@ bool MainWindow::loadXMLPresetFileData(const QString& file,
                     } else if (childName == "TYPE") {
                         parameters[PARAMETERS_COUNT] = val;
                     }
+                }
+                const bool isSection = parameters[PARAMETERS_COUNT] == "TopLewelItem" ||
+                                       parameters[PARAMETERS_COUNT] == "TopLevelItem";
+                if (isSection) {
+                    skipLegacyVideoToolboxSection = parameters[CurParamIndex::OUTPUT_PARAM].compare(
+                        "Hardware accelerated Apple VideoToolbox", Qt::CaseInsensitive) == 0;
+                }
+                if (skipLegacyVideoToolboxSection) {
+                    continue;
                 }
                 for (int p = 0; p < PARAMETERS_COUNT + 1; p++) {
                     ptable_list[p].push_back(parameters[p]);

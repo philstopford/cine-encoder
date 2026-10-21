@@ -647,6 +647,11 @@ public:
 
     [[nodiscard]] static bool isPresetSectionSupported(const QString &sectionName)
     {
+        // VideoToolbox presets are grouped with their equivalent High Quality
+        // presets.  Hide the duplicate legacy section from existing libraries.
+        if (sectionName.compare("Hardware accelerated Apple VideoToolbox", Qt::CaseInsensitive) == 0) {
+            return false;
+        }
 #if defined(Q_OS_MACOS)
         if (sectionName.contains("NVENC", Qt::CaseInsensitive) ||
             sectionName.contains("QSV", Qt::CaseInsensitive) ||

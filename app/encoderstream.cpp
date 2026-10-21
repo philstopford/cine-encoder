@@ -225,7 +225,20 @@ void EncoderStream::initEncoding(StreamData *data,
     m_preset_0.append("50M");
     m_preset.append("-vn");
     
-    // Handle metadata - include stream title if available
+    // Copy the selected stream's metadata.  In particular, this retains
+    // language and title tags for containers that support stream metadata.
+    m_preset.append("-map_metadata");
+    m_preset.append("0");
+    if (data->cont_type == ContentType::Audio) {
+        m_preset.append("-map_metadata:s:a:0");
+        m_preset.append(QString("0:s:a:%1").arg(m_pData->stream));
+    } else {
+        m_preset.append("-map_metadata:s:s:0");
+        m_preset.append(QString("0:s:s:%1").arg(m_pData->stream));
+    }
+
+    // A non-empty title from the UI is an explicit override.  Leaving it
+    // unset must not erase the title copied from the input.
     if (!m_pData->title.isEmpty()) {
         // Export stream title as metadata for supported formats
         // Use stream-specific metadata which is more reliable for extraction
@@ -239,13 +252,6 @@ void EncoderStream::initEncoding(StreamData *data,
         // Also set global title metadata as fallback
         m_preset.append("-metadata");
         m_preset.append(QString("title=%1").arg(Helper::makeFileStringFFMPEGReady(m_pData->title)));
-        // Disable other global metadata but keep our custom metadata
-        m_preset.append("-map_metadata");
-        m_preset.append("-1");
-    } else {
-        // No title available, disable all metadata
-        m_preset.append("-map_metadata");
-        m_preset.append("-1");
     }
     
     m_preset.append("-map_chapters");

@@ -171,9 +171,11 @@ private slots:
     void colorPrimaries(const QString _hdr[], int CE_PRIMARY, int CE_REP_PRIM, QStringList &colorprim,
                         QStringList &colorprim_vf);
 
-    int extAudio(Constants::Data &data, QStringList &_audioMapParam, QStringList &_audioMetadataParam, int audioNum);
+    int extAudio(Constants::Data &data, QStringList &_audioMapParam, QStringList &_audioMetadataParam, int audioNum,
+                 bool writeMovHandlerNames);
 
-    static void audio(Constants::Data &data, QStringList &_audioMapParam, QStringList &_audioMetadataParam, int &audioNum) ;
+    static void audio(Constants::Data &data, QStringList &_audioMapParam, QStringList &_audioMetadataParam, int &audioNum,
+                      bool writeMovHandlerNames) ;
 
     static QStringList presetModule(const Tables &t, int CE_CODEC, int CE_PRESET) ;
 

@@ -1034,6 +1034,20 @@ void Preset::onComboBox_mode_textChanged(const QString &arg1)  // Change curret 
     const bool nvencVbrMode = arg1 == tr("Variable Bitrate (NVENC)");
     const bool nvencCqMode = arg1 == tr("Constant QP (NVENC)") || arg1 == tr("Constant Quality (NVENC)");
     const bool vtCqMode = arg1 == tr("Quality (VideoToolbox)") || arg1 == tr("Constant Quality (VideoToolbox)");
+    QString modeTooltip = tr("Choose how the encoder balances quality, bitrate, and file size.");
+    if (arg1 == tr("Constant Rate Factor"))
+        modeTooltip = tr("Recommended for software encoders: choose visual quality and let bitrate vary. Lower values improve quality and increase file size.");
+    else if (arg1 == tr("Constant QP"))
+        modeTooltip = tr("Fixed quantizer for software H.264/H.265. Use CRF for most encodes; use this only when every frame needs the same quantizer.");
+    else if (nvencCqMode)
+        modeTooltip = tr("NVENC-only fixed-quality mode. Lower quantizer values improve quality and increase file size.");
+    else if (vtCqMode)
+        modeTooltip = tr("Apple VideoToolbox quality mode. Higher values improve quality and increase file size.");
+    else if (arg1 == tr("Constant Bitrate"))
+        modeTooltip = tr("Keeps output close to one bitrate. Use for delivery systems with a strict bandwidth limit.");
+    else if (arg1 == tr("Average Bitrate") || arg1 == tr("Variable Bitrate") || nvencVbrMode)
+        modeTooltip = tr("Targets a bitrate while allowing complexity-dependent variation. Use when file size or delivery bandwidth matters.");
+    ui->comboBox_mode->setToolTip(modeTooltip);
     ui->lineEdit_bitrate->clear();
     ui->lineEdit_minrate->clear();
     ui->lineEdit_maxrate->clear();

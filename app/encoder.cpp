@@ -234,10 +234,13 @@ void Encoder::initEncoding(const QString  &temp_file,
     QStringList _audioMapParam;
     QStringList _audioMetadataParam;
     int audioNum;
-    audio(data, _audioMapParam, _audioMetadataParam, audioNum);
+    const bool writeMovHandlerNames = container.compare("mp4", Qt::CaseInsensitive) == 0 ||
+                                      container.compare("mov", Qt::CaseInsensitive) == 0 ||
+                                      container.compare("m4v", Qt::CaseInsensitive) == 0;
+    audio(data, _audioMapParam, _audioMetadataParam, audioNum, writeMovHandlerNames);
 
     /********************************* External Audio streams ************************************/
-    int extTrackNum = extAudio(data, _audioMapParam, _audioMetadataParam, audioNum);
+    int extTrackNum = extAudio(data, _audioMapParam, _audioMetadataParam, audioNum, writeMovHandlerNames);
 
     /**************************************** Subtitles **************************************/
     QStringList burn_subt_vf;
@@ -530,31 +533,28 @@ Data &Encoder::video(QString &globalTitle, Data &data, QVector<QString> &videoMe
                      QStringList &_videoMetadataParam) {
     if (globalTitle != "") {
         videoMetadata[0] = QString("-metadata:s:v:0 title=\"%1\" ").arg(Helper::makeFileStringFFMPEGReady(globalTitle).replace(" ", "\u00A0"));
-        _videoMetadataParam.append({"-metadata:s:v:0",QString("title=\""+Helper::makeFileStringFFMPEGReady(globalTitle)+"\"")});
+        _videoMetadataParam.append({"-metadata:s:v:0",QString("title="+Helper::makeFileStringFFMPEGReady(globalTitle))});
     } else {
         if (data.videoMetadata[VIDEO_TITLE] != "") {
             videoMetadata[0] = QString("-metadata:s:v:0 title=\"%1\" ").arg(Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_TITLE])
                                                                                 .replace(" ", "\u00A0"));
-            _videoMetadataParam.append({"-metadata:s:v:0",QString("title=\"" + Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_TITLE]) + "\"")});
-        } else {
-            videoMetadata[0] = QString("-map_metadata:s:v:0 -1 ");
-            _videoMetadataParam.append({"-map_metadata:s:v:0","-1"});
+            _videoMetadataParam.append({"-metadata:s:v:0",QString("title=" + Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_TITLE]) )});
         }
     }
     if (data.videoMetadata[VIDEO_MOVIENAME] != "") {
         videoMetadata[1] = QString("-metadata title=\"%1\" ").arg(Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_MOVIENAME])
                                                               .replace(" ", "\u00A0"));
-        _videoMetadataParam.append({"-metadata",QString("title=\""+Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_MOVIENAME])+"\"")});
+        _videoMetadataParam.append({"-metadata",QString("title="+Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_MOVIENAME]))});
     }
     if (data.videoMetadata[VIDEO_AUTHOR] != "") {
         videoMetadata[2] = QString("-metadata author=\"%1\" ").arg(Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_AUTHOR])
                                                                .replace(" ", "\u00A0"));
-        _videoMetadataParam.append({"-metadata",QString("author=\""+Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_AUTHOR])+"\"")});
+        _videoMetadataParam.append({"-metadata",QString("author="+Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_AUTHOR]))});
     }
     if (data.videoMetadata[VIDEO_DESCRIPTION] != "") {
         videoMetadata[3] = QString("-metadata description=\"%1\" ").arg(Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_DESCRIPTION])
                                                                     .replace(" ", "\u00A0"));
-        _videoMetadataParam.append({"-metadata",QString("description=\""+Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_DESCRIPTION])+"\"")});
+        _videoMetadataParam.append({"-metadata",QString("description="+Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_DESCRIPTION]))});
     }
     if (data.videoMetadata[VIDEO_YEAR] != "") {
         videoMetadata[4] = QString("-metadata year=%1 ").arg(Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_YEAR]).replace(" ", ""));
@@ -563,7 +563,7 @@ Data &Encoder::video(QString &globalTitle, Data &data, QVector<QString> &videoMe
     if (data.videoMetadata[VIDEO_PERFORMER] != "") {
         videoMetadata[5] = QString("-metadata author=\"%1\" ").arg(Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_PERFORMER])
                                                                .replace(" ", "\u00A0"));
-        _videoMetadataParam.append({"-metadata",QString("author=\""+Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_PERFORMER])+"\"")});
+        _videoMetadataParam.append({"-metadata",QString("author="+Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_PERFORMER]))});
     }
     return data;
 }
@@ -619,6 +619,7 @@ QStringList Encoder::getCodec(const Tables &t, int CE_CODEC, const QString &resi
     codec.append(_audioMapParam);
     codec.append(_subtitleMapParam);
     codec.append({"-map_metadata", "0"});
+    codec.append({"-map_metadata:s:v:0", "0:s:v:0"});
     
     // Handle chapter mapping - either from input file or external chapters file
     if (!chaptersFile.isEmpty() && chaptersInputIndex >= 0) {
@@ -748,8 +749,11 @@ void Encoder::subtitles(const QString &input_file, const QString &subtitle_font,
                     // _subtitleFormatParam.append({"-c:s", "dvd_subtitle"});
                 }
                 _subtitleMapParam.append({"-map", "0:s:"+numToStr(k)+"?"});
-                _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "language="+Helper::makeFileStringFFMPEGReady(data.fields[Data::subtLangs][k]) });
-                _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "title="+Helper::makeFileStringFFMPEGReady(data.fields[Data::subtTitles][k]) });
+                _subtitleMetadataParam.append({"-map_metadata:s:s:"+numToStr(subtNum), "0:s:s:"+numToStr(k)});
+                if (!data.fields[Data::subtLangs][k].isEmpty())
+                    _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "language="+Helper::makeFileStringFFMPEGReady(data.fields[Data::subtLangs][k]) });
+                if (!data.fields[Data::subtTitles][k].isEmpty())
+                    _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "title="+Helper::makeFileStringFFMPEGReady(data.fields[Data::subtTitles][k]) });
                 _subtitleMetadataParam.append({"-disposition:s:"+numToStr(subtNum), data.checks[Data::subtDef][k] ? "default" : "0" });
                 subtNum++;
             }
@@ -892,8 +896,11 @@ Encoder::extSub(Data &data, int extTrackNum, QStringList &_subtitleMapParam, QSt
                 }
                 _extSubPaths << "-i" << Helper::makeFileStringFFMPEGReady(data.fields[Data::externSubtPath][k]);
                 _subtitleMapParam.append({"-map", numToStr(extTrackNum)+":s?"});
-                _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "language="+Helper::makeFileStringFFMPEGReady(data.fields[Data::externSubtLangs][k]) });
-                _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "title="+Helper::makeFileStringFFMPEGReady(data.fields[Data::externSubtTitles][k]) });
+                _subtitleMetadataParam.append({"-map_metadata:s:s:"+numToStr(subtNum), numToStr(extTrackNum)+":s:s:0"});
+                if (!data.fields[Data::externSubtLangs][k].isEmpty())
+                    _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "language="+Helper::makeFileStringFFMPEGReady(data.fields[Data::externSubtLangs][k]) });
+                if (!data.fields[Data::externSubtTitles][k].isEmpty())
+                    _subtitleMetadataParam.append({"-metadata:s:s:"+numToStr(subtNum), "title="+Helper::makeFileStringFFMPEGReady(data.fields[Data::externSubtTitles][k]) });
                 _subtitleMetadataParam.append({"-disposition:s:"+numToStr(subtNum), data.checks[Data::externSubtDef][k] ? "default" : "0" });
                 subtNum++;
                 extTrackNum++;
@@ -946,23 +953,32 @@ QStringList Encoder::presetModule(const Tables &t, int CE_CODEC, int CE_PRESET) 
 }
 
 void
-Encoder::audio(Data &data, QStringList &_audioMapParam, QStringList &_audioMetadataParam, int &audioNum) {
+Encoder::audio(Data &data, QStringList &_audioMapParam, QStringList &_audioMetadataParam, int &audioNum,
+               bool writeMovHandlerNames) {
     audioNum= 0;
     auto length = data.checks[Data::audioChecks].size();
     for (int k = 0; k < length; k++) {
         if (data.checks[Data::audioChecks][k]) {
             _audioMapParam.append({"-map", "0:a:"+numToStr(k)+"?" });
+            _audioMetadataParam.append({"-map_metadata:s:a:"+numToStr(audioNum), "0:s:a:"+numToStr(k)});
             if (k < data.audioProcessing.size() && data.audioProcessing[k].isActive())
                 _audioMapParam.append({"-filter:a:"+numToStr(audioNum), data.audioProcessing[k].filterChain()});
-            _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"language="+Helper::makeFileStringFFMPEGReady(data.fields[Data::audioLangs][k])});
-            _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"title="+Helper::makeFileStringFFMPEGReady(data.fields[Data::audioTitles][k])});
+            // Source stream metadata is mapped by getCodec().  Do not replace a
+            // source tag with an empty field when MediaInfo did not expose it.
+            if (!data.fields[Data::audioLangs][k].isEmpty())
+                _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"language="+Helper::makeFileStringFFMPEGReady(data.fields[Data::audioLangs][k])});
+            if (!data.fields[Data::audioTitles][k].isEmpty())
+                _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"title="+Helper::makeFileStringFFMPEGReady(data.fields[Data::audioTitles][k])});
+            if (writeMovHandlerNames && !data.fields[Data::audioTitles][k].isEmpty())
+                _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"handler_name="+Helper::makeFileStringFFMPEGReady(data.fields[Data::audioTitles][k])});
             _audioMetadataParam.append({"-disposition:a:"+numToStr(audioNum),data.checks[Data::audioDef][k] ? "default" : "0"});
             audioNum++;
         }
     }
 }
 
-int Encoder::extAudio(Data &data, QStringList &_audioMapParam, QStringList &_audioMetadataParam, int audioNum) {
+int Encoder::extAudio(Data &data, QStringList &_audioMapParam, QStringList &_audioMetadataParam, int audioNum,
+                      bool writeMovHandlerNames) {
     auto length = data.checks[Data::externAudioChecks].size();
     int extTrackNum = 1;
 
@@ -970,10 +986,15 @@ int Encoder::extAudio(Data &data, QStringList &_audioMapParam, QStringList &_aud
         if (data.checks[Data::externAudioChecks][k]) {
             _extAudioPaths << "-i" << Helper::makeFileStringFFMPEGReady(data.fields[Data::externAudioPath][k]);
             _audioMapParam.append({"-map", numToStr(extTrackNum) + ":a?" });
+            _audioMetadataParam.append({"-map_metadata:s:a:"+numToStr(audioNum), numToStr(extTrackNum)+":s:a:0"});
             if (k < data.externAudioProcessing.size() && data.externAudioProcessing[k].isActive())
                 _audioMapParam.append({"-filter:a:"+numToStr(audioNum), data.externAudioProcessing[k].filterChain()});
-            _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"language="+Helper::makeFileStringFFMPEGReady(data.fields[Data::externAudioLangs][k])});
-            _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"title="+Helper::makeFileStringFFMPEGReady(data.fields[Data::externAudioTitles][k])});
+            if (!data.fields[Data::externAudioLangs][k].isEmpty())
+                _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"language="+Helper::makeFileStringFFMPEGReady(data.fields[Data::externAudioLangs][k])});
+            if (!data.fields[Data::externAudioTitles][k].isEmpty())
+                _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"title="+Helper::makeFileStringFFMPEGReady(data.fields[Data::externAudioTitles][k])});
+            if (writeMovHandlerNames && !data.fields[Data::externAudioTitles][k].isEmpty())
+                _audioMetadataParam.append({"-metadata:s:a:"+numToStr(audioNum),"handler_name="+Helper::makeFileStringFFMPEGReady(data.fields[Data::externAudioTitles][k])});
             _audioMetadataParam.append({"-disposition:a:"+numToStr(audioNum),data.checks[Data::externAudioDef][k] ? "default" : "0"});
             audioNum++;
             extTrackNum++;
@@ -1097,7 +1118,7 @@ QStringList Encoder::modeModule(const Tables &t, int CE_CODEC, int _CE_MODE, con
     }
     else
     if (selected_mode == "CQP") {
-        mode.append({"-b:v", "0", "-cq", CE_BQR, "-qmin", CE_BQR, "-qmax", CE_BQR});
+        mode.append({"-qp", CE_BQR});
     }
     else
     if (selected_mode == "CQP_QS") {

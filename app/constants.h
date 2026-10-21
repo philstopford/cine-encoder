@@ -35,7 +35,7 @@ inline QString numToStr(long num) { return QString::number(num); }
                             QSettings::IniFormat);
 
 // ******************* Constants *****************************//
-constexpr int PRESETS_VERSION = 202607;
+constexpr int PRESETS_VERSION = 202608;
 constexpr int SETTINGS_VERSION = 202602;
 
 constexpr int PARAMETERS_COUNT = 45;
