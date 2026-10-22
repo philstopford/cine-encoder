@@ -192,6 +192,7 @@ namespace Constants {
         static const int FIELDS_COUNT = 22;
 
         QVector<QString> videoMetadata;
+        bool preserveInputTitleMetadata = true;
         QVector<bool>    checks[CHECKS_COUNT];
         QVector<QString> fields[FIELDS_COUNT];
         
@@ -210,6 +211,7 @@ namespace Constants {
         
         void clear() {
             videoMetadata.clear();
+            preserveInputTitleMetadata = true;
             for (auto & check : checks)
                 check.clear();
             for (auto & field : fields)

@@ -10,6 +10,8 @@ private slots:
     void usesCanonicalFfmpeg9Options();
     void supportsLegacyOptionNames();
     void removesUnsupportedOptionalOptions();
+    void detectsSubtitleFilter();
+    void rejectsMissingSubtitleFilter();
 };
 
 void TestFFmpegCompatibility::usesCanonicalFfmpeg9Options()
@@ -41,6 +43,21 @@ void TestFFmpegCompatibility::removesUnsupportedOptionalOptions()
 
     QCOMPARE(FFmpegCompatibility::adaptNvencAqOptions(input, QStringLiteral("other options")),
              QStringList({"-rc", "vbr", "-bf", "2"}));
+}
+
+void TestFFmpegCompatibility::detectsSubtitleFilter()
+{
+    const QString filters = QStringLiteral(
+        " .. ass               V->V       Render ASS subtitles onto input video using the libass library.\n"
+        " .. subtitles         V->V       Render text subtitles onto input video using the libass library.\n");
+    QVERIFY(FFmpegCompatibility::hasSubtitleFilter(filters));
+}
+
+void TestFFmpegCompatibility::rejectsMissingSubtitleFilter()
+{
+    const QString filters = QStringLiteral(
+        " ... null              V->V       Pass the source unchanged to the output.\n");
+    QVERIFY(!FFmpegCompatibility::hasSubtitleFilter(filters));
 }
 
 QTEST_APPLESS_MAIN(TestFFmpegCompatibility)

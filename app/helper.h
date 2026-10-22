@@ -67,7 +67,7 @@ public:
     /**
      * @brief Escape special characters in a filename/path for FFmpeg filter syntax
      * @param fileString Original file path or name
-     * @return Escaped string safe for FFmpeg filters like subtitles='...'
+     * @return Quoted filename option safe for FFmpeg subtitle filters
      */
     static QString makeFileStringFFMPEGFilterReady(const QString& fileString);
 

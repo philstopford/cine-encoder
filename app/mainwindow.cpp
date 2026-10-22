@@ -51,6 +51,8 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QCheckBox>
+#include <QScrollArea>
 #include <QHash>
 #include <QSet>
 #include <QTranslator>
@@ -642,12 +644,22 @@ MainWindow::MainWindow(QWidget *parent):
     m_output_file(""),
     m_presetFileVersion(0),
     m_pEffectStack(nullptr),
+    m_pPreserveInputTitleMetadata(nullptr),
+    m_videoMetadataTabIndex(-1),
     m_effectsTabIndex(-1),
     m_windowActivated(false),
     m_expandWindowsState(false),
     m_rowHeight(ROWHEIGHTDFLT)
 {
     ui->setupUi(centralWidget());
+    m_pPreserveInputTitleMetadata = new QCheckBox(tr("Copy input title metadata"), ui->frameMetadata);
+    m_pPreserveInputTitleMetadata->setToolTip(
+        tr("Copy title metadata from the input file. Disable this to remove input titles from the output."));
+    ui->verticalLayout_7->insertWidget(1, m_pPreserveInputTitleMetadata);
+    connect(m_pPreserveInputTitleMetadata, &QCheckBox::toggled, this, [this](bool preserve) {
+        if (m_row != -1)
+            m_data[m_row].preserveInputTitleMetadata = preserve;
+    });
     setTitleBar(ui->frame_top);
     //*************** Set labels *****************//
     auto *pTableLayout = new QHBoxLayout(ui->tableWidget);
@@ -734,6 +746,17 @@ MainWindow::MainWindow(QWidget *parent):
 
     ui->streamAudio->setContentType(QStreamView::Content::Audio);
     ui->streamSubtitle->setContentType(QStreamView::Content::Subtitle);
+    auto *videoMetadataPage = new QWidget(ui->tabWidgetStreams);
+    auto *videoMetadataLayout = new QVBoxLayout(videoMetadataPage);
+    videoMetadataLayout->setContentsMargins(0, 0, 0, 0);
+    auto *videoMetadataScrollArea = new QScrollArea(videoMetadataPage);
+    videoMetadataScrollArea->setWidgetResizable(true);
+    ui->frameTab_1->setParent(videoMetadataScrollArea);
+    videoMetadataScrollArea->setWidget(ui->frameTab_1);
+    videoMetadataLayout->addWidget(videoMetadataScrollArea);
+    m_pPreserveInputTitleMetadata->setParent(videoMetadataPage);
+    videoMetadataLayout->addWidget(m_pPreserveInputTitleMetadata);
+    m_videoMetadataTabIndex = ui->tabWidgetStreams->insertTab(0, videoMetadataPage, tr("Video"));
     auto *effectsPage = new QWidget(ui->tabWidgetStreams);
     auto *effectsLayout = new QVBoxLayout(effectsPage);
     effectsLayout->setContentsMargins(6, 6, 6, 6);
@@ -1201,6 +1224,8 @@ void MainWindow::createConnections()
     menuEdit->addAction(m_pActStop);
 
     m_pActEditMetadata = new QAction(tr("Edit metadata"), menuTools);
+    m_pActClearSelectedVideoTitles = new QAction(
+        tr("Clear video title metadata for selected files"), menuTools);
     m_pActSelectAudio = new QAction(tr("Select audio streams"), menuTools);
     m_pActSelectSubtitles = new QAction(tr("Select subtitles"), menuTools);
     m_pActDeselectAudio = new QAction(tr("Deselect audio streams"), menuTools);
@@ -1212,6 +1237,8 @@ void MainWindow::createConnections()
     m_pActAudioEffects = new QAction(tr("Audio effects / timing…"), menuTools);
     m_pActPreview = new QAction(tr("Preview current settings…"), menuTools);
     connect(m_pActEditMetadata, &QAction::triggered, this, &MainWindow::showMetadataEditor);
+    connect(m_pActClearSelectedVideoTitles, &QAction::triggered,
+            this, &MainWindow::onClearSelectedVideoTitles);
     connect(m_pActSelectAudio, &QAction::triggered, this, &MainWindow::showAudioStreams);
     connect(m_pActSelectSubtitles, &QAction::triggered, this, &MainWindow::showSubtitles);
     connect(m_pActDeselectAudio, &QAction::triggered, this, &MainWindow::clearAudioStreams);
@@ -1223,6 +1250,7 @@ void MainWindow::createConnections()
     connect(m_pActAudioEffects, &QAction::triggered, this, &MainWindow::onAudioEffects);
     connect(m_pActPreview, &QAction::triggered, this, &MainWindow::onPreviewSettings);
     menuTools->addAction(m_pActEditMetadata);
+    menuTools->addAction(m_pActClearSelectedVideoTitles);
     menuTools->addSeparator();
     menuTools->addAction(m_pActSelectAudio);
     menuTools->addAction(m_pActSelectSubtitles);
@@ -1275,6 +1303,7 @@ void MainWindow::createConnections()
     m_pItemMenu->addAction(m_pActStart);
     m_pItemMenu->addSeparator();
     m_pItemMenu->addAction(m_pActEditMetadata);
+    m_pItemMenu->addAction(m_pActClearSelectedVideoTitles);
     m_pItemMenu->addSeparator();
     m_pItemMenu->addAction(m_pActSelectAudio);
     m_pItemMenu->addAction(m_pActSelectSubtitles);
@@ -2240,19 +2269,20 @@ void MainWindow::setFloating(const int index, const QPoint &offset, const QSize 
 
 void MainWindow::showMetadataEditor()
 {
-    setFloating(DockIndex::METADATA_DOCK, QPoint(200,-200), QSize(300,500));
+    m_pDocks[DockIndex::STREAMS_DOCK]->show();
+    ui->tabWidgetStreams->setCurrentIndex(m_videoMetadataTabIndex);
 }
 
 void MainWindow::showAudioStreams()
 {
     setFloating(DockIndex::STREAMS_DOCK, QPoint(220,-180), QSize(300,500));
-    ui->tabWidgetStreams->setCurrentIndex(0);
+    ui->tabWidgetStreams->setCurrentIndex(ui->tabWidgetStreams->indexOf(ui->tab_2));
 }
 
 void MainWindow::showSubtitles()
 {
     setFloating(DockIndex::STREAMS_DOCK, QPoint(220,-180), QSize(300,500));
-    ui->tabWidgetStreams->setCurrentIndex(1);
+    ui->tabWidgetStreams->setCurrentIndex(ui->tabWidgetStreams->indexOf(ui->tab_3));
 }
 
 void MainWindow::clearAudioStreams()
@@ -2431,6 +2461,8 @@ void MainWindow::get_current_data() // Get current data
     ui->lineVAuthor->setText(m_data[m_row].videoMetadata[VIDEO_AUTHOR]);
     ui->lineVPerf->setText(m_data[m_row].videoMetadata[VIDEO_PERFORMER]);
     ui->lineVDescript->setText(m_data[m_row].videoMetadata[VIDEO_DESCRIPTION]);
+    const QSignalBlocker preserveTitleBlocker(m_pPreserveInputTitleMetadata);
+    m_pPreserveInputTitleMetadata->setChecked(m_data[m_row].preserveInputTitleMetadata);
 
     foreach (QLineEdit *lineEdit, linesEditMetadata)
         lineEdit->setCursorPosition(0);
@@ -2528,6 +2560,7 @@ void MainWindow::setWidgetsEnabled(bool state)    // Set widgets states
 
     ui->clearMetadata->setEnabled(state);
     ui->undoMetadata->setEnabled(state);
+    m_pPreserveInputTitleMetadata->setEnabled(state);
     auto linesEditMetadata = ui->frameTab_1->findChildren<QLineEdit*>();
     foreach (QLineEdit *lineEdit, linesEditMetadata)
         lineEdit->setEnabled(state);
@@ -3853,6 +3886,22 @@ void MainWindow::onUndoMetadata()
     }
 }
 
+void MainWindow::onClearSelectedVideoTitles()
+{
+    const QModelIndexList rows = ui->tableWidget->selectionModel()->selectedRows();
+    for (const QModelIndex &index : rows) {
+        if (index.row() < 0 || index.row() >= m_data.size())
+            continue;
+
+        m_data[index.row()].videoMetadata[VIDEO_TITLE].clear();
+        m_data[index.row()].videoMetadata[VIDEO_MOVIENAME].clear();
+        m_data[index.row()].preserveInputTitleMetadata = false;
+    }
+
+    if (m_row != -1 && !rows.isEmpty())
+        get_current_data();
+}
+
 /************************************************
 ** Streams Window
 ************************************************/
@@ -3954,27 +4003,33 @@ void MainWindow::onAddExtStream()
 void MainWindow::onDeselectTitles()
 {
     if (m_row != -1) {
-        const int ind = ui->tabWidgetStreams->currentIndex();
-        ind == 0 ? ui->streamAudio->deselectTitles() :
-        ui->streamSubtitle->deselectTitles();
+        const QWidget *page = ui->tabWidgetStreams->currentWidget();
+        if (page == ui->tab_2)
+            ui->streamAudio->deselectTitles();
+        else if (page == ui->tab_3)
+            ui->streamSubtitle->deselectTitles();
     }
 }
 
 void MainWindow::onClearTitles()
 {
     if (m_row != -1) {
-        const int ind = ui->tabWidgetStreams->currentIndex();
-        ind == 0 ? ui->streamAudio->clearTitles() :
-                   ui->streamSubtitle->clearTitles();
+        const QWidget *page = ui->tabWidgetStreams->currentWidget();
+        if (page == ui->tab_2)
+            ui->streamAudio->clearTitles();
+        else if (page == ui->tab_3)
+            ui->streamSubtitle->clearTitles();
     }
 }
 
 void MainWindow::onUndoTitles()
 {
     if (m_row != -1) {
-        const int ind = ui->tabWidgetStreams->currentIndex();
-        ind == 0 ? ui->streamAudio->undoTitles() :
-                   ui->streamSubtitle->undoTitles();
+        const QWidget *page = ui->tabWidgetStreams->currentWidget();
+        if (page == ui->tab_2)
+            ui->streamAudio->undoTitles();
+        else if (page == ui->tab_3)
+            ui->streamSubtitle->undoTitles();
     }
 }
 

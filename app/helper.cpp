@@ -49,30 +49,13 @@ QString Helper::makeFileStringFFMPEGReady(const QString& fileString)
 
 QString Helper::makeFileStringFFMPEGFilterReady(const QString& fileString)
 {
-    /*
-     * This escaping is specifically for filenames used inside FFmpeg filter strings
-     * WITHOUT quoting, such as: subtitles=filename:options
-     * 
-     * FFmpeg's filter parser requires backslash escaping for special characters.
-     * The filename is NOT wrapped in quotes, so we escape directly with backslashes.
-     * A literal ASCII apostrophe needs an extra escaping level because the
-     * filtergraph parser and the subtitles filter option parser both consume
-     * backslashes before it reaches libass.
-     * 
-     * Reference: https://ffmpeg.org/ffmpeg-filters.html#Notes-on-filtergraph-escaping
-     */
+    // Use the named filename option and quote its value. A positional filename
+    // is parsed as an unquoted filter option, so spaces and parentheses can make
+    // the following subtitle options appear to be part of the filename.
     QString file_substitute = fileString;
-    // Order matters! Backslash must be escaped first to avoid double-escaping
-    file_substitute.replace("\\", "\\\\");      // \ -> \\ (one backslash becomes two)
-    file_substitute.replace("'", QString(3, QLatin1Char('\\')) + QLatin1Char('\'')); // ' -> \\\'
-    file_substitute.replace(":", "\\:");        // : -> \: (colon becomes backslash-colon)
-    file_substitute.replace(",", "\\,");        // , -> \, (comma becomes backslash-comma)
-    file_substitute.replace(";", "\\;");        // ; -> \; (semicolon becomes backslash-semicolon)
-    file_substitute.replace("[", "\\[");        // [ -> \[ (bracket becomes backslash-bracket)
-    file_substitute.replace("]", "\\]");        // ] -> \] (bracket becomes backslash-bracket)
-    file_substitute.replace(" ", "\\ ");        // space -> \  (space becomes backslash-space)
-
-    return file_substitute;
+    file_substitute.replace("\\", "\\\\");
+    file_substitute.replace("'", "\\'");
+    return "filename='" + file_substitute + "'";
 }
 
 void Helper::detectEnv()

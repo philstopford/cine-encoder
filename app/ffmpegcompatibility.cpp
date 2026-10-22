@@ -87,3 +87,26 @@ QStringList FFmpegCompatibility::adaptArgumentsToHost(const QStringList &argumen
 
     return adaptNvencAqOptions(arguments, QString::fromLocal8Bit(probe.readAll()));
 }
+
+bool FFmpegCompatibility::hasSubtitleFilter(const QString &filters)
+{
+    const QRegularExpression expression(
+        QStringLiteral("(?:^|\\n)\\s*\\.\\.\\s+subtitles\\s+V->V(?:\\s|$)"));
+    return expression.match(filters).hasMatch();
+}
+
+FFmpegCompatibility::SubtitleFilterStatus FFmpegCompatibility::subtitleFilterStatus()
+{
+    QProcess probe;
+    probe.setProcessChannelMode(QProcess::MergedChannels);
+    probe.start(QStringLiteral("ffmpeg"),
+                {QStringLiteral("-hide_banner"), QStringLiteral("-filters")});
+
+    if (!probe.waitForStarted(3000) || !probe.waitForFinished(5000)
+        || probe.exitStatus() != QProcess::NormalExit || probe.exitCode() != 0)
+        return SubtitleFilterStatus::Unavailable;
+
+    return hasSubtitleFilter(QString::fromLocal8Bit(probe.readAll()))
+        ? SubtitleFilterStatus::Available
+        : SubtitleFilterStatus::Missing;
+}

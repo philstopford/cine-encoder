@@ -531,17 +531,22 @@ void Encoder::initVariables(const QString &temp_file, const QString &input_file,
 
 Data &Encoder::video(QString &globalTitle, Data &data, QVector<QString> &videoMetadata,
                      QStringList &_videoMetadataParam) {
+    if (!data.preserveInputTitleMetadata)
+        _videoMetadataParam.append({"-metadata", "title="});
+
     if (globalTitle != "") {
         videoMetadata[0] = QString("-metadata:s:v:0 title=\"%1\" ").arg(Helper::makeFileStringFFMPEGReady(globalTitle).replace(" ", "\u00A0"));
         _videoMetadataParam.append({"-metadata:s:v:0",QString("title="+Helper::makeFileStringFFMPEGReady(globalTitle))});
     } else {
-        if (data.videoMetadata[VIDEO_TITLE] != "") {
+        if (data.preserveInputTitleMetadata && data.videoMetadata[VIDEO_TITLE] != "") {
             videoMetadata[0] = QString("-metadata:s:v:0 title=\"%1\" ").arg(Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_TITLE])
                                                                                 .replace(" ", "\u00A0"));
             _videoMetadataParam.append({"-metadata:s:v:0",QString("title=" + Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_TITLE]) )});
+        } else if (!data.preserveInputTitleMetadata) {
+            _videoMetadataParam.append({"-metadata:s:v:0", "title="});
         }
     }
-    if (data.videoMetadata[VIDEO_MOVIENAME] != "") {
+    if (data.preserveInputTitleMetadata && data.videoMetadata[VIDEO_MOVIENAME] != "") {
         videoMetadata[1] = QString("-metadata title=\"%1\" ").arg(Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_MOVIENAME])
                                                               .replace(" ", "\u00A0"));
         _videoMetadataParam.append({"-metadata",QString("title="+Helper::makeFileStringFFMPEGReady(data.videoMetadata[VIDEO_MOVIENAME]))});

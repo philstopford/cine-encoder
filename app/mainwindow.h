@@ -31,6 +31,7 @@
 #include "widgets/qstreamview.h"
 
 class QEffectStack;
+class QCheckBox;
 
 #ifdef WM_CUSTOM
     #include "basewindow_cwm.h"
@@ -134,7 +135,9 @@ private:
                 *m_pSubtitleLabel;
 
     QEffectStack *m_pEffectStack;
-    int m_effectsTabIndex;
+    QCheckBox *m_pPreserveInputTitleMetadata;
+    int m_videoMetadataTabIndex,
+        m_effectsTabIndex;
 
     // ============= Progress animation =============
     QAnimatedSvg    *m_pAnimation;
@@ -151,6 +154,7 @@ private:
                 *m_pActStart,
                 *m_pActStop,
                 *m_pActEditMetadata,
+                *m_pActClearSelectedVideoTitles,
                 *m_pActSelectAudio,
                 *m_pActSelectSubtitles,
                 *m_pActDeselectAudio,
@@ -327,6 +331,7 @@ private slots:
     // ============= Video Metadata ================
     void onClearMetadata();
     void onUndoMetadata();
+    void onClearSelectedVideoTitles();
 
     // ============ Streams Metadata ===============
     void onAddExtStream();

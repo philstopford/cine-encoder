@@ -24,6 +24,7 @@
 #include <QDir>
 #include "mainwindow.h"
 #include "helper.h"
+#include "ffmpegcompatibility.h"
 
 
 QString readXMLSettingFromFile(const QString& tagToFind);
@@ -89,6 +90,24 @@ int main(int argc, char *argv[])
     QTranslator trns;
     if (currLang != "en" && trns.load(QString(":/resources/translation/translation_%1.qm").arg(currLang))) {
         QApplication::installTranslator(&trns);
+    }
+
+    const auto subtitleFilterStatus = FFmpegCompatibility::subtitleFilterStatus();
+    if (subtitleFilterStatus != FFmpegCompatibility::SubtitleFilterStatus::Available) {
+        QString detail;
+        if (subtitleFilterStatus == FFmpegCompatibility::SubtitleFilterStatus::Missing) {
+            detail = QObject::tr("The installed FFmpeg does not include the subtitles filter. "
+                                 "Hard-burning text subtitles will be unavailable.");
+        } else {
+            detail = QObject::tr("Cine Encoder could not query the installed FFmpeg. "
+                                 "Hard-burning text subtitles may be unavailable.");
+        }
+#if defined(Q_OS_MACOS)
+        detail += QObject::tr("\n\nInstall Homebrew's full build and make it active:\n"
+                              "brew install ffmpeg-full\n"
+                              "brew unlink ffmpeg && brew link --overwrite ffmpeg-full");
+#endif
+        QMessageBox::warning(nullptr, QObject::tr("FFmpeg subtitle support unavailable"), detail);
     }
 
     /********************* Set Font ******************************/

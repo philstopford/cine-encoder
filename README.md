@@ -49,7 +49,11 @@ Install CMake, Qt6, MediaInfo, and runtime utilities using [Homebrew](https://br
 brew install cmake qt@6 mediainfo
 
 # Runtime dependencies (used by Cine Encoder for encoding, muxing, and analysis)
-brew install ffmpeg mkvtoolnix
+# ffmpeg-full includes libass, which Cine Encoder needs to hard-burn text subtitles.
+brew install ffmpeg-full mkvtoolnix
+
+# ffmpeg-full is keg-only. Make it the ffmpeg command Cine Encoder launches.
+brew unlink ffmpeg && brew link --overwrite ffmpeg-full
 
 # Optional (for building DMG disk image packages)
 brew install create-dmg
