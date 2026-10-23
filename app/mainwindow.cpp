@@ -3469,7 +3469,13 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
                     m_data[numRows].fields[Data::audioChannels].push_back(AINFO(size_t(j), "Channels"));
                     m_data[numRows].fields[Data::audioChLayouts].push_back(AINFO(size_t(j), "ChannelLayout"));
                     m_data[numRows].fields[Data::audioDuration].push_back(AINFO(size_t(j), "Duration"));
-                    m_data[numRows].fields[Data::audioLangs].push_back(AINFO(size_t(j), "Language"));
+                    // FFmpeg's MOV/MP4 muxer only writes ISO 639-2 (three-letter)
+                    // language codes. MediaInfo's plain Language field is normally
+                    // ISO 639-1 (for example "en"), which FFmpeg silently drops.
+                    QString audioLanguage = AINFO(size_t(j), "Language/String3");
+                    if (audioLanguage.isEmpty())
+                        audioLanguage = AINFO(size_t(j), "Language");
+                    m_data[numRows].fields[Data::audioLangs].push_back(audioLanguage);
                     m_data[numRows].fields[Data::audioTitles].push_back(AINFO(size_t(j), "Title"));
                     const QString deflt = AINFO(size_t(j), "Default");
                     m_data[numRows].checks[Data::audioDef].push_back(deflt == "Yes");
@@ -3909,10 +3915,15 @@ void MainWindow::onClearSelectedVideoTitles()
 void MainWindow::onAddExtStream()
 {
     if (m_row != -1) {
-        const int ind = ui->tabWidgetStreams->currentIndex();
+        const QWidget *page = ui->tabWidgetStreams->currentWidget();
+        const bool isAudio = page == ui->tab_2;
+        const bool isSubtitle = page == ui->tab_3;
+        if (!isAudio && !isSubtitle)
+            return;
+
         QStringList result;
-        Helper::openFileDialog(ind == 0 ? Helper::FileDialogType::OPENAFILES :
-                                          Helper::FileDialogType::OPENSFILES,
+        Helper::openFileDialog(isAudio ? Helper::FileDialogType::OPENAFILES :
+                                         Helper::FileDialogType::OPENSFILES,
                                tr("Open Files"),
                                m_openDir,
                                result);
@@ -3921,7 +3932,7 @@ void MainWindow::onAddExtStream()
             foreach (auto &path, result) {
                 if (MI.Open(path.toStdWString()) == 1) {
                     const int vcnt = GINFO(0, "VideoCount").toInt();
-                    if (ind == 0) {
+                    if (isAudio) {
                         const int acnt = GINFO(0, "AudioCount").toInt();
                         if (vcnt == 0 && acnt == 1) {
                             QString audioFormat = AINFO(0, "Format");
@@ -3943,7 +3954,10 @@ void MainWindow::onAddExtStream()
                                 m_data[m_row].fields[Data::externAudioChannels].push_back(AINFO(0, "Channels"));
                                 m_data[m_row].fields[Data::externAudioChLayouts].push_back(AINFO(0, "ChannelsLayouts"));
                                 m_data[m_row].fields[Data::externAudioDuration].push_back(AINFO(0, "Duration"));
-                                m_data[m_row].fields[Data::externAudioLangs].push_back(AINFO(0, "Language"));
+                                QString audioLanguage = AINFO(0, "Language/String3");
+                                if (audioLanguage.isEmpty())
+                                    audioLanguage = AINFO(0, "Language");
+                                m_data[m_row].fields[Data::externAudioLangs].push_back(audioLanguage);
                                 m_data[m_row].fields[Data::externAudioTitles].push_back(AINFO(0, "Title"));
                                 m_data[m_row].fields[Data::externAudioPath].push_back(path);
                                 m_data[m_row].checks[Data::externAudioDef].push_back(false);
