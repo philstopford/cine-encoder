@@ -2,8 +2,11 @@
 #define TABLES_H
 
 #include <QObject>
+#include <QProcess>
+#include <QDir>
 #include <QMap>
 #include <QStringList>
+#include <array>
 #include "constants.h"
 
 class Tables : public QObject
@@ -629,20 +632,23 @@ public:
         if ((row >= 6 && row <= 11) || row == 12 || (row >= 13 && row <= 15)) {
             return false;
         }
-        return true;
 #elif defined(Q_OS_WIN64)
         // On Windows: VAAPI (12) and VideoToolbox (31..34) are unsupported
         if (row == 12 || (row >= 31 && row <= 34)) {
             return false;
         }
-        return true;
 #else // Linux / UNIX
         // On Linux: VideoToolbox (31..34) is unsupported
         if (row >= 31 && row <= 34) {
             return false;
         }
-        return true;
 #endif
+        if (!isHardwareCodec(row)) return true;
+        static std::array<int, NUMBER_PRESETS> probeResults{}; // 0 unknown, 1 available, -1 unavailable
+        int &result = probeResults[row];
+        if (result == 0)
+            result = probeHardwareCodec(row) ? 1 : -1;
+        return result == 1;
     }
 
     [[nodiscard]] static bool isPresetSectionSupported(const QString &sectionName)
@@ -674,6 +680,60 @@ public:
     }
 
 private:
+    [[nodiscard]] static bool isHardwareCodec(int row)
+    {
+        return row >= 6 && row <= 15;
+    }
+
+    [[nodiscard]] bool probeHardwareCodec(int row) const
+    {
+        const QStringList codecArgs = getCodecArgs(row);
+        const int encoderOption = codecArgs.indexOf("-c:v");
+        if (encoderOption < 0 || encoderOption + 1 >= codecArgs.size()) return false;
+
+        QStringList args = {"-hide_banner", "-loglevel", "error", "-nostdin"};
+        args << "-f" << "lavfi" << "-i" << "color=c=black:s=64x64:r=1";
+        // Use the bit depth and profile required by this preset in the probe.
+        const bool tenBit = row == 6 || row == 9 || row == 13;
+        args << "-vf" << (row == 12 ? "format=nv12,hwupload" :
+                          tenBit ? "format=p010le" : "format=nv12");
+        args << "-c:v" << codecArgs[encoderOption + 1];
+        const int profileOption = codecArgs.indexOf("-profile:v");
+        if (profileOption >= 0 && profileOption + 1 < codecArgs.size())
+            args << "-profile:v" << codecArgs[profileOption + 1];
+        args << "-frames:v" << "1" << "-an" << "-f" << "null" << "-";
+
+        QStringList devices;
+        if (row == 12) {
+            devices = QDir("/dev/dri").entryList({"renderD*"}, QDir::System);
+            if (devices.isEmpty()) return false;
+            // Encoding currently does not select a device, so only probe the
+            // default render node rather than advertising another GPU's codec.
+            devices = {devices.first()};
+        } else {
+            devices << QString();
+        }
+        for (const QString &device : devices) {
+            QStringList deviceArgs = args;
+            if (!device.isEmpty()) {
+                deviceArgs.insert(4, "-vaapi_device");
+                deviceArgs.insert(5, "/dev/dri/" + device);
+            }
+            QProcess probe;
+            probe.setProcessChannelMode(QProcess::MergedChannels);
+            probe.start("ffmpeg", deviceArgs);
+            if (!probe.waitForStarted(2000)) return false;
+            if (!probe.waitForFinished(5000)) {
+                probe.kill();
+                probe.waitForFinished();
+                continue;
+            }
+            if (probe.exitStatus() == QProcess::NormalExit && probe.exitCode() == 0)
+                return true;
+        }
+        return false;
+    }
+
     template<const int r, const int c>
     [[nodiscard]] QStringList getListByRow(const int row, const QString (&arr)[r][c]) const
     {

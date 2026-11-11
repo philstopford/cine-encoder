@@ -1,6 +1,6 @@
 # Cine Encoder
 
-Cine Encoder is an application, using the FFmpeg, MKVToolNix and MediaInfo utilities, that allows you to convert media files while preserving HDR metadata. Supported hardware encoding includes Apple VideoToolbox (on macOS / Apple Silicon), NVIDIA NVENC, and Intel QSV (on Windows and experimental on Linux). The following encoding modes are implemented: H265, H264, AV1, VP9, MPEG-2, XDCAM, XAVC, DNxHR, and ProRes.
+Cine Encoder is an application, using the FFmpeg, MKVToolNix and MediaInfo utilities, that allows you to convert media files while preserving HDR metadata. Supported hardware encoding includes Apple VideoToolbox (on macOS / Apple Silicon), NVIDIA NVENC, and Intel QSV (on Windows and experimental on Linux). NVENC, QSV, and VAAPI presets are shown only when a short FFmpeg encode probe succeeds on the host. A successful probe checks basic encoder and device availability, but does not guarantee every source or filter combination will encode. The following encoding modes are implemented: H265, H264, AV1, VP9, MPEG-2, XDCAM, XAVC, DNxHR, and ProRes.
 
 ![View](./images/View_1.png)
 

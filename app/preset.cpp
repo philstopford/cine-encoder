@@ -66,6 +66,8 @@ void Preset::onCloseWindow()
 
 void Preset::onButtonApply()  // Apply preset
 {
+    // The timer may not have regenerated the description after the last edit.
+    repeat_handler();
     (*m_pNew_param)[CurParamIndex::OUTPUT_PARAM] = ui->textBrowser_presetname->toPlainText();
     (*m_pNew_param)[CurParamIndex::CODEC] = QString::number(ui->comboBox_codec->currentIndex());
     (*m_pNew_param)[CurParamIndex::MODE] = QString::number(ui->comboBox_mode->currentIndex());

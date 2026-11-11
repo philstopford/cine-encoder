@@ -61,6 +61,7 @@
 #include <QSignalBlocker>
 #include <QScreen>
 #include <QHeaderView>
+#include <QRegularExpression>
 #include <iostream>
 #include <iomanip>
 #include <cmath>
@@ -2061,9 +2062,19 @@ void MainWindow::rebuildPresetTreeFromTable()
     parentFont.setBold(true);
     parentFont.setItalic(true);
     QTreeWidgetItem *currentParent = nullptr;
+    auto removeEmptyHardwareSection = [&]() {
+        if (!currentParent || currentParent->childCount() != 0) return;
+        const QString name = currentParent->text(0);
+        if (!name.contains("QSV", Qt::CaseInsensitive) &&
+            !name.contains("NVENC", Qt::CaseInsensitive) &&
+            !name.contains("VAAPI", Qt::CaseInsensitive)) return;
+        delete ui->treeWidget->takeTopLevelItem(ui->treeWidget->indexOfTopLevelItem(currentParent));
+        currentParent = nullptr;
+    };
     for (int i = 0; i < numRows; i++) {
         type = m_preset_table[PARAMETERS_COUNT][i];
         if ((type == "TopLewelItem") || (type == "TopLevelItem")) {
+            removeEmptyHardwareSection();
             const QString sectionName = m_preset_table[0][i];
             if (!Tables::isPresetSectionSupported(sectionName)) {
                 currentParent = nullptr;
@@ -2082,6 +2093,16 @@ void MainWindow::rebuildPresetTreeFromTable()
         if (type == "ChildItem") {
             if (!currentParent) {
                 continue;
+            }
+            // Older saves can contain a stale generated summary even though BQR
+            // has the edited quality. Keep the numeric parameter authoritative.
+            if (m_preset_table[0][i].contains("Quality (VideoToolbox)")) {
+                static const QRegularExpression qualityValue("(Quality \\(VideoToolbox\\) )\\d+(?:\\.\\d+)?");
+                const auto match = qualityValue.match(m_preset_table[0][i]);
+                if (match.hasMatch()) {
+                    m_preset_table[0][i].replace(match.capturedStart(), match.capturedLength(),
+                        match.captured(1) + m_preset_table[CurParamIndex::BQR][i]);
+                }
             }
             const int codecIndex = m_preset_table[1][i].toInt();
             Tables t;
@@ -2107,11 +2128,33 @@ void MainWindow::rebuildPresetTreeFromTable()
             currentParent->addChild(child);
         }
     }
-    if (m_pos_top != -1 && m_pos_cld != -1 && m_pos_top < ui->treeWidget->topLevelItemCount()) {
-        QTreeWidgetItem *item = ui->treeWidget->topLevelItem(m_pos_top);
-        if (item && m_pos_cld < item->childCount()) {
-            ui->treeWidget->setCurrentItem(item->child(m_pos_cld));
+    removeEmptyHardwareSection();
+    // Filtering changes tree positions. Restore the selected preset by its
+    // saved parameters, rather than trusting indices from another host.
+    QTreeWidgetItem *selectedPreset = nullptr;
+    if (m_pos_top >= 0 && m_pos_cld >= 0) {
+        for (int top = 0; top < ui->treeWidget->topLevelItemCount() && !selectedPreset; ++top) {
+            QTreeWidgetItem *section = ui->treeWidget->topLevelItem(top);
+            for (int child = 0; child < section->childCount(); ++child) {
+                QTreeWidgetItem *candidate = section->child(child);
+                if (candidate->text(CurParamIndex::PRESET_NAME + 7) == m_curParams[CurParamIndex::PRESET_NAME] &&
+                    candidate->text(CurParamIndex::CODEC + 7) == m_curParams[CurParamIndex::CODEC]) {
+                    selectedPreset = candidate;
+                    m_pos_top = top;
+                    m_pos_cld = child;
+                    break;
+                }
+            }
         }
+    }
+    if (selectedPreset) {
+        ui->treeWidget->setCurrentItem(selectedPreset);
+        for (int k = 0; k < PARAMETERS_COUNT; ++k)
+            m_curParams[k] = selectedPreset->text(k + 7);
+    } else {
+        m_pos_top = -1;
+        m_pos_cld = -1;
+        ui->treeWidget->setCurrentItem(nullptr);
     }
     for (int i = 7; i < 41; i++) {
         ui->treeWidget->hideColumn(i);
@@ -2323,6 +2366,8 @@ void MainWindow::showVideoSplitter()
 
 void MainWindow::get_current_data() // Get current data
 {
+    const QVector<QString> &params = m_row < m_data.size() && !m_data[m_row].presetParams.isEmpty()
+        ? m_data[m_row].presetParams : m_curParams;
     m_dur = GETTEXT(m_row, T_DUR).toDouble();
     m_stream_size = GETTEXT(m_row, T_STREAMSIZE);
     m_width = GETTEXT(m_row, T_WIDTH);
@@ -2472,10 +2517,10 @@ void MainWindow::get_current_data() // Get current data
             !m_data[m_row].fields[Data::externAudioFormats].empty()) {
         m_pAudioLabel->setVisible(false);
         Tables t;
-        int codecIndex = m_curParams[CurParamIndex::CODEC].toInt();
-        int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+        int codecIndex = params[CurParamIndex::CODEC].toInt();
+        int audioCodecIndex = params[CurParamIndex::AUDIO_CODEC].toInt();
         QString targetAudioCodec = t.arr_acodec[codecIndex][audioCodecIndex];
-        bool usePresetSubtitleSettings = m_curParams[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
+        bool usePresetSubtitleSettings = params[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
         ui->streamAudio->setList(extension, m_data[m_row], targetAudioCodec, usePresetSubtitleSettings);
     }
 
@@ -2484,10 +2529,10 @@ void MainWindow::get_current_data() // Get current data
             !m_data[m_row].fields[Data::externSubtFormats].empty()) {
         m_pSubtitleLabel->setVisible(false);
         Tables t;
-        int codecIndex = m_curParams[CurParamIndex::CODEC].toInt();
-        int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+        int codecIndex = params[CurParamIndex::CODEC].toInt();
+        int audioCodecIndex = params[CurParamIndex::AUDIO_CODEC].toInt();
         QString targetAudioCodec = t.arr_acodec[codecIndex][audioCodecIndex];
-        bool usePresetSubtitleSettings = m_curParams[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
+        bool usePresetSubtitleSettings = params[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
         ui->streamSubtitle->setList(extension, m_data[m_row], targetAudioCodec, usePresetSubtitleSettings);
     }
 }
@@ -3407,7 +3452,7 @@ void MainWindow::openFiles(const QStringList &openFileNames)    // Open files
             QVector<QString> currentPresetParams;
             
             // Check if there's a currently selected preset
-            if (m_pos_top != -1 && m_pos_cld != -1) {
+            if (m_pos_top >= 0 && m_pos_top < ui->treeWidget->topLevelItemCount() && m_pos_cld >= 0) {
                 // Use the currently selected preset
                 QTreeWidgetItem *currentItem = ui->treeWidget->topLevelItem(m_pos_top)->child(m_pos_cld);
                 if (currentItem) {
@@ -3563,16 +3608,15 @@ void MainWindow::onTableSelectionChanged()
         m_pTableLabel->hide();
         // Remove event filter when files are present to avoid interfering with header drag operations
         m_pTableLabel->removeEventFilter(this);
-        get_current_data();
-        if (m_row < m_data.size())
-            m_pEffectStack->setFilters(&m_data[m_row].videoEffects);
-        
         // Load per-file preset parameters if available
         if (m_row < m_data.size() && !m_data[m_row].presetParams.isEmpty()) {
             for (int k = 0; k < PARAMETERS_COUNT && k < m_data[m_row].presetParams.size(); k++) {
                 m_curParams[k] = m_data[m_row].presetParams[k];
             }
         }
+        get_current_data();
+        if (m_row < m_data.size())
+            m_pEffectStack->setFilters(&m_data[m_row].videoEffects);
     } else {
         //************* Reset widgets ******************//
         qDebug() << "No files, showing table label and installing event filter";
@@ -3915,6 +3959,8 @@ void MainWindow::onClearSelectedVideoTitles()
 void MainWindow::onAddExtStream()
 {
     if (m_row != -1) {
+        const QVector<QString> &params = m_row < m_data.size() && !m_data[m_row].presetParams.isEmpty()
+            ? m_data[m_row].presetParams : m_curParams;
         const QWidget *page = ui->tabWidgetStreams->currentWidget();
         const bool isAudio = page == ui->tab_2;
         const bool isSubtitle = page == ui->tab_3;
@@ -3942,9 +3988,9 @@ void MainWindow::onAddExtStream()
                                 audioFormat += QString("  %1 kHz").arg(smplrt);
                                 // Get target audio codec from preset to determine if stream will be transcoded or copied
                                 Tables t;
-                                QString targetExtension = t.arr_container[m_curParams[CurParamIndex::CODEC].toInt()][m_curParams[CurParamIndex::CONTAINER].toInt()].toLower();
-                                int codecIndex = m_curParams[CurParamIndex::CODEC].toInt();
-                                int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+                                QString targetExtension = t.arr_container[params[CurParamIndex::CODEC].toInt()][params[CurParamIndex::CONTAINER].toInt()].toLower();
+                                int codecIndex = params[CurParamIndex::CODEC].toInt();
+                                int audioCodecIndex = params[CurParamIndex::AUDIO_CODEC].toInt();
                                 QString targetAudioCodec = t.arr_acodec[codecIndex][audioCodecIndex];
                                 
                                 // External audio streams are checked by default unless they're set to "Source" (copy) and incompatible
@@ -3972,7 +4018,7 @@ void MainWindow::onAddExtStream()
                             if (!subtitleFormat.isEmpty()) {
                                 // Use target container from preset parameters for better compatibility checking
                                 Tables t;
-                                QString targetExtension = t.arr_container[m_curParams[CurParamIndex::CODEC].toInt()][m_curParams[CurParamIndex::CONTAINER].toInt()].toLower();
+                                QString targetExtension = t.arr_container[params[CurParamIndex::CODEC].toInt()][params[CurParamIndex::CONTAINER].toInt()].toLower();
                                 
                                 m_data[m_row].checks[Data::externSubtChecks].push_back(Helper::isSubtitleSupported(targetExtension, subtitleFormat));
                                 m_data[m_row].fields[Data::externSubtFormats].push_back(subtitleFormat);
@@ -3995,19 +4041,19 @@ void MainWindow::onAddExtStream()
             if (!m_data[m_row].fields[Data::externAudioFormats].empty()) {
                 m_pAudioLabel->setVisible(false);
                 Tables t;
-                int codecIndex = m_curParams[CurParamIndex::CODEC].toInt();
-                int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+                int codecIndex = params[CurParamIndex::CODEC].toInt();
+                int audioCodecIndex = params[CurParamIndex::AUDIO_CODEC].toInt();
                 QString targetAudioCodec = t.arr_acodec[codecIndex][audioCodecIndex];
-                bool usePresetSubtitleSettings = m_curParams[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
+                bool usePresetSubtitleSettings = params[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
                 ui->streamAudio->setList(extension, m_data[m_row], targetAudioCodec, usePresetSubtitleSettings);
             }
             if (!m_data[m_row].fields[Data::externSubtFormats].empty()) {
                 m_pSubtitleLabel->setVisible(false);
                 Tables t;
-                int codecIndex = m_curParams[CurParamIndex::CODEC].toInt();
-                int audioCodecIndex = m_curParams[CurParamIndex::AUDIO_CODEC].toInt();
+                int codecIndex = params[CurParamIndex::CODEC].toInt();
+                int audioCodecIndex = params[CurParamIndex::AUDIO_CODEC].toInt();
                 QString targetAudioCodec = t.arr_acodec[codecIndex][audioCodecIndex];
-                bool usePresetSubtitleSettings = m_curParams[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
+                bool usePresetSubtitleSettings = params[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt() == 1;
                 ui->streamSubtitle->setList(extension, m_data[m_row], targetAudioCodec, usePresetSubtitleSettings);
             }
         }
@@ -4203,8 +4249,8 @@ void MainWindow::onApplyPreset()  // Apply preset
         }
     }
 
-    if (m_row != -1)
-        get_output_filename();
+    if (m_row >= 0 && selectedRows.contains(m_row))
+        get_current_data();
 
     showPopup(tr("Applied preset '%1' to %2 file(s)").arg(presetName).arg(selectedRows.size()));
 
