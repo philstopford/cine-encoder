@@ -33,17 +33,10 @@ The repository includes automated build workflows:
 ## Local Development
 
 ### Windows
-```bash
-# Run the automated build script
-build-windows.bat
-```
 
-Requirements:
-- Qt6 with Multimedia modules (MinGW or MSVC)
-- MediaInfo library
-- CMake 3.16+
+For a local x64 MSVC build and a portable `deploy` directory, follow the [Windows instructions in README.md](README.md#build-instructions-for-windows) and run `build-windows.bat` from an x64 Visual Studio 2022 Developer Command Prompt. The script requires the matching Qt 6 MSVC kit, MediaInfo.dll, FFmpeg/FFprobe, and MKVToolNix, and checks their deployment.
 
-For automated GitHub Actions builds, see `docs/WINDOWS_BUILD.md` for detailed information.
+GitHub Actions uses MinGW instead. Its ZIP includes Qt, MediaInfo, and MinGW runtime libraries, but FFmpeg and MKVToolNix must be installed separately and available on `PATH`.
 
 ### macOS
 ```bash

@@ -7,10 +7,6 @@ if(APPLE)
     endif()
 endif()
 
-if(WIN32)
-    set(CMAKE_PREFIX_PATH "C:\\Qt\\6.9.2\\mingw_64\\")
-endif()
-
 # Support for GitHub Actions Qt installation path
 if(DEFINED ENV{Qt6_DIR})
     list(APPEND CMAKE_PREFIX_PATH "$ENV{Qt6_DIR}")

@@ -1,126 +1,60 @@
 @echo off
-REM Windows build and deployment script for Cine Encoder
-REM This script helps developers build and package the application locally
+setlocal EnableExtensions
+REM Run from an x64 Visual Studio Developer Command Prompt.
+cd /d "%~dp0"
 
-echo Building Cine Encoder for Windows...
-
-REM Check if Qt6 is available
-echo Checking for Qt6 installation...
 if not defined Qt6_DIR (
-    REM Try to find Qt6 in common installation paths
-    for %%d in ("C:\Qt\6.*\msvc*_64" "C:\Qt\Qt6.*\6.*\msvc*_64" "%USERPROFILE%\Qt\6.*\msvc*_64") do (
-        if exist "%%d\bin\qmake.exe" (
-            set "Qt6_DIR=%%d"
-            echo Found Qt6 at: %%d
-            goto qt_found
-        )
-    )
-    echo Error: Qt6 not found. Please ensure Qt6 is installed with:
-    echo - Qt6 Core, Gui, Widgets components
-    echo - Qt6 SVG module
-    echo - Qt6 Multimedia module
-    echo.
-    echo Set Qt6_DIR environment variable to Qt6 installation directory
-    echo Example: set Qt6_DIR=C:\Qt\6.7.0\msvc2022_64
-    pause
+    echo Set Qt6_DIR to the Qt MSVC x64 kit, for example C:\Qt\6.7.2\msvc2022_64
     exit /b 1
-    :qt_found
 )
+if not exist "%Qt6_DIR%\lib\cmake\Qt6\Qt6Config.cmake" (
+    echo Qt6_DIR does not point to a Qt installation: %Qt6_DIR%
+    exit /b 1
+)
+if not exist "%Qt6_DIR%\bin\windeployqt.exe" (
+    echo windeployqt.exe is missing from %Qt6_DIR%\bin
+    exit /b 1
+)
+where cl.exe >nul 2>nul || (echo Run this from an x64 Visual Studio Developer Command Prompt. & exit /b 1)
+where cmake.exe >nul 2>nul || (echo CMake is required on PATH. & exit /b 1)
 
-REM Verify Qt6 modules
-echo Verifying Qt6 modules...
-set "SVG_FOUND=0"
-set "MULTIMEDIA_FOUND=0"
-
-if exist "%Qt6_DIR%\lib\Qt6Svg.lib" set "SVG_FOUND=1"
-if exist "%Qt6_DIR%\bin\Qt6Svg.dll" set "SVG_FOUND=1"
-if exist "%Qt6_DIR%\lib\Qt6Multimedia.lib" set "MULTIMEDIA_FOUND=1"
-if exist "%Qt6_DIR%\bin\Qt6Multimedia.dll" set "MULTIMEDIA_FOUND=1"
-
-if "%SVG_FOUND%"=="0" (
-    echo Error: Qt6 SVG module not found
-    echo Please install Qt6 with SVG support
-    pause
+REM MediaInfoDLL.h loads MediaInfo.dll at runtime; no import library is needed.
+if not defined MEDIAINFO_DLL set "MEDIAINFO_DLL=%~dp0app\MediaInfo.dll"
+if not exist "%MEDIAINFO_DLL%" (
+    echo Set MEDIAINFO_DLL to the x64 MediaInfo.dll downloaded from MediaArea.
     exit /b 1
 )
 
-if "%MULTIMEDIA_FOUND%"=="0" (
-    echo Error: Qt6 Multimedia module not found
-    echo Please install Qt6 with Multimedia support
-    pause
+REM Point these at directories containing the executable and its supporting DLLs.
+if not defined FFMPEG_BIN set "FFMPEG_BIN=%~dp0runtime\ffmpeg\bin"
+if not defined MKVTOOLNIX_BIN set "MKVTOOLNIX_BIN=%~dp0runtime\mkvtoolnix"
+if not exist "%FFMPEG_BIN%\ffmpeg.exe" (
+    echo Set FFMPEG_BIN to a directory containing ffmpeg.exe and ffprobe.exe.
+    exit /b 1
+)
+if not exist "%FFMPEG_BIN%\ffprobe.exe" (
+    echo ffprobe.exe is missing from %FFMPEG_BIN%
+    exit /b 1
+)
+if not exist "%MKVTOOLNIX_BIN%\mkvpropedit.exe" (
+    echo Set MKVTOOLNIX_BIN to a directory containing mkvpropedit.exe.
     exit /b 1
 )
 
-echo ✓ Qt6 Core found at: %Qt6_DIR%
-echo ✓ Qt6 SVG module found
-echo ✓ Qt6 Multimedia module found
+cmake -S . -B build-windows -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="%Qt6_DIR%" -DBUILD_TESTING=OFF || exit /b 1
+cmake --build build-windows --config Release || exit /b 1
+if not exist "build-windows\Release\cine_encoder.exe" exit /b 1
 
-REM Add Qt6 to PATH
-set "PATH=%Qt6_DIR%\bin;%PATH%"
+if not exist deploy mkdir deploy
+copy /y "build-windows\Release\cine_encoder.exe" "deploy\" >nul || exit /b 1
+"%Qt6_DIR%\bin\windeployqt.exe" --release --dir "deploy" "deploy\cine_encoder.exe" || exit /b 1
+copy /y "%MEDIAINFO_DLL%" "deploy\" >nul || exit /b 1
+xcopy /e /i /y "%FFMPEG_BIN%" "deploy\" >nul || exit /b 1
+xcopy /e /i /y "%MKVTOOLNIX_BIN%" "deploy\" >nul || exit /b 1
 
-REM Check for MediaInfo
-echo Checking for MediaInfo library...
-if not exist "app\MediaInfoDLL\MediaInfoDLL.h" (
-    echo MediaInfo development headers not found
-    echo Please download MediaInfo DLL from:
-    echo https://mediaarea.net/download/binary/libmediainfo0/
-    echo And extract MediaInfoDLL.h and MediaInfoDLL.lib to app\MediaInfoDLL\
-    pause
-    exit /b 1
+for %%F in (cine_encoder.exe MediaInfo.dll ffmpeg.exe ffprobe.exe mkvpropedit.exe Qt6Core.dll Qt6Gui.dll Qt6Widgets.dll Qt6Multimedia.dll) do (
+    if not exist "deploy\%%F" (echo Missing deployed file: %%F & exit /b 1)
 )
-echo ✓ MediaInfo library found
-
-REM Set up build directory
-if exist build rmdir /s /q build
-mkdir build
-cd build
-
-REM Configure with CMake
-echo Configuring with CMake...
-cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%Qt6_DIR%" -DQt6_DIR="%Qt6_DIR%" ..
-if %errorlevel% neq 0 (
-    echo CMake configuration failed!
-    pause
-    exit /b 1
-)
-
-REM Build the application
-echo Building application...
-cmake --build . --config Release
-if %errorlevel% neq 0 (
-    echo Build failed!
-    pause
-    exit /b 1
-)
-
-cd ..
-
-REM Create deployment directory
-echo Creating deployment...
-if exist deploy rmdir /s /q deploy
-mkdir deploy
-
-REM Copy main executable
-copy build\Release\cine_encoder.exe deploy\
-
-REM Deploy Qt dependencies including SVG support
-echo Deploying Qt dependencies...
-windeployqt.exe --dir deploy --release --svg deploy\cine_encoder.exe
-
-REM Check if SVG plugin was deployed
-if exist "deploy\imageformats\qsvg.dll" (
-    echo ✓ SVG plugin deployed successfully - SVG icons will work
-) else (
-    echo ⚠ WARNING: SVG plugin not found - SVG icons may not display correctly
-)
-
-REM List all deployed files
-echo.
-echo Deployed files:
-dir /s deploy
-
-echo.
-echo Build and deployment completed successfully!
-echo You can run the application from: deploy\cine_encoder.exe
-echo.
-pause
+if not exist "deploy\platforms\qwindows.dll" (echo Missing Qt Windows platform plugin. & exit /b 1)
+echo Deployment ready in deploy\
+exit /b 0
