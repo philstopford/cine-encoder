@@ -257,7 +257,6 @@ void Preset::showEvent(QShowEvent *event)
 
         ui->checkBox_use_preset_subtitles->setCheckState((Qt::CheckState)(*m_pNew_param)[CurParamIndex::USE_PRESET_SUBTITLE_SETTINGS].toInt());
 
-        QFontDatabase database;
         QFontDatabase::WritingSystem values = QFontDatabase::WritingSystem::Latin;
         const QStringList fontFamilies = QFontDatabase::families(values);
         auto *fontModel = new QStringListModel(ui->comboBox_preset_subtitles_font);
