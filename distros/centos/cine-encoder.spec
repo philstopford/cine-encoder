@@ -1,13 +1,13 @@
 Summary:    Video encoder
 Name:       cine-encoder
-Version:    3.5
+Version:    3.5.5
 Release:    1%{?dist}
 License:    GPLv3
 URL:        https://github.com/CineEncoder/%{name}
 Source0:    %{name}-%{version}.tar.xz
 
-BuildRequires: gcc-c++, qt5-qtbase-devel, qt5-qtmultimedia-devel, qt5-qtsvg-devel, qt5-qtx11extras-devel, libmediainfo-devel, libXext-devel
-Requires: ffmpeg, mkvtoolnix, libva-intel-driver
+BuildRequires: cmake, gcc-c++, qt6-qtbase-devel, qt6-qtsvg-devel, qt6-qtmultimedia-devel, libmediainfo-devel
+Requires: ffmpeg, mkvtoolnix
 
 %description
 Cine Encoder is an application, uses the FFmpeg, MKVToolNix and MediaInfo
@@ -22,23 +22,14 @@ Licence: GNU GPL v.3
 %autosetup
 
 %build
-# Regenerate the Makefile with the Fedora qmake name
-qmake-qt5 -o builddir/Makefile app/cine_encoder.pro -spec linux-g++ \
-  CONFIG+=qtquickcompiler
-cd builddir
-
-%make_build
+%cmake -DBUILD_TESTING=OFF
+%cmake_build
 
 %install
-cd builddir
-%make_install INSTALL_ROOT=%{buildroot}
-cd -
-mkdir -p %{buildroot}/%{_datadir}/icons/hicolor/64x64/apps
-mkdir -p %{buildroot}/%{_datadir}/applications
-mkdir -p %{buildroot}/%{_datadir}/sounds
-install -m 0644 share/%{name}.desktop %{buildroot}/%{_datadir}/applications
-install -m 0644 share/%{name}.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/apps
-install -m 0644 share/%{name}.wav %{buildroot}/%{_datadir}/sounds
+%cmake_install
+install -Dm644 share/%{name}.desktop %{buildroot}%{_datadir}/applications/%{name}.desktop
+install -Dm644 share/%{name}.png %{buildroot}%{_datadir}/icons/hicolor/64x64/apps/%{name}.png
+install -Dm644 share/%{name}.wav %{buildroot}%{_datadir}/sounds/%{name}.wav
 
 %files
 %doc share/ABOUT

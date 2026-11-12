@@ -116,7 +116,7 @@ sudo apt install build-essential cmake qt6-base-dev qt6-svg-dev qt6-multimedia-d
 sudo pacman -S --needed base-devel cmake qt6-base qt6-svg qt6-multimedia libmediainfo ffmpeg mkvtoolnix-cli
 ```
 
-The `distros/archlinux/PKGBUILD` file still targets the older Qt 5/qmake build. Use the CMake commands below for a current source build.
+The `distros/archlinux/PKGBUILD` recipe builds with Qt 6 and CMake.
 
 #### Fedora
 
@@ -124,7 +124,7 @@ The `distros/archlinux/PKGBUILD` file still targets the older Qt 5/qmake build. 
 sudo dnf install cmake gcc-c++ qt6-qtbase-devel qt6-qtsvg-devel qt6-qtmultimedia-devel libmediainfo-devel ffmpeg mkvtoolnix
 ```
 
-On Fedora releases where `ffmpeg` is unavailable from the enabled repositories, enable an appropriate repository that provides it. The RPM spec under `distros/fedora` also targets the older Qt 5 build; use CMake for the current source.
+On Fedora releases where `ffmpeg` is unavailable from the enabled repositories, enable an appropriate repository that provides it. The RPM specs under `distros/fedora` and `distros/centos` use Qt 6 and CMake.
 
 #### NixOS
 

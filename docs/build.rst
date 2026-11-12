@@ -2,61 +2,28 @@
 Build from source
 =================
 
-|
+Cine Encoder requires CMake 3.16 or newer, a C++ compiler, Qt 6 Core,
+Gui, Widgets, Multimedia, MultimediaWidgets, and Svg development modules,
+and the MediaInfo development library. At runtime, install FFmpeg (including
+ffprobe) and MKVToolNix (including mkvpropedit).
 
-Operating system: Linux x86_64
+On Debian or Ubuntu::
 
-|
+  sudo apt update
+  sudo apt install build-essential cmake qt6-base-dev qt6-svg-dev qt6-multimedia-dev libmediainfo-dev ffmpeg mkvtoolnix
 
-Install dependencies:
+On Arch Linux or Manjaro::
 
-|
+  sudo pacman -S --needed base-devel cmake qt6-base qt6-svg qt6-multimedia libmediainfo ffmpeg mkvtoolnix-cli
 
-- Arch Linux / Manjaro Linux:
-    - ffmpeg>=4.2
-    - mkvtoolnix-cli>=49.0
-    - qt5-base>=5.15
-    - qt5-multimedia>=5.15
-    - libmediainfo>=20.03
+On Fedora::
 
-|
+  sudo dnf install cmake gcc-c++ qt6-qtbase-devel qt6-qtsvg-devel qt6-qtmultimedia-devel libmediainfo-devel ffmpeg mkvtoolnix
 
-- Debian 10.6 / Ubuntu 20.04 / Linux Mint 20:
-    - ffmpeg>=4.1.6
-    - mkvtoolnix>=31.0
-    - qt5-qmake>=5.11.3
-    - qtbase5-dev>=5.11.3
-    - qtmultimedia5-dev>=5.11.3
-    - libmediainfo-dev>=18.12
+Build from the repository root::
 
-|
+  cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+  cmake --build build --parallel
+  ./build/cine_encoder
 
-- Fedora 33:
-    - ffmpeg>=4.3.2
-    - mkvtoolnix>=53.0.0
-    - qt5-qtbase-devel>=5.15
-    - qt5-qtmultimedia-devel>=5.15
-    - libmediainfo-devel>=20.09
-
-|
-
-- CentOS 7.8:
-    - ffmpeg>=3.4.8
-    - mkvtoolnix>=46.0.0
-    - qt5-qtbase-devel>=5.9.7
-    - qt5-qtmultimedia-devel>=5.9.7
-    - libmediainfo-devel>=21.03
-
-|
-
-Buld package:
-
-.. code-block:: INI
-
- mkdir build
- cd build
- git clone https://github.com/CineEncoder/cine-encoder.git
- cd cine-encoder
- qmake-qt5 -o builddir/Makefile app/cine_encoder.pro -spec linux-g++ CONFIG+=qtquickcompiler (or for Debian:  /usr/lib/qt5/bin/qmake -o builddir/Makefile app/cine_encoder.pro -spec linux-g++)
- cd builddir
- make
+See README.md for macOS, Windows, and NixOS instructions.

@@ -2,28 +2,13 @@ Source: cine-encoder
 Section: video
 Priority: optional
 Maintainer: Oleg Kozhukharenko <depositmail@rambler.ru>
-Build-Depends:	gcc,
-                qt5-qmake,
-                qtbase5-dev,
-                qtmultimedia5-dev,
-                libqt5svg5-dev,
-                libqt5x11extras5-dev,
-                libmediainfo-dev,
-                libxext-dev
-Standards-Version: 4.5.0
-Homepage: https://github.com/CineEncoder/cine-encoder
+Build-Depends: debhelper-compat (= 13), cmake, g++, qt6-base-dev, qt6-svg-dev, qt6-multimedia-dev, libmediainfo-dev
+Standards-Version: 4.6.2
+Homepage: https://github.com/philstopford/cine-encoder
 
 Package: cine-encoder
 Architecture: any
-Depends:	${misc:Depends},
-            ${shlibs:Depends},
-            ffmpeg,
-            mkvtoolnix,
-            i965-va-driver
-Description: Cine Encoder 2023 ver 3.5
- Cine Encoder is an application, uses the FFmpeg, MKVToolNix and MediaInfo
- utilities, that allows to convert media files while preserving HDR metadata.
- Supported hardware encoding NVENC and Intel QSV (for Windows and experimental
- for Linux). The following encoding modes are implemented: H265, H264, VP9,
- MPEG-2, XDCAM, XAVC, DNxHR, ProRes.
- Licence: GNU GPL v.3
+Depends: ${misc:Depends}, ${shlibs:Depends}, ffmpeg, mkvtoolnix
+Description: desktop media converter
+ Cine Encoder converts media files with FFmpeg and supports HDR metadata,
+ hardware encoders, and configurable presets.

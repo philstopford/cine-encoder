@@ -32,15 +32,7 @@ set(CMAKE_AUTORCC ON)
 include(GNUInstallDirs)
 set(CMAKE_AUTOUIC ON)
 
-find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
-# On Windows, skip Svg component since qtsvg causes build issues
-if(WIN32)
-    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Multimedia MultimediaWidgets)
-    find_package(Qt${QT_VERSION_MAJOR} OPTIONAL_COMPONENTS Widgets Svg)
-else()
-    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Multimedia MultimediaWidgets Svg)
-    find_package(Qt${QT_VERSION_MAJOR} OPTIONAL_COMPONENTS Widgets)
-endif()
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Multimedia MultimediaWidgets Svg)
 
 # Print Qt6 information for debugging
 message(STATUS "Qt6 version: ${Qt6_VERSION}")
@@ -88,24 +80,15 @@ add_executable(cine_encoder WIN32 MACOSX_BUNDLE
     app/files.qrc
 )
 target_link_libraries(cine_encoder PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Multimedia
-    Qt::MultimediaWidgets
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::Multimedia
+    Qt6::MultimediaWidgets
+    Qt6::Svg
 )
 
-# Link Qt::Svg conditionally based on availability
-if(Qt6Svg_FOUND)
-    target_link_libraries(cine_encoder PRIVATE Qt::Svg)
-endif()
-
 target_include_directories(cine_encoder PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/app)
-
-if((QT_VERSION_MAJOR GREATER 4))
-    target_link_libraries(cine_encoder PRIVATE
-        Qt::Widgets
-    )
-endif()
 
 if(DEFINES___contains___WM_CUSTOM)
     target_sources(cine_encoder PUBLIC
@@ -213,10 +196,6 @@ install(TARGETS cine_encoder
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-
-# Consider using qt_generate_deploy_app_script() for app deployment if
-# the project can use Qt 6.3. In that case rerun qmake2cmake with
-# --min-qt-version=6.3.
 
 # Add testing support
 option(BUILD_TESTING "Build tests" ON)
