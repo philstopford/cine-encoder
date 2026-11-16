@@ -27,6 +27,7 @@ private slots:
     void testMakeFileStringFFMPEGFilterReady_brackets();
     void testMakeFileStringFFMPEGFilterReady_complex();
     void testMakeFileStringFFMPEGReady_noEscaping();
+    void testReorderPreservesFileRecords();
 };
 
 void TestHelper::testMakeFileStringFFMPEGFilterReady_singleQuote()
@@ -114,6 +115,16 @@ void TestHelper::testMakeFileStringFFMPEGReady_noEscaping()
     
     // Should return the string as-is since QProcess handles escaping
     QCOMPARE(result, input);
+}
+
+void TestHelper::testReorderPreservesFileRecords()
+{
+    QVector<QString> files{"A-one-track", "B-two-tracks", "C-one-track"};
+    Helper::reorder(files, QVector<int>{2, 0, 1});
+    QCOMPARE(files, (QVector<QString>{"C-one-track", "A-one-track", "B-two-tracks"}));
+
+    Helper::reorder(files, QVector<int>{2, 1, 0});
+    QCOMPARE(files, (QVector<QString>{"B-two-tracks", "A-one-track", "C-one-track"}));
 }
 
 QTEST_MAIN(TestHelper)

@@ -240,13 +240,18 @@ void Helper::eraseRow(QVector<T> &v, const int row)
 template<class T>
 void Helper::reorder(QVector<T> &v, QVector<int> const &order)
 {
-    for (int s = 1, d; s < order.size(); ++s) {
-        for (d = order[s]; d < s; d = order[d]);
-        if (d == s)
-            while (d = order[d], d != s)
-                std::swap(v[s], v[d]);
-
+    // order[newRow] is the old row. Move the complete per-file record so
+    // audio/subtitle selections remain attached to their input file.
+    if (order.size() != v.size())
+        return;
+    QVector<T> reordered;
+    reordered.reserve(v.size());
+    for (const int oldRow : order) {
+        if (oldRow < 0 || oldRow >= v.size())
+            return;
+        reordered.push_back(v[oldRow]);
     }
+    v = std::move(reordered);
 }
 
 #endif // HELPER_H

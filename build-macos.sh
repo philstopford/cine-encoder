@@ -133,6 +133,15 @@ mkdir deploy
 # Copy app bundle
 cp -R build/cine_encoder.app deploy/
 
+# Finder needs both the icon resource and the bundle metadata that names it.
+APP_CONTENTS="deploy/cine_encoder.app/Contents"
+if [ ! -f "$APP_CONTENTS/Info.plist" ] || \
+   [ ! -f "$APP_CONTENTS/Resources/cine-encoder.icns" ] || \
+   [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$APP_CONTENTS/Info.plist" 2>/dev/null)" != "cine-encoder.icns" ]; then
+    echo "Error: macOS app bundle is missing its icon or icon metadata"
+    exit 1
+fi
+
 # Deploy Qt dependencies including SVG support
 echo "Deploying Qt dependencies..."
 macdeployqt deploy/cine_encoder.app -always-overwrite -svg

@@ -1563,11 +1563,11 @@ void MainWindow::setParameters()    // Set parameters
     ui->tableWidget->verticalHeader()->setVisible(true);
     ui->tableWidget->verticalHeader()->setDefaultSectionSize(ROWHEIGHT * Helper::scaling());
     ui->tableWidget->setAlternatingRowColors(true);
-    ui->tableWidget->setDropIndicatorShown(true);
-    ui->tableWidget->setDragEnabled(true);
-    ui->tableWidget->setDragDropOverwriteMode(true);
-    ui->tableWidget->setDragDropMode(QAbstractItemView::DragDrop);
-    ui->tableWidget->setDefaultDropAction(Qt::TargetMoveAction);
+    // Queue rows are reordered through the sort controls, which also move
+    // their per-file records. Qt's internal cell drag/drop would move only
+    // table items and silently detach them from those records.
+    ui->tableWidget->setDragEnabled(false);
+    ui->tableWidget->setDragDropMode(QAbstractItemView::NoDragDrop);
     ui->tableWidget->setColumnWidth(ColumnIndex::WARNING, 45); // Warning column, minimal width for icon only
     ui->tableWidget->setColumnWidth(ColumnIndex::FILENAME, 350); // Make wider to accommodate path + filename
     ui->tableWidget->setColumnWidth(ColumnIndex::FORMAT, 80);
@@ -3113,16 +3113,25 @@ void MainWindow::onRemoveAllFiles()  // Remove all files from table
 void MainWindow::onSort(const bool up)
 {
     const int rowsCount = ui->tableWidget->rowCount();
-    for (int i = 0; i < rowsCount; i++) {
-        auto *id = new QTableWidgetItem(numToStr(i));
-        ui->tableWidget->setItem(i, ColumnIndex::T_ID, id);
+    // The stream and effect widgets hold pointers into m_data. Detach them
+    // before replacing its elements, then reload the selected sorted row.
+    ui->streamAudio->clearList();
+    ui->streamSubtitle->clearList();
+    m_pEffectStack->setFilters(nullptr);
+    {
+        const QSignalBlocker blocker(ui->tableWidget);
+        for (int i = 0; i < rowsCount; i++) {
+            auto *id = new QTableWidgetItem(numToStr(i));
+            ui->tableWidget->setItem(i, ColumnIndex::T_ID, id);
+        }
+        Qt::SortOrder srt = (up) ? Qt::AscendingOrder : Qt::DescendingOrder;
+        ui->tableWidget->sortByColumn(ColumnIndex::FILENAME, srt);
+        QVector<int> order;
+        for (int i = 0; i < rowsCount; i++)
+            order.push_back(GETTEXT(i, T_ID).toInt());
+        Helper::reorder(m_data, order);
     }
-    Qt::SortOrder srt = (up) ? Qt::AscendingOrder : Qt::DescendingOrder;
-    ui->tableWidget->sortByColumn(ColumnIndex::FILENAME, srt);
-    QVector<int> order(0);
-    for (int i = 0; i < rowsCount; i++)
-        order.push_back(GETTEXT(i, T_ID).toInt());
-    Helper::reorder(m_data, order);
+    onTableSelectionChanged();
 }
 
 void MainWindow::onSortDown()    // Sort table

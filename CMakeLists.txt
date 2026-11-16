@@ -131,6 +131,7 @@ if(APPLE)
 endif()
 
 if(WIN32)
+    target_sources(cine_encoder PRIVATE app/icon.rc)
     target_link_libraries(cine_encoder PRIVATE
         dwmapi
         user32

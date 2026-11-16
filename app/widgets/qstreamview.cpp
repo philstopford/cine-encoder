@@ -124,104 +124,11 @@ void QStreamView::setList(QString extension, Data &data, const QString& targetAu
         return;
     }
 
-    // Save current audio selection state before clearing
-    QVector<bool> savedAudioChecks;
-    QVector<bool> savedExternAudioChecks;
-    QVector<bool> savedAudioDef;
-    QVector<bool> savedExternAudioDef;
-    // Save current subtitle selection state before clearing
-    QVector<bool> savedSubtChecks;
-    QVector<bool> savedExternSubtChecks;
-    QVector<bool> savedSubtDef;
-    QVector<bool> savedExternSubtDef;
-    QVector<bool> savedSubtBurn;
-    QVector<bool> savedExternSubtBurn;
-    
-    if (m_pData != nullptr) {
-        // Save states only if the previous data was fully initialized
-        if (!m_pData->videoMetadata.isEmpty()) {
-            // Save audio states - use try-catch to handle potential atomic operation failures
-            try {
-                if (Data::audioChecks < Data::CHECKS_COUNT && !m_pData->checks[Data::audioChecks].isEmpty()) {
-                    savedAudioChecks = m_pData->checks[Data::audioChecks];
-                }
-                if (Data::externAudioChecks < Data::CHECKS_COUNT && !m_pData->checks[Data::externAudioChecks].isEmpty()) {
-                    savedExternAudioChecks = m_pData->checks[Data::externAudioChecks];
-                }
-                if (Data::audioDef < Data::CHECKS_COUNT && !m_pData->checks[Data::audioDef].isEmpty()) {
-                    savedAudioDef = m_pData->checks[Data::audioDef];
-                }
-                if (Data::externAudioDef < Data::CHECKS_COUNT && !m_pData->checks[Data::externAudioDef].isEmpty()) {
-                    savedExternAudioDef = m_pData->checks[Data::externAudioDef];
-                }
-                // Save subtitle states
-                if (Data::subtChecks < Data::CHECKS_COUNT && !m_pData->checks[Data::subtChecks].isEmpty()) {
-                    savedSubtChecks = m_pData->checks[Data::subtChecks];
-                }
-                if (Data::externSubtChecks < Data::CHECKS_COUNT && !m_pData->checks[Data::externSubtChecks].isEmpty()) {
-                    savedExternSubtChecks = m_pData->checks[Data::externSubtChecks];
-                }
-                if (Data::subtDef < Data::CHECKS_COUNT && !m_pData->checks[Data::subtDef].isEmpty()) {
-                    savedSubtDef = m_pData->checks[Data::subtDef];
-                }
-                if (Data::externSubtDef < Data::CHECKS_COUNT && !m_pData->checks[Data::externSubtDef].isEmpty()) {
-                    savedExternSubtDef = m_pData->checks[Data::externSubtDef];
-                }
-                if (Data::subtBurn < Data::CHECKS_COUNT && !m_pData->checks[Data::subtBurn].isEmpty()) {
-                    savedSubtBurn = m_pData->checks[Data::subtBurn];
-                }
-                if (Data::externSubtBurn < Data::CHECKS_COUNT && !m_pData->checks[Data::externSubtBurn].isEmpty()) {
-                    savedExternSubtBurn = m_pData->checks[Data::externSubtBurn];
-                }
-            } catch (...) {
-                // If any exception occurs during vector copying, continue with empty saved vectors
-                // This handles race conditions during data initialization
-            }
-        }
-    }
-    
+    // Selection state already lives in Data. Rebuild directly from the requested
+    // record; the previous record may have moved when queue rows were sorted or
+    // the vector grew.
     clearList();
-    
-    // Only restore saved selection state if we're refreshing the same file's data
-    // This preserves user choices within the same file while preventing cross-file pollution
-    bool isSameFile = (m_pData == &data);
     m_pData = &data;
-    
-    if (isSameFile) {
-        // Same file being refreshed - restore user selections
-        if (!savedAudioChecks.isEmpty() && savedAudioChecks.size() == data.checks[Data::audioChecks].size()) {
-            data.checks[Data::audioChecks] = savedAudioChecks;
-        }
-        if (!savedExternAudioChecks.isEmpty() && savedExternAudioChecks.size() == data.checks[Data::externAudioChecks].size()) {
-            data.checks[Data::externAudioChecks] = savedExternAudioChecks;
-        }
-        if (!savedAudioDef.isEmpty() && savedAudioDef.size() == data.checks[Data::audioDef].size()) {
-            data.checks[Data::audioDef] = savedAudioDef;
-        }
-        if (!savedExternAudioDef.isEmpty() && savedExternAudioDef.size() == data.checks[Data::externAudioDef].size()) {
-            data.checks[Data::externAudioDef] = savedExternAudioDef;
-        }
-        // Also restore subtitle selections for the same file
-        if (!savedSubtChecks.isEmpty() && savedSubtChecks.size() == data.checks[Data::subtChecks].size()) {
-            data.checks[Data::subtChecks] = savedSubtChecks;
-        }
-        if (!savedExternSubtChecks.isEmpty() && savedExternSubtChecks.size() == data.checks[Data::externSubtChecks].size()) {
-            data.checks[Data::externSubtChecks] = savedExternSubtChecks;
-        }
-        if (!savedSubtDef.isEmpty() && savedSubtDef.size() == data.checks[Data::subtDef].size()) {
-            data.checks[Data::subtDef] = savedSubtDef;
-        }
-        if (!savedExternSubtDef.isEmpty() && savedExternSubtDef.size() == data.checks[Data::externSubtDef].size()) {
-            data.checks[Data::externSubtDef] = savedExternSubtDef;
-        }
-        if (!savedSubtBurn.isEmpty() && savedSubtBurn.size() == data.checks[Data::subtBurn].size()) {
-            data.checks[Data::subtBurn] = savedSubtBurn;
-        }
-        if (!savedExternSubtBurn.isEmpty() && savedExternSubtBurn.size() == data.checks[Data::externSubtBurn].size()) {
-            data.checks[Data::externSubtBurn] = savedExternSubtBurn;
-        }
-    }
-    // Note: For different files, we preserve each file's own defaults as set by Helper::isAudioSupported() and Helper::isSubtitleSupported()
     m_targetAudioCodec = targetAudioCodec;
     m_usePresetSubtitleSettings = usePresetSubtitleSettings;
     const QString columns[] = {
